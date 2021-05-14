@@ -129,8 +129,8 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
              * }     */
 
             if (from_rr_type == CHANX) {
-                iseg_low = device_ctx.rr_nodes[inode].xlow();
-                iseg_high = device_ctx.rr_nodes[inode].xhigh();
+                iseg_low = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
+                iseg_high = device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/;
             } else { /* CHANY */
                 iseg_low = device_ctx.rr_nodes[inode].ylow();
                 iseg_high = device_ctx.rr_nodes[inode].yhigh();

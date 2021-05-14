@@ -56,6 +56,12 @@ class RRGraphView {
     /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const;
 
+    /* Get the xhigh of a routing resource node */
+    int node_xhigh(RRNodeId node) const;
+
+    /* Get the xlow of a routing resource node */
+    int node_xlow(RRNodeId node) const;
+
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */
   private:

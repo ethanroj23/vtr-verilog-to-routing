@@ -208,7 +208,7 @@ static void check_source(int inode, ClusterNetId net_id) {
                         "in check_source: net %d begins with a node of type %d.\n", size_t(net_id), rr_type);
     }
 
-    int i = device_ctx.rr_nodes[inode].xlow();
+    int i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
     int j = device_ctx.rr_nodes[inode].ylow();
     /* for sinks and sources, ptc_num is class */
     int ptc_num = device_ctx.rr_nodes[inode].ptc_num();
@@ -321,15 +321,15 @@ static bool check_adjacent(int from_node, int to_node) {
     num_adj = 0;
 
     from_type = device_ctx.rr_graph.node_type(RRNodeId(from_node)) /*ESR API*/;
-    from_xlow = device_ctx.rr_nodes[from_node].xlow();
+    from_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/;
     from_ylow = device_ctx.rr_nodes[from_node].ylow();
-    from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
+    from_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/;
     from_yhigh = device_ctx.rr_nodes[from_node].yhigh();
     from_ptc = device_ctx.rr_nodes[from_node].ptc_num();
     to_type = device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/;
-    to_xlow = device_ctx.rr_nodes[to_node].xlow();
+    to_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/;
     to_ylow = device_ctx.rr_nodes[to_node].ylow();
-    to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
+    to_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/;
     to_yhigh = device_ctx.rr_nodes[to_node].yhigh();
     to_ptc = device_ctx.rr_nodes[to_node].ptc_num();
 
@@ -388,8 +388,8 @@ static bool check_adjacent(int from_node, int to_node) {
             if (to_type == IPIN) {
                 num_adj += 1; //adjacent
             } else if (to_type == CHANX) {
-                from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
-                to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
+                from_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/;
+                to_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/;
                 if (from_ylow == to_ylow) {
                     /* UDSD Modification by WMF Begin */
                     /*For Fs > 3, can connect to overlapping wire segment */
@@ -473,10 +473,10 @@ static int chanx_chany_adjacent(int chanx_node, int chany_node) {
     auto& device_ctx = g_vpr_ctx.device();
 
     chanx_y = device_ctx.rr_nodes[chanx_node].ylow();
-    chanx_xlow = device_ctx.rr_nodes[chanx_node].xlow();
-    chanx_xhigh = device_ctx.rr_nodes[chanx_node].xhigh();
+    chanx_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(chanx_node)) /*ESR API*/;
+    chanx_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(chanx_node)) /*ESR API*/;
 
-    chany_x = device_ctx.rr_nodes[chany_node].xlow();
+    chany_x = device_ctx.rr_graph.node_xlow(RRNodeId(chany_node)) /*ESR API*/;
     chany_ylow = device_ctx.rr_nodes[chany_node].ylow();
     chany_yhigh = device_ctx.rr_nodes[chany_node].yhigh();
 

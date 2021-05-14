@@ -31,11 +31,11 @@ bool RouterDelayProfiler::calculate_delay(int source_node, int sink_node, const 
 
     //vtr::ScopedStartFinishTimer t(vtr::string_fmt("Profiling Delay from %s at %d,%d (%s) to %s at %d,%d (%s)",
     //device_ctx.rr_nodes[source_node].type_string(),
-    //device_ctx.rr_nodes[source_node].xlow(),
+    //device_ctx.rr_graph.node_xhigh(RRNodeId(source_node)) /*ESR API*/,
     //device_ctx.rr_nodes[source_node].ylow(),
     //rr_node_arch_name(source_node).c_str(),
     //device_ctx.rr_nodes[sink_node].type_string(),
-    //device_ctx.rr_nodes[sink_node].xlow(),
+    //device_ctx.rr_graph.node_xhigh(RRNodeId(sink_node)) /*ESR API*/,
     //device_ctx.rr_nodes[sink_node].ylow(),
     //rr_node_arch_name(sink_node).c_str()));
 

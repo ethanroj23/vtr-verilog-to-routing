@@ -170,8 +170,8 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if ((device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/ == SOURCE)
-                        && (device_ctx.rr_nodes[to_node].xlow() == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
-                        && (device_ctx.rr_nodes[to_node].xhigh() == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
+                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
+                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
                         continue;
                     }
 
@@ -225,13 +225,13 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                 /* Now add in the shared buffer transistors, and reset some flags. */
 
                 if (from_rr_type == CHANX) {
-                    for (i = device_ctx.rr_nodes[from_node].xlow() - 1;
-                         i <= device_ctx.rr_nodes[from_node].xhigh(); i++) {
+                    for (i = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/ - 1;
+                         i <= device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/; i++) {
                         ntrans_sharing += shared_buffer_trans[i];
                         shared_buffer_trans[i] = 0.;
                     }
 
-                    for (i = device_ctx.rr_nodes[from_node].xlow(); i <= device_ctx.rr_nodes[from_node].xhigh();
+                    for (i = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/; i <= device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/;
                          i++)
                         cblock_counted[i] = false;
 
@@ -368,8 +368,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if ((device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/ == SOURCE)
-                        && (device_ctx.rr_nodes[to_node].xlow() == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
-                        && (device_ctx.rr_nodes[to_node].xhigh() == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
+                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
+                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
                         continue;
                     }
 
@@ -444,7 +444,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                 /* Reset some flags */
                 if (from_rr_type == CHANX) {
-                    for (i = device_ctx.rr_nodes[from_node].xlow(); i <= device_ctx.rr_nodes[from_node].xhigh(); i++)
+                    for (i = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/; i <= device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/; i++)
                         cblock_counted[i] = false;
 
                 } else { /* CHANY */

@@ -1665,7 +1665,7 @@ static size_t calculate_wirelength_available() {
     size_t available_wirelength = 0;
     for (size_t i = 0; i < device_ctx.rr_nodes.size(); ++i) {
         if (device_ctx.rr_graph.node_type(RRNodeId(i)) == CHANX || device_ctx.rr_graph.node_type(RRNodeId(i)) == CHANY) {
-            size_t length_x = device_ctx.rr_nodes[i].xhigh() - device_ctx.rr_nodes[i].xlow();
+            size_t length_x = device_ctx.rr_graph.node_xhigh(RRNodeId(i)) /*ESR API*/ - device_ctx.rr_graph.node_xlow(RRNodeId(i)) /*ESR API*/;
             size_t length_y = device_ctx.rr_nodes[i].yhigh() - device_ctx.rr_nodes[i].ylow();
 
             available_wirelength += device_ctx.rr_nodes[i].capacity() * (length_x + length_y + 1);

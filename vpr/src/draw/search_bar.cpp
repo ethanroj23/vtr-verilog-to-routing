@@ -186,7 +186,7 @@ void auto_zoom_rr_node(int rr_node_id) {
     switch (device_ctx.rr_graph.node_type(RRNodeId(rr_node_id)) /*ESR API*/) {
         case IPIN:
         case OPIN: {
-            int i = device_ctx.rr_nodes[rr_node_id].xlow();
+            int i = device_ctx.rr_graph.node_xlow(RRNodeId(rr_node_id)) /*ESR API*/;
             int j = device_ctx.rr_nodes[rr_node_id].ylow();
             t_physical_tile_type_ptr type = device_ctx.grid[i][j].type;
             int width_offset = device_ctx.grid[i][j].width_offset;

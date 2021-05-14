@@ -13,3 +13,11 @@ t_rr_type RRGraphView::node_type(RRNodeId node) const {
 const RRSpatialLookup& RRGraphView::node_lookup() const {
     return node_lookup_;
 }
+
+int RRGraphView::node_xhigh(RRNodeId node) const {
+    return node_storage_.node_xhigh(node);
+}
+
+int RRGraphView::node_xlow(RRNodeId node) const {
+    return node_storage_.node_xlow(node);
+}

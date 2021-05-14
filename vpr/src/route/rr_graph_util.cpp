@@ -18,7 +18,7 @@ int seg_index_of_cblock(t_rr_type from_rr_type, int to_node) {
     auto& device_ctx = g_vpr_ctx.device();
 
     if (from_rr_type == CHANX)
-        return (device_ctx.rr_nodes[to_node].xlow());
+        return (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/);
     else
         /* CHANY */
         return (device_ctx.rr_nodes[to_node].ylow());
@@ -41,12 +41,12 @@ int seg_index_of_sblock(int from_node, int to_node) {
 
     if (from_rr_type == CHANX) {
         if (to_rr_type == CHANY) {
-            return (device_ctx.rr_nodes[to_node].xlow());
+            return (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/);
         } else if (to_rr_type == CHANX) {
-            if (device_ctx.rr_nodes[to_node].xlow() > device_ctx.rr_nodes[from_node].xlow()) { /* Going right */
-                return (device_ctx.rr_nodes[from_node].xhigh());
+            if (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ > device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/) { /* Going right */
+                return (device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/);
             } else { /* Going left */
-                return (device_ctx.rr_nodes[to_node].xhigh());
+                return (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/);
             }
         } else {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,

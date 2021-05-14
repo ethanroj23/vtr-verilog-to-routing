@@ -242,7 +242,7 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
         tptr = route_ctx.trace[net_id].head;
         while (tptr != nullptr) {
             inode = tptr->index;
-            rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
+            rr_type = device_ctx.rr_nodes[inode].type();
 
             if (rr_type == SINK) {
                 tptr = tptr->next; /* Skip next segment. */
@@ -252,12 +252,12 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
 
             else if (rr_type == CHANX) {
                 j = device_ctx.rr_nodes[inode].ylow();
-                for (i = device_ctx.rr_nodes[inode].xlow(); i <= device_ctx.rr_nodes[inode].xhigh(); i++)
+                for (i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/; i <= device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/; i++)
                     chanx_occ[i][j]++;
             }
 
             else if (rr_type == CHANY) {
-                i = device_ctx.rr_nodes[inode].xlow();
+                i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
                 for (j = device_ctx.rr_nodes[inode].ylow(); j <= device_ctx.rr_nodes[inode].yhigh(); j++)
                     chany_occ[i][j]++;
             }
@@ -290,25 +290,25 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
                         "in get_num_bends_and_length: net #%lu has no traceback.\n", size_t(inet));
     }
     inode = prevptr->index;
-    prev_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
+    prev_type = device_ctx.rr_nodes[inode].type();
 
     tptr = prevptr->next;
 
     while (tptr != nullptr) {
         inode = tptr->index;
-        curr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
+        curr_type = device_ctx.rr_nodes[inode].type();
 
         if (curr_type == SINK) { /* Starting a new segment */
             tptr = tptr->next;   /* Link to existing path - don't add to len. */
             if (tptr == nullptr)
                 break;
 
-            curr_type = device_ctx.rr_graph.node_type(RRNodeId(tptr->index)) /*ESR API*/;
+            curr_type = device_ctx.rr_nodes[tptr->index].type();
         }
 
         else if (curr_type == CHANX || curr_type == CHANY) {
             segments++;
-            length += 1 + device_ctx.rr_nodes[inode].xhigh() - device_ctx.rr_nodes[inode].xlow()
+            length += 1 + device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/ - device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/
                       + device_ctx.rr_nodes[inode].yhigh() - device_ctx.rr_nodes[inode].ylow();
 
             if (curr_type != prev_type && (prev_type == CHANX || prev_type == CHANY))

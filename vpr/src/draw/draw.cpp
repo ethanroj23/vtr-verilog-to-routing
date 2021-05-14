@@ -1445,8 +1445,8 @@ static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) 
     int coord_min = -1;
     int coord_max = -1;
     if (type == CHANX) {
-        coord_min = device_ctx.rr_nodes[inode].xlow();
-        coord_max = device_ctx.rr_nodes[inode].xhigh();
+        coord_min = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
+        coord_max = device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/;
         if (dir == INC_DIRECTION) {
             mux_dir = RIGHT;
         } else {
@@ -1822,9 +1822,9 @@ static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_
     y1 = chanx_bbox.bottom();
     x2 = chany_bbox.left();
 
-    chanx_xlow = device_ctx.rr_nodes[chanx_node].xlow();
+    chanx_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(chanx_node)) /*ESR API*/;
     chanx_y = device_ctx.rr_nodes[chanx_node].ylow();
-    chany_x = device_ctx.rr_nodes[chany_node].xlow();
+    chany_x = device_ctx.rr_graph.node_xlow(RRNodeId(chany_node)) /*ESR API*/;
     chany_ylow = device_ctx.rr_nodes[chany_node].ylow();
 
     if (chanx_xlow <= chany_x) { /* Can draw connection going right */
@@ -1893,10 +1893,10 @@ static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, s
     y1 = from_chan.bottom();
     y2 = to_chan.bottom();
 
-    from_xlow = device_ctx.rr_nodes[from_node].xlow();
-    from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
-    to_xlow = device_ctx.rr_nodes[to_node].xlow();
-    to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
+    from_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/;
+    from_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/;
+    to_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/;
+    to_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/;
     if (to_xhigh < from_xlow) { /* From right to left */
         /* UDSD Note by WMF: could never happen for INC wires, unless U-turn. For DEC
          * wires this handles well */
@@ -1973,8 +1973,8 @@ static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, s
     from_chan = draw_get_rr_chan_bbox(from_node);
     to_chan = draw_get_rr_chan_bbox(to_node);
 
-    // from_x = device_ctx.rr_nodes[from_node].xlow();
-    // to_x = device_ctx.rr_nodes[to_node].xlow();
+    // from_x = device_ctx.rr_graph.node_xlow(RRNodeId(from_node)) /*ESR API*/;
+    // to_x = device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/;
     from_ylow = device_ctx.rr_nodes[from_node].ylow();
     from_yhigh = device_ctx.rr_nodes[from_node].yhigh();
     to_ylow = device_ctx.rr_nodes[to_node].ylow();
@@ -2050,8 +2050,8 @@ ezgl::rectangle draw_get_rr_chan_bbox(int inode) {
 
     switch (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/) {
         case CHANX:
-            left = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()];
-            right = draw_coords->tile_x[device_ctx.rr_nodes[inode].xhigh()]
+            left = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/];
+            right = draw_coords->tile_x[device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/]
                     + draw_coords->get_tile_width();
             bottom = draw_coords->tile_y[device_ctx.rr_nodes[inode].ylow()]
                      + draw_coords->get_tile_width()
@@ -2061,10 +2061,10 @@ ezgl::rectangle draw_get_rr_chan_bbox(int inode) {
                   + (1. + device_ctx.rr_nodes[inode].ptc_num());
             break;
         case CHANY:
-            left = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()]
+            left = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/]
                    + draw_coords->get_tile_width()
                    + (1. + device_ctx.rr_nodes[inode].ptc_num());
-            right = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()]
+            right = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/]
                     + draw_coords->get_tile_width()
                     + (1. + device_ctx.rr_nodes[inode].ptc_num());
             bottom = draw_coords->tile_y[device_ctx.rr_nodes[inode].ylow()];
@@ -2382,7 +2382,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
             }
             case CHANX: {
                 if (draw_state->draw_route_type == GLOBAL)
-                    chanx_track[device_ctx.rr_nodes[inode].xlow()][device_ctx.rr_nodes[inode].ylow()]++;
+                    chanx_track[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_nodes[inode].ylow()]++;
 
                 int itrack = get_track_num(inode, chanx_track, chany_track);
                 draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
@@ -2416,7 +2416,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
             }
             case CHANY: {
                 if (draw_state->draw_route_type == GLOBAL)
-                    chany_track[device_ctx.rr_nodes[inode].xlow()][device_ctx.rr_nodes[inode].ylow()]++;
+                    chany_track[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_nodes[inode].ylow()]++;
 
                 int itrack = get_track_num(inode, chanx_track, chany_track);
                 draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
@@ -2468,7 +2468,7 @@ static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, c
     /* GLOBAL route stuff below. */
 
     rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
-    i = device_ctx.rr_nodes[inode].xlow(); /* NB: Global rr graphs must have only unit */
+    i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/; /* NB: Global rr graphs must have only unit */
     j = device_ctx.rr_nodes[inode].ylow(); /* length channel segments.                 */
 
     switch (rr_type) {
@@ -2590,7 +2590,7 @@ static int draw_check_rr_node_hit(float click_x, float click_y) {
         switch (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/) {
             case IPIN:
             case OPIN: {
-                int i = device_ctx.rr_nodes[inode].xlow();
+                int i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
                 int j = device_ctx.rr_nodes[inode].ylow();
                 t_physical_tile_type_ptr type = device_ctx.grid[i][j].type;
                 int width_offset = device_ctx.grid[i][j].width_offset;

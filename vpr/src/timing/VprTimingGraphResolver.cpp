@@ -308,7 +308,7 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
                 net_component.type_name += ")"; //add the side of the routing resource node
                 // For OPINs and IPINs the starting and ending coordinate are identical, so we can just arbitrarily assign the start to larger values
                 // and the end to the lower coordinate
-                start_x = " (" + std::to_string(device_ctx.rr_nodes[node->inode].xhigh()) + ","; //start and end coordinates are the same for OPINs and IPINs
+                start_x = " (" + std::to_string(device_ctx.rr_graph.node_xhigh(RRNodeId(node->inode)) /*ESR API*/) + ","; //start and end coordinates are the same for OPINs and IPINs
                 start_y = std::to_string(device_ctx.rr_nodes[node->inode].yhigh()) + ")";
                 end_x = "";
                 end_y = "";
@@ -324,16 +324,16 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
                 arrow = "->"; //we will point the coordinates from start to finish, left to right
 
                 if (device_ctx.rr_nodes[node->inode].direction() == DEC_DIRECTION) {                 //signal travels along decreasing direction
-                    start_x = " (" + std::to_string(device_ctx.rr_nodes[node->inode].xhigh()) + ","; //start coordinates have large value
+                    start_x = " (" + std::to_string(device_ctx.rr_graph.node_xhigh(RRNodeId(node->inode)) /*ESR API*/) + ","; //start coordinates have large value
                     start_y = std::to_string(device_ctx.rr_nodes[node->inode].yhigh()) + ")";
-                    end_x = "(" + std::to_string(device_ctx.rr_nodes[node->inode].xlow()) + ","; //end coordinates have smaller value
+                    end_x = "(" + std::to_string(device_ctx.rr_graph.node_xhigh(RRNodeId(node->inode)) /*ESR API*/) + ","; //end coordinates have smaller value
                     end_y = std::to_string(device_ctx.rr_nodes[node->inode].ylow()) + ")";
                 }
 
                 else {                                                                              // signal travels in increasing direction, stays at same point, or can travel both directions
-                    start_x = " (" + std::to_string(device_ctx.rr_nodes[node->inode].xlow()) + ","; //start coordinates have smaller value
+                    start_x = " (" + std::to_string(device_ctx.rr_graph.node_xhigh(RRNodeId(node->inode)) /*ESR API*/) + ","; //start coordinates have smaller value
                     start_y = std::to_string(device_ctx.rr_nodes[node->inode].ylow()) + ")";
-                    end_x = "(" + std::to_string(device_ctx.rr_nodes[node->inode].xhigh()) + ","; //end coordinates have larger value
+                    end_x = "(" + std::to_string(device_ctx.rr_graph.node_xhigh(RRNodeId(node->inode)) /*ESR API*/) + ","; //end coordinates have larger value
                     end_y = std::to_string(device_ctx.rr_nodes[node->inode].yhigh()) + ")";
                     if (device_ctx.rr_nodes[node->inode].direction() == BI_DIRECTION) {
                         arrow = "<->"; //indicate that signal can travel both direction

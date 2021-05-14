@@ -716,7 +716,7 @@ static void build_rr_graph(const t_graph_type graph_type,
                 device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.x_list[ylow]);
             }
             if (device_ctx.rr_graph.node_type(RRNodeId(i)) /*ESR API*/ == CHANY) {
-                int xlow = device_ctx.rr_nodes[i].xlow();
+                int xlow = device_ctx.rr_graph.node_xlow(RRNodeId(i)) /*ESR API*/;
                 device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.y_list[xlow]);
             }
         }
