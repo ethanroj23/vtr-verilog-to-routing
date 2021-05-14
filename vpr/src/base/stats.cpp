@@ -242,8 +242,8 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
         tptr = route_ctx.trace[net_id].head;
         while (tptr != nullptr) {
             inode = tptr->index;
-            rr_type = device_ctx.rr_nodes[inode].type();
-
+            rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode));
+            
             if (rr_type == SINK) {
                 tptr = tptr->next; /* Skip next segment. */
                 if (tptr == nullptr)
@@ -290,20 +290,20 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
                         "in get_num_bends_and_length: net #%lu has no traceback.\n", size_t(inet));
     }
     inode = prevptr->index;
-    prev_type = device_ctx.rr_nodes[inode].type();
+    prev_type = device_ctx.rr_graph.node_type(RRNodeId(inode));
 
     tptr = prevptr->next;
 
     while (tptr != nullptr) {
         inode = tptr->index;
-        curr_type = device_ctx.rr_nodes[inode].type();
+        curr_type = device_ctx.rr_graph.node_type(RRNodeId(inode));
 
         if (curr_type == SINK) { /* Starting a new segment */
             tptr = tptr->next;   /* Link to existing path - don't add to len. */
             if (tptr == nullptr)
                 break;
 
-            curr_type = device_ctx.rr_nodes[tptr->index].type();
+            curr_type = device_ctx.rr_graph.node_type(RRNodeId(tptr->index));
         }
 
         else if (curr_type == CHANX || curr_type == CHANY) {

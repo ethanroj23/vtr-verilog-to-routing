@@ -21,3 +21,11 @@ int RRGraphView::node_xhigh(RRNodeId node) const {
 int RRGraphView::node_xlow(RRNodeId node) const {
     return node_storage_.node_xlow(node);
 }
+
+int RRGraphView::node_yhigh(RRNodeId node) const {
+    return node_storage_.node_yhigh(node);
+}
+
+int RRGraphView::node_ylow(RRNodeId node) const {
+    return node_storage_.node_ylow(node);
+}

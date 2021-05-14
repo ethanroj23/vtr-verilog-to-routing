@@ -62,6 +62,12 @@ class RRGraphView {
     /* Get the xlow of a routing resource node */
     int node_xlow(RRNodeId node) const;
 
+    /* Get the yhigh of a routing resource node */
+    int node_yhigh(RRNodeId node) const;
+
+    /* Get the ylow of a routing resource node */
+    int node_ylow(RRNodeId node) const;
+
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */
   private:
