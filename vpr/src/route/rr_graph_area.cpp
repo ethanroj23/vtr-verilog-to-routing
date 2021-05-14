@@ -170,8 +170,8 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if ((device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/ == SOURCE)
-                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
-                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
+                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_graph.ylow(RRNodeId(to_node)) /*ESR API*/ == 0)
+                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_graph.yhigh(RRNodeId(to_node)) /*ESR API*/ == 0)) {
                         continue;
                     }
 
@@ -236,13 +236,13 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                         cblock_counted[i] = false;
 
                 } else { /* CHANY */
-                    for (j = device_ctx.rr_nodes[from_node].ylow() - 1;
-                         j <= device_ctx.rr_nodes[from_node].yhigh(); j++) {
+                    for (j = device_ctx.rr_graph.ylow(RRNodeId(from_node)) /*ESR API*/ - 1;
+                         j <= device_ctx.rr_graph.yhigh(RRNodeId(from_node)) /*ESR API*/; j++) {
                         ntrans_sharing += shared_buffer_trans[j];
                         shared_buffer_trans[j] = 0.;
                     }
 
-                    for (j = device_ctx.rr_nodes[from_node].ylow(); j <= device_ctx.rr_nodes[from_node].yhigh();
+                    for (j = device_ctx.rr_graph.ylow(RRNodeId(from_node)) /*ESR API*/; j <= device_ctx.rr_graph.yhigh(RRNodeId(from_node)) /*ESR API*/;
                          j++)
                         cblock_counted[j] = false;
                 }
@@ -368,8 +368,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if ((device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/ == SOURCE)
-                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
-                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
+                        && (device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_graph.ylow(RRNodeId(to_node)) /*ESR API*/ == 0)
+                        && (device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/ == 0) && (device_ctx.rr_graph.yhigh(RRNodeId(to_node)) /*ESR API*/ == 0)) {
                         continue;
                     }
 
@@ -448,7 +448,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                         cblock_counted[i] = false;
 
                 } else { /* CHANY */
-                    for (j = device_ctx.rr_nodes[from_node].ylow(); j <= device_ctx.rr_nodes[from_node].yhigh();
+                    for (j = device_ctx.rr_graph.ylow(RRNodeId(from_node)) /*ESR API*/; j <= device_ctx.rr_graph.yhigh(RRNodeId(from_node)) /*ESR API*/;
                          j++)
                         cblock_counted[j] = false;
                 }

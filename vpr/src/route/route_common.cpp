@@ -190,7 +190,7 @@ void get_serial_num() {
         while (tptr != nullptr) {
             inode = tptr->index;
             serial_num += (size_t(net_id) + 1)
-                          * (device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ * (device_ctx.grid.width()) - device_ctx.rr_nodes[inode].yhigh());
+                          * (device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ * (device_ctx.grid.width()) - device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/);
 
             serial_num -= device_ctx.rr_nodes[inode].ptc_num() * (size_t(net_id) + 1) * 10;
 
@@ -1226,15 +1226,15 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                     int inode = tptr->index;
                     t_rr_type rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
                     int ilow = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
-                    int jlow = device_ctx.rr_nodes[inode].ylow();
+                    int jlow = device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/;
 
                     fprintf(fp, "Node:\t%d\t%6s (%d,%d) ", inode,
                             device_ctx.rr_nodes[inode].type_string(), ilow, jlow);
 
                     if ((ilow != device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/)
-                        || (jlow != device_ctx.rr_nodes[inode].yhigh()))
+                        || (jlow != device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/))
                         fprintf(fp, "to (%d,%d) ", device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/,
-                                device_ctx.rr_nodes[inode].yhigh());
+                                device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/);
 
                     switch (rr_type) {
                         case IPIN:

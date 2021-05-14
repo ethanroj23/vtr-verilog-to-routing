@@ -60,8 +60,8 @@ void check_rr_graph(const t_graph_type graph_type,
 
         /* Ignore any uninitialized rr_graph nodes */
         if ((device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ == SOURCE)
-            && (device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[inode].ylow() == 0)
-            && (device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/ == 0) && (device_ctx.rr_nodes[inode].yhigh() == 0)) {
+            && (device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ == 0) && (device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/ == 0)
+            && (device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/ == 0) && (device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/ == 0)) {
             continue;
         }
 
@@ -215,7 +215,7 @@ void check_rr_graph(const t_graph_type graph_type,
                  */
                 bool is_chain = false;
                 if (rr_type == IPIN) {
-                    t_physical_tile_type_ptr type = device_ctx.grid[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_nodes[inode].ylow()].type;
+                    t_physical_tile_type_ptr type = device_ctx.grid[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/].type;
                     for (const t_fc_specification& fc_spec : types[type->index].fc_specs) {
                         if (fc_spec.fc_value == 0 && fc_spec.seg_index == 0) {
                             is_chain = true;
@@ -227,9 +227,9 @@ void check_rr_graph(const t_graph_type graph_type,
                 const auto& rr_graph = device_ctx.rr_graph;
 
                 bool is_fringe = ((device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ == 1)
-                                  || (device_ctx.rr_nodes[inode].ylow() == 1)
+                                  || (device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/ == 1)
                                   || (device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/ == int(grid.width()) - 2)
-                                  || (device_ctx.rr_nodes[inode].yhigh() == int(grid.height()) - 2));
+                                  || (device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/ == int(grid.height()) - 2));
                 bool is_wire = (rr_graph.node_type(RRNodeId(inode)) == CHANX
                                 || rr_graph.node_type(RRNodeId(inode)) == CHANY);
 
@@ -255,7 +255,7 @@ void check_rr_graph(const t_graph_type graph_type,
                     VTR_LOG_WARN(
                         "in check_rr_graph: fringe node %d %s at (%d,%d) has no fanin.\n"
                         "\t This is possible on a fringe node based on low Fc_out, N, and certain lengths.\n",
-                        inode, device_ctx.rr_nodes[inode].type_string(), device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/, device_ctx.rr_nodes[inode].ylow());
+                        inode, device_ctx.rr_nodes[inode].type_string(), device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/, device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/);
                     is_fringe_warning_sent = true;
                 }
             }
@@ -276,7 +276,7 @@ static bool rr_node_is_global_clb_ipin(int inode) {
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    type = device_ctx.grid[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_nodes[inode].ylow()].type;
+    type = device_ctx.grid[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/].type;
 
     if (device_ctx.rr_graph.node_type(RRNodeId(inode)) != IPIN)
         return (false);
@@ -300,8 +300,8 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
     xlow = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
     xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/;
-    ylow = device_ctx.rr_nodes[inode].ylow();
-    yhigh = device_ctx.rr_nodes[inode].yhigh();
+    ylow = device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/;
+    yhigh = device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/;
     ptc_num = device_ctx.rr_nodes[inode].ptc_num();
     capacity = device_ctx.rr_nodes[inode].capacity();
     cost_index = device_ctx.rr_nodes[inode].cost_index();
