@@ -264,7 +264,7 @@ t_rt_node* update_route_tree(t_heap* hptr, int target_net_pin_index, SpatialRout
 void add_route_tree_to_rr_node_lookup(t_rt_node* node) {
     if (node) {
         auto& device_ctx = g_vpr_ctx.device();
-        if (device_ctx.rr_nodes[node->inode].type() == SINK) {
+        if (device_ctx.rr_graph.node_type(RRNodeId(node->inode)) /*ESR API*/ == SINK) {
             VTR_ASSERT(rr_node_to_rt_node[node->inode] == nullptr || rr_node_to_rt_node[node->inode]->inode == node->inode);
         } else {
             VTR_ASSERT(rr_node_to_rt_node[node->inode] == nullptr || rr_node_to_rt_node[node->inode] == node);
@@ -292,10 +292,10 @@ add_subtree_to_route_tree(t_heap* hptr, int target_net_pin_index, t_rt_node** si
 
     int inode = hptr->index;
 
-    //if (device_ctx.rr_nodes[inode].type() != SINK) {
+    //if (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ != SINK) {
     //VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
     //"in add_subtree_to_route_tree. Expected type = SINK (%d).\n"
-    //"Got type = %d.",  SINK, device_ctx.rr_nodes[inode].type());
+    //"Got type = %d.",  SINK, device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/);
     //}
 
     sink_rt_node = alloc_rt_node();
@@ -348,7 +348,7 @@ add_subtree_to_route_tree(t_heap* hptr, int target_net_pin_index, t_rt_node** si
 
         rr_node_to_rt_node[inode] = rt_node;
 
-        if (device_ctx.rr_nodes[inode].type() == IPIN) {
+        if (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ == IPIN) {
             rt_node->re_expand = false;
         } else {
             rt_node->re_expand = true;
@@ -406,7 +406,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
                 rt_node->inode = rr_node;
                 rt_node->net_pin_index = OPEN;
 
-                if (device_ctx.rr_nodes[rr_node].type() == IPIN) {
+                if (device_ctx.rr_graph.node_type(RRNodeId(rr_node)) /*ESR API*/ == IPIN) {
                     rt_node->re_expand = false;
                 } else {
                     rt_node->re_expand = true;
@@ -801,7 +801,7 @@ static t_trace* traceback_to_route_tree_branch(t_trace* trace,
         // In some cases, the same sink node is put into the tree multiple times in a single route.
         // So it is possible to hit the same node index multiple times during traceback. Create a
         // separate rt_node for each sink with the same node index.
-        if (itr == rr_node_to_rt.end() || device_ctx.rr_nodes[inode].type() == SINK) {
+        if (itr == rr_node_to_rt.end() || device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ == SINK) {
             //Create
 
             //Initialize route tree node
@@ -814,7 +814,7 @@ static t_trace* traceback_to_route_tree_branch(t_trace* trace,
             node->C_downstream = std::numeric_limits<float>::quiet_NaN();
             node->Tdel = std::numeric_limits<float>::quiet_NaN();
 
-            auto node_type = device_ctx.rr_nodes[inode].type();
+            auto node_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
             if (node_type == IPIN || node_type == SINK)
                 node->re_expand = false;
             else
@@ -954,7 +954,7 @@ t_trace* traceback_from_route_tree(ClusterNetId inet, const t_rt_node* root, int
         nodes.insert(trace->index);
 
         //Sanity check that number of sinks match expected
-        if (device_ctx.rr_nodes[trace->index].type() == SINK) {
+        if (device_ctx.rr_graph.node_type(RRNodeId(trace->index)) /*ESR API*/ == SINK) {
             num_trace_sinks += 1;
         }
     }
@@ -1037,7 +1037,7 @@ static t_rt_node* prune_route_tree_recurr(t_rt_node* node, CBRR& connections_inf
         }
     }
 
-    if (device_ctx.rr_nodes[node->inode].type() == SINK) {
+    if (device_ctx.rr_graph.node_type(RRNodeId(node->inode)) /*ESR API*/ == SINK) {
         if (!force_prune) {
             //Valid path to sink
 
@@ -1173,7 +1173,7 @@ t_rt_node* prune_route_tree(t_rt_node* rt_root, CBRR& connections_inf, std::vect
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    VTR_ASSERT_MSG(device_ctx.rr_nodes[rt_root->inode].type() == SOURCE, "Root of route tree must be SOURCE");
+    VTR_ASSERT_MSG(device_ctx.rr_graph.node_type(RRNodeId(rt_root->inode)) /*ESR API*/ == SOURCE, "Root of route tree must be SOURCE");
 
     VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_nodes[rt_root->inode].capacity(),
                    "Route tree root/SOURCE should never be congested");
@@ -1258,7 +1258,7 @@ static void print_node(const t_rt_node* rt_node) {
     auto& device_ctx = g_vpr_ctx.device();
 
     int inode = rt_node->inode;
-    t_rr_type node_type = device_ctx.rr_nodes[inode].type();
+    t_rr_type node_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
     VTR_LOG("%5.1e %5.1e %2d%6s|%-6d-> ", rt_node->C_downstream, rt_node->R_upstream,
             rt_node->re_expand, rr_node_typename[node_type], inode);
 }
