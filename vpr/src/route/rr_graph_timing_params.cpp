@@ -132,8 +132,8 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
                 iseg_low = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
                 iseg_high = device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/;
             } else { /* CHANY */
-                iseg_low = device_ctx.rr_graph.ylow(RRNodeId(inode)) /*ESR API*/;
-                iseg_high = device_ctx.rr_graph.yhigh(RRNodeId(inode)) /*ESR API*/;
+                iseg_low = device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/;
+                iseg_high = device_ctx.rr_graph.node_yhigh(RRNodeId(inode)) /*ESR API*/;
             }
 
             for (icblock = iseg_low; icblock <= iseg_high; icblock++) {

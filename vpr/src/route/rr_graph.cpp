@@ -712,7 +712,7 @@ static void build_rr_graph(const t_graph_type graph_type,
         // the regular graph.
         for (int i = 0; i < num_rr_nodes; i++) {
             if (device_ctx.rr_graph.node_type(RRNodeId(i)) /*ESR API*/ == CHANX) {
-                int ylow = device_ctx.rr_graph.ylow(RRNodeId(i)) /*ESR API*/;
+                int ylow = device_ctx.rr_graph.node_ylow(RRNodeId(i)) /*ESR API*/;
                 device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.x_list[ylow]);
             }
             if (device_ctx.rr_graph.node_type(RRNodeId(i)) /*ESR API*/ == CHANY) {
