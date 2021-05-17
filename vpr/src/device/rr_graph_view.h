@@ -80,6 +80,22 @@ class RRGraphView {
     /* Get the direction of a routing resource node */
     e_direction node_direction(RRNodeId node) const;
 
+    /* Get the fan_in of a routing resource node */
+    t_edge_size node_fan_in(RRNodeId node) const;
+
+    /* Get the configurable edges of a routing resource node */
+    edge_idx_range node_configurable_edges(RRNodeId node) const;
+
+    /* Get the non configurable edges of a routing resource node */
+    edge_idx_range node_non_configurable_edges(RRNodeId node) const;
+
+    /* Get the type string of a routing resource node */
+    const char* node_type_string(RRNodeId node) const;
+
+    /* Get the cost index of a routing resource node */
+    short node_cost_index(RRNodeId node) const;
+
+
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */
   private:

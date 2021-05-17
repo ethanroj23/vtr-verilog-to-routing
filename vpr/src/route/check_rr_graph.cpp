@@ -184,14 +184,14 @@ void check_rr_graph(const t_graph_type graph_type,
         check_unbuffered_edges(inode);
 
         //Check that all config/non-config edges are appropriately organized
-        for (auto edge : device_ctx.rr_nodes[inode].configurable_edges()) {
+        for (auto edge : device_ctx.rr_graph.node_configurable_edges(RRNodeId(inode))) {
             if (!device_ctx.rr_nodes[inode].edge_is_configurable(edge)) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d edge %d is non-configurable, but in configurable edges",
                                 inode, edge);
             }
         }
 
-        for (auto edge : device_ctx.rr_nodes[inode].non_configurable_edges()) {
+        for (auto edge : device_ctx.rr_graph.node_non_configurable_edges(RRNodeId(inode))) {
             if (device_ctx.rr_nodes[inode].edge_is_configurable(edge)) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d edge %d is configurable, but in non-configurable edges",
                                 inode, edge);
@@ -249,13 +249,13 @@ void check_rr_graph(const t_graph_type graph_type,
                         }
                     } else {
                         VTR_LOG_ERROR("in check_rr_graph: node %d (%s) has no fanin.\n",
-                                      inode, device_ctx.rr_nodes[inode].type_string());
+                                      inode, device_ctx.rr_graph.node_type_string(RRNodeId(inode)));
                     }
                 } else if (!is_chain && !is_fringe_warning_sent) {
                     VTR_LOG_WARN(
                         "in check_rr_graph: fringe node %d %s at (%d,%d) has no fanin.\n"
                         "\t This is possible on a fringe node based on low Fc_out, N, and certain lengths.\n",
-                        inode, device_ctx.rr_nodes[inode].type_string(), device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/, device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/);
+                        inode, device_ctx.rr_graph.node_type_string(RRNodeId(inode)), device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/, device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/);
                     is_fringe_warning_sent = true;
                 }
             }
@@ -304,7 +304,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     yhigh = device_ctx.rr_graph.node_yhigh(RRNodeId(inode)) /*ESR API*/;
     ptc_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
     capacity = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
-    cost_index = device_ctx.rr_nodes[inode].cost_index();
+    cost_index = device_ctx.rr_graph.node_cost_index(RRNodeId(inode));
     type = nullptr;
 
     const auto& grid = device_ctx.grid;
@@ -602,7 +602,7 @@ static void check_rr_edge(int from_node, int iedge, int to_node) {
     int iswitch = device_ctx.rr_nodes[from_node].edge_switch(iedge);
     auto switch_type = device_ctx.rr_switch_inf[iswitch].type();
 
-    int to_fanin = device_ctx.rr_nodes[to_node].fan_in();
+    int to_fanin = device_ctx.rr_graph.node_fan_in(RRNodeId(to_node));
     switch (switch_type) {
         case SwitchType::BUFFER:
             //Buffer switches are non-configurable, and uni-directional -- they must have only one driver

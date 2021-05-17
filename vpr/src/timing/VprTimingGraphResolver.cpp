@@ -295,7 +295,7 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
             || ((rr_type == SOURCE || rr_type == SINK) && (detail_level() == e_timing_report_detail::DEBUG))) {
             tatum::DelayComponent net_component; //declare a new instance of DelayComponent
 
-            net_component.type_name = device_ctx.rr_nodes[node->inode].type_string(); //write the component's type as a routing resource node
+            net_component.type_name = device_ctx.rr_graph.node_type_string(RRNodeId(node->inode)); //write the component's type as a routing resource node
             net_component.type_name += ":" + std::to_string(node->inode) + " ";       //add the index of the routing resource node
             if (device_ctx.rr_graph.node_type(RRNodeId(node->inode)) == OPIN || device_ctx.rr_graph.node_type(RRNodeId(node->inode)) == IPIN) {
                 net_component.type_name += "side: ("; //add the side of the routing resource node
@@ -315,7 +315,7 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
                 arrow = "";
             }
             if (device_ctx.rr_graph.node_type(RRNodeId(node->inode)) /*ESR API*/ == CHANX || device_ctx.rr_graph.node_type(RRNodeId(node->inode)) /*ESR API*/ == CHANY) { //for channels, we would like to describe the component with segment specific information
-                int cost_index = device_ctx.rr_nodes[node->inode].cost_index();
+                int cost_index = device_ctx.rr_graph.node_cost_index(RRNodeId(node->inode));
                 int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
                 net_component.type_name += device_ctx.rr_segments[seg_index].name;                                 //Write the segment name
                 net_component.type_name += " length:" + std::to_string(device_ctx.rr_nodes[node->inode].length()); //add the length of the segment

@@ -45,3 +45,23 @@ short RRGraphView::node_ptc_num(RRNodeId node) const {
 e_direction RRGraphView::node_direction(RRNodeId node) const {
     return node_storage_.node_direction(node);
 }
+
+t_edge_size RRGraphView::node_fan_in(RRNodeId node) const {
+    return node_storage_.fan_in(node);
+}
+
+edge_idx_range RRGraphView::node_configurable_edges(RRNodeId node) const {
+    return node_storage_.configurable_edges(node);
+}
+
+edge_idx_range RRGraphView::node_non_configurable_edges(RRNodeId node) const {
+    return node_storage_.non_configurable_edges(node);
+}
+
+const char* RRGraphView::node_type_string(RRNodeId node) const {
+    return node_storage_.node_type_string(node);
+}
+
+short RRGraphView::node_cost_index(RRNodeId node) const {
+    return node_storage_.node_cost_index(node);
+}

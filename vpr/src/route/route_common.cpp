@@ -616,7 +616,7 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
     //Record the non-configurable out-going edges
     std::vector<t_edge_size> unvisited_non_configurable_edges;
     auto& device_ctx = g_vpr_ctx.device();
-    for (auto iedge : device_ctx.rr_nodes[node].non_configurable_edges()) {
+    for (auto iedge : device_ctx.rr_graph.node_non_configurable_edges(RRNodeId(node))) {
         VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable(iedge));
 
         int to_node = device_ctx.rr_nodes[node].edge_sink_node(iedge);
@@ -1229,7 +1229,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                     int jlow = device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/;
 
                     fprintf(fp, "Node:\t%d\t%6s (%d,%d) ", inode,
-                            device_ctx.rr_nodes[inode].type_string(), ilow, jlow);
+                            device_ctx.rr_graph.node_type_string(RRNodeId(inode)), ilow, jlow);
 
                     if ((ilow != device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/)
                         || (jlow != device_ctx.rr_graph.node_yhigh(RRNodeId(inode)) /*ESR API*/))
@@ -1263,7 +1263,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                         default:
                             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                             "in print_route: Unexpected traceback element type: %d (%s).\n",
-                                            rr_type, device_ctx.rr_nodes[inode].type_string());
+                                            rr_type, device_ctx.rr_graph.node_type_string(RRNodeId(inode)));
                             break;
                     }
 
@@ -1639,7 +1639,7 @@ void print_rr_node_route_inf_dot() {
     VTR_LOG("\tnode[shape=record]\n");
     for (size_t inode = 0; inode < route_ctx.rr_node_route_inf.size(); ++inode) {
         if (!std::isinf(route_ctx.rr_node_route_inf[inode].path_cost)) {
-            VTR_LOG("\tnode%zu[label=\"{%zu (%s)", inode, inode, device_ctx.rr_nodes[inode].type_string());
+            VTR_LOG("\tnode%zu[label=\"{%zu (%s)", inode, inode, device_ctx.rr_graph.node_type_string(RRNodeId(inode)));
             if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(inode))) {
                 VTR_LOG(" x");
             }

@@ -416,7 +416,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
             }
         }
 
-        for (int iedge : device_ctx.rr_nodes[rr_node].non_configurable_edges()) {
+        for (int iedge : device_ctx.rr_graph.node_non_configurable_edges(RRNodeId(rr_node))) {
             //Recursive case: expand children
             VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable(iedge));
 
@@ -689,7 +689,7 @@ void print_route_tree(const t_rt_node* rt_node, int depth) {
 
     auto& device_ctx = g_vpr_ctx.device();
     VTR_LOG("%srt_node: %d (%s) \t ipin: %d \t R: %g \t C: %g \t delay: %g",
-            indent.c_str(), rt_node->inode, device_ctx.rr_nodes[rt_node->inode].type_string(), rt_node->net_pin_index, rt_node->R_upstream, rt_node->C_downstream, rt_node->Tdel);
+            indent.c_str(), rt_node->inode, device_ctx.rr_graph.node_type_string(RRNodeId(rt_node->inode)), rt_node->net_pin_index, rt_node->R_upstream, rt_node->C_downstream, rt_node->Tdel);
 
     if (rt_node->parent_switch != OPEN) {
         bool parent_edge_configurable = device_ctx.rr_switch_inf[rt_node->parent_switch].configurable();
