@@ -58,9 +58,9 @@ void get_segment_usage_stats(std::vector<t_segment_inf>& segment_inf) {
                 length = LONGLINE;
 
             seg_occ_by_length[length] += route_ctx.rr_node_route_inf[inode].occ();
-            seg_cap_by_length[length] += device_ctx.rr_nodes[inode].capacity();
+            seg_cap_by_length[length] += device_ctx.rr_graph.node_capacity(RRNodeId(inode));
             seg_occ_by_type[seg_type] += route_ctx.rr_node_route_inf[inode].occ();
-            seg_cap_by_type[seg_type] += device_ctx.rr_nodes[inode].capacity();
+            seg_cap_by_type[seg_type] += device_ctx.rr_graph.node_capacity(RRNodeId(inode));
         }
     }
 

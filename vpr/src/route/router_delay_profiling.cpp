@@ -79,7 +79,7 @@ bool RouterDelayProfiler::calculate_delay(int source_node, int sink_node, const 
         //find delay
         *net_delay = rt_node_of_sink->Tdel;
 
-        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_nodes[rt_root->inode].capacity(), "SOURCE should never be congested");
+        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_graph.node_capacity(RRNodeId(rt_root->inode)), "SOURCE should never be congested");
         free_route_tree(rt_root);
     }
 

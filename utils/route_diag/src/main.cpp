@@ -123,7 +123,7 @@ static void do_one_route(int source_node, int sink_node,
         print_route_tree(rt_root);
         VTR_LOG("\n");
 
-        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_nodes[rt_root->inode].capacity(), "SOURCE should never be congested");
+        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_graph.node_capacity(RRNodeId(rt_root->inode)), "SOURCE should never be congested");
         free_route_tree(rt_root);
     } else {
         VTR_LOG("Routed failed");

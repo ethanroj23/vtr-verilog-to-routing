@@ -700,7 +700,7 @@ void print_route_tree(const t_rt_node* rt_node, int depth) {
 
     auto& route_ctx = g_vpr_ctx.routing();
 
-    if (route_ctx.rr_node_route_inf[rt_node->inode].occ() > device_ctx.rr_nodes[rt_node->inode].capacity()) {
+    if (route_ctx.rr_node_route_inf[rt_node->inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(rt_node->inode))) {
         VTR_LOG(" x");
     }
 
@@ -979,7 +979,7 @@ static t_rt_node* prune_route_tree_recurr(t_rt_node* node, CBRR& connections_inf
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    bool congested = (route_ctx.rr_node_route_inf[node->inode].occ() > device_ctx.rr_nodes[node->inode].capacity());
+    bool congested = (route_ctx.rr_node_route_inf[node->inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(node->inode)));
     int node_set = -1;
     auto itr = device_ctx.rr_node_to_non_config_node_set.find(node->inode);
     if (itr != device_ctx.rr_node_to_non_config_node_set.end()) {
@@ -1175,7 +1175,7 @@ t_rt_node* prune_route_tree(t_rt_node* rt_root, CBRR& connections_inf, std::vect
 
     VTR_ASSERT_MSG(device_ctx.rr_graph.node_type(RRNodeId(rt_root->inode)) /*ESR API*/ == SOURCE, "Root of route tree must be SOURCE");
 
-    VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_nodes[rt_root->inode].capacity(),
+    VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_graph.node_capacity(RRNodeId(rt_root->inode)),
                    "Route tree root/SOURCE should never be congested");
 
     return prune_route_tree_recurr(rt_root, connections_inf, false, non_config_node_set_usage);
@@ -1392,7 +1392,7 @@ bool is_valid_route_tree(const t_rt_node* root) {
     // sink, must not be congested
     if (!edge) {
         int occ = route_ctx.rr_node_route_inf[inode].occ();
-        int capacity = device_ctx.rr_nodes[inode].capacity();
+        int capacity = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
         if (occ > capacity) {
             VTR_LOG("SINK %d occ %d > cap %d\n", inode, occ, capacity);
             return false;
@@ -1439,7 +1439,7 @@ bool is_uncongested_route_tree(const t_rt_node* root) {
     auto& device_ctx = g_vpr_ctx.device();
 
     int inode = root->inode;
-    if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_nodes[inode].capacity()) {
+    if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(inode))) {
         //This node is congested
         return false;
     }

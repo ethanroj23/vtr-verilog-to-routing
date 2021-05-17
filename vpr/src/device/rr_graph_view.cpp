@@ -14,18 +14,34 @@ const RRSpatialLookup& RRGraphView::node_lookup() const {
     return node_lookup_;
 }
 
-int RRGraphView::node_xhigh(RRNodeId node) const {
+short RRGraphView::node_xhigh(RRNodeId node) const {
     return node_storage_.node_xhigh(node);
 }
 
-int RRGraphView::node_xlow(RRNodeId node) const {
+short RRGraphView::node_xlow(RRNodeId node) const {
     return node_storage_.node_xlow(node);
 }
 
-int RRGraphView::node_yhigh(RRNodeId node) const {
+short RRGraphView::node_yhigh(RRNodeId node) const {
     return node_storage_.node_yhigh(node);
 }
 
-int RRGraphView::node_ylow(RRNodeId node) const {
+short RRGraphView::node_ylow(RRNodeId node) const {
     return node_storage_.node_ylow(node);
+}
+
+t_edge_size RRGraphView::node_num_edges(RRNodeId node) const {
+    return node_storage_.num_edges(node);
+}
+
+short RRGraphView::node_capacity(RRNodeId node) const {
+    return node_storage_.node_capacity(node);
+}
+
+short RRGraphView::node_ptc_num(RRNodeId node) const {
+    return node_storage_.node_ptc_num(node);
+}
+
+e_direction RRGraphView::node_direction(RRNodeId node) const {
+    return node_storage_.node_direction(node);
 }

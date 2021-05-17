@@ -71,7 +71,7 @@ void check_rr_graph(const t_graph_type graph_type,
         }
 
         t_rr_type rr_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
-        int num_edges = device_ctx.rr_nodes[inode].num_edges();
+        int num_edges = device_ctx.rr_graph.node_num_edges(RRNodeId(inode)) /*ESR API*/;
 
         check_rr_node(inode, route_type, device_ctx);
 
@@ -281,7 +281,7 @@ static bool rr_node_is_global_clb_ipin(int inode) {
     if (device_ctx.rr_graph.node_type(RRNodeId(inode)) != IPIN)
         return (false);
 
-    ipin = device_ctx.rr_nodes[inode].ptc_num();
+    ipin = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
 
     return type->is_ignored_pin[ipin];
 }
@@ -302,8 +302,8 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(inode)) /*ESR API*/;
     ylow = device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/;
     yhigh = device_ctx.rr_graph.node_yhigh(RRNodeId(inode)) /*ESR API*/;
-    ptc_num = device_ctx.rr_nodes[inode].ptc_num();
-    capacity = device_ctx.rr_nodes[inode].capacity();
+    ptc_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
+    capacity = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
     cost_index = device_ctx.rr_nodes[inode].cost_index();
     type = nullptr;
 
@@ -479,7 +479,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     }
 
     /* Check that the number of (out) edges is reasonable. */
-    num_edges = device_ctx.rr_nodes[inode].num_edges();
+    num_edges = device_ctx.rr_graph.node_num_edges(RRNodeId(inode)) /*ESR API*/;
 
     if (rr_type != SINK && rr_type != IPIN) {
         if (num_edges <= 0) {
@@ -539,7 +539,7 @@ static void check_unbuffered_edges(int from_node) {
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
 
-    from_num_edges = device_ctx.rr_nodes[from_node].num_edges();
+    from_num_edges = device_ctx.rr_graph.node_num_edges(RRNodeId(from_node)) /*ESR API*/;
 
     for (from_edge = 0; from_edge < from_num_edges; from_edge++) {
         to_node = device_ctx.rr_nodes[from_node].edge_sink_node(from_edge);
@@ -557,7 +557,7 @@ static void check_unbuffered_edges(int from_node) {
          * check that there is a corresponding edge from to_node back to         *
          * from_node.                                                            */
 
-        to_num_edges = device_ctx.rr_nodes[to_node].num_edges();
+        to_num_edges = device_ctx.rr_graph.node_num_edges(RRNodeId(to_node)) /*ESR API*/;
         trans_matched = false;
 
         for (to_edge = 0; to_edge < to_num_edges; to_edge++) {

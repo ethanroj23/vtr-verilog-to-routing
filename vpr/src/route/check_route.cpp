@@ -211,7 +211,7 @@ static void check_source(int inode, ClusterNetId net_id) {
     int i = device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/;
     int j = device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/;
     /* for sinks and sources, ptc_num is class */
-    int ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    int ptc_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
     /* First node_block for net is the source */
     ClusterBlockId blk_id = cluster_ctx.clb_nlist.net_driver_block(net_id);
     auto type = device_ctx.grid[i][j].type;
@@ -304,7 +304,7 @@ static bool check_adjacent(int from_node, int to_node) {
 
     reached = false;
 
-    for (t_edge_size iconn = 0; iconn < device_ctx.rr_nodes[from_node].num_edges(); iconn++) {
+    for (t_edge_size iconn = 0; iconn < device_ctx.rr_graph.node_num_edges(RRNodeId(from_node)) /*ESR API*/; iconn++) {
         if (device_ctx.rr_nodes[from_node].edge_sink_node(iconn) == to_node) {
             reached = true;
             break;
@@ -325,13 +325,13 @@ static bool check_adjacent(int from_node, int to_node) {
     from_ylow = device_ctx.rr_graph.node_ylow(RRNodeId(from_node)) /*ESR API*/;
     from_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(from_node)) /*ESR API*/;
     from_yhigh = device_ctx.rr_graph.node_yhigh(RRNodeId(from_node)) /*ESR API*/;
-    from_ptc = device_ctx.rr_nodes[from_node].ptc_num();
+    from_ptc = device_ctx.rr_graph.node_ptc_num(RRNodeId(from_node));
     to_type = device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/;
     to_xlow = device_ctx.rr_graph.node_xlow(RRNodeId(to_node)) /*ESR API*/;
     to_ylow = device_ctx.rr_graph.node_ylow(RRNodeId(to_node)) /*ESR API*/;
     to_xhigh = device_ctx.rr_graph.node_xhigh(RRNodeId(to_node)) /*ESR API*/;
     to_yhigh = device_ctx.rr_graph.node_yhigh(RRNodeId(to_node)) /*ESR API*/;
-    to_ptc = device_ctx.rr_nodes[to_node].ptc_num();
+    to_ptc = device_ctx.rr_graph.node_ptc_num(RRNodeId(to_node));
 
     switch (from_type) {
         case SOURCE:
@@ -578,7 +578,7 @@ static void check_locally_used_clb_opins(const t_clb_opins_used& clb_opins_used_
                                     size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, inode, rr_type);
                 }
 
-                ipin = device_ctx.rr_nodes[inode].ptc_num();
+                ipin = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
                 if (physical_tile_type(blk_id)->pin_class[ipin] != iclass) {
                     VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                     "in check_locally_used_opins: block #%lu (%s):\n"

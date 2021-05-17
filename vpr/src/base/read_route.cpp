@@ -316,7 +316,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             if (tokens[6 + offset] != "Switch:") {
                 /*This is an opin or ipin, process its pin nums*/
                 if (!is_io_type(device_ctx.grid[x][y].type) && (tokens[2] == "IPIN" || tokens[2] == "OPIN")) {
-                    int pin_num = device_ctx.rr_nodes[inode].ptc_num();
+                    int pin_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
 
                     auto type = device_ctx.grid[x][y].type;
                     int height_offset = device_ctx.grid[x][y].height_offset;

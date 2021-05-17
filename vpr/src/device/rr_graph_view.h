@@ -57,16 +57,28 @@ class RRGraphView {
     const RRSpatialLookup& node_lookup() const;
 
     /* Get the xhigh of a routing resource node */
-    int node_xhigh(RRNodeId node) const;
+    short node_xhigh(RRNodeId node) const;
 
     /* Get the xlow of a routing resource node */
-    int node_xlow(RRNodeId node) const;
+    short node_xlow(RRNodeId node) const;
 
     /* Get the yhigh of a routing resource node */
-    int node_yhigh(RRNodeId node) const;
+    short node_yhigh(RRNodeId node) const;
 
     /* Get the ylow of a routing resource node */
-    int node_ylow(RRNodeId node) const;
+    short node_ylow(RRNodeId node) const;
+
+    /* Get the number of edges of a routing resource node */
+    t_edge_size node_num_edges(RRNodeId node) const;
+
+    /* Get the capacity of a routing resource node */
+    short node_capacity(RRNodeId node) const;
+
+    /* Get the ptc_num of a routing resource node */
+    short node_ptc_num(RRNodeId node) const;
+
+    /* Get the direction of a routing resource node */
+    e_direction node_direction(RRNodeId node) const;
 
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */

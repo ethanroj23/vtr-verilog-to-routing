@@ -192,7 +192,7 @@ void get_serial_num() {
             serial_num += (size_t(net_id) + 1)
                           * (device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/ * (device_ctx.grid.width()) - device_ctx.rr_graph.node_yhigh(RRNodeId(inode)) /*ESR API*/);
 
-            serial_num -= device_ctx.rr_nodes[inode].ptc_num() * (size_t(net_id) + 1) * 10;
+            serial_num -= device_ctx.rr_graph.node_ptc_num(RRNodeId(inode)) * (size_t(net_id) + 1) * 10;
 
             serial_num -= device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ * (size_t(net_id) + 1) * 100;
             serial_num %= 2000000000; /* Prevent overflow */
@@ -327,7 +327,7 @@ bool feasible_routing() {
     auto& route_ctx = g_vpr_ctx.routing();
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_nodes[inode].capacity()) {
+        if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(inode))) {
             return (false);
         }
     }
@@ -343,7 +343,7 @@ std::vector<int> collect_congested_rr_nodes() {
     std::vector<int> congested_rr_nodes;
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
         short occ = route_ctx.rr_node_route_inf[inode].occ();
-        short capacity = device_ctx.rr_nodes[inode].capacity();
+        short capacity = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
 
         if (occ > capacity) {
             congested_rr_nodes.push_back(inode);
@@ -427,7 +427,7 @@ void pathfinder_update_acc_cost_and_overuse_info(float acc_fac, OveruseInfo& ove
     size_t overused_nodes = 0, total_overuse = 0, worst_overuse = 0;
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        int overuse = route_ctx.rr_node_route_inf[inode].occ() - device_ctx.rr_nodes[inode].capacity();
+        int overuse = route_ctx.rr_node_route_inf[inode].occ() - device_ctx.rr_graph.node_capacity(RRNodeId(inode));
 
         // If overused, update the acc_cost and add this node to the overuse info
         // If not, do nothing
@@ -1267,11 +1267,11 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             break;
                     }
 
-                    fprintf(fp, "%d  ", device_ctx.rr_nodes[inode].ptc_num());
+                    fprintf(fp, "%d  ", device_ctx.rr_graph.node_ptc_num(RRNodeId(inode)));
 
                     auto physical_tile = device_ctx.grid[ilow][jlow].type;
                     if (!is_io_type(physical_tile) && (rr_type == IPIN || rr_type == OPIN)) {
-                        int pin_num = device_ctx.rr_nodes[inode].ptc_num();
+                        int pin_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
                         int xoffset = device_ctx.grid[ilow][jlow].width_offset;
                         int yoffset = device_ctx.grid[ilow][jlow].height_offset;
                         int sub_tile_offset = physical_tile->get_sub_tile_loc_from_pin(pin_num);
@@ -1411,7 +1411,7 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             //the reserved OPINs to move out of the way of congestion, by preferring
             //to reserve OPINs with lower congestion costs).
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
-            num_edges = device_ctx.rr_nodes[from_node].num_edges();
+            num_edges = device_ctx.rr_graph.node_num_edges(RRNodeId(from_node)) /*ESR API*/;
             for (iconn = 0; iconn < num_edges; iconn++) {
                 to_node = device_ctx.rr_nodes[from_node].edge_sink_node(iconn);
 
@@ -1450,7 +1450,7 @@ static void adjust_one_rr_occ_and_acc_cost(int inode, int add_or_sub, float acc_
     auto& device_ctx = g_vpr_ctx.device();
 
     int new_occ = route_ctx.rr_node_route_inf[inode].occ() + add_or_sub;
-    int capacity = device_ctx.rr_nodes[inode].capacity();
+    int capacity = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
     route_ctx.rr_node_route_inf[inode].set_occ(new_occ);
 
     if (new_occ < capacity) {
@@ -1505,7 +1505,7 @@ void print_traceback(const t_trace* trace) {
             VTR_LOG("*"); //Reached non-configurably
         }
 
-        if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_nodes[inode].capacity()) {
+        if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(inode))) {
             VTR_LOG(" x"); //Overused
         }
         VTR_LOG("\n");
@@ -1547,7 +1547,7 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             auto& device_ctx = g_vpr_ctx.device();
 
             bool found = false;
-            for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[trace->index].num_edges(); ++iedge) {
+            for (t_edge_size iedge = 0; iedge < device_ctx.rr_graph.node_num_edges(RRNodeId(trace->index)) /*ESR API*/; ++iedge) {
                 int to_node = device_ctx.rr_nodes[trace->index].edge_sink_node(iedge);
 
                 if (to_node == next->index) {
@@ -1597,7 +1597,7 @@ void print_invalid_routing_info() {
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
         int occ = route_ctx.rr_node_route_inf[inode].occ();
-        int cap = device_ctx.rr_nodes[inode].capacity();
+        int cap = device_ctx.rr_graph.node_capacity(RRNodeId(inode));
         if (occ > cap) {
             VTR_LOG("  %s is overused (occ=%d capacity=%d)\n", describe_rr_node(inode).c_str(), occ, cap);
 
@@ -1640,7 +1640,7 @@ void print_rr_node_route_inf_dot() {
     for (size_t inode = 0; inode < route_ctx.rr_node_route_inf.size(); ++inode) {
         if (!std::isinf(route_ctx.rr_node_route_inf[inode].path_cost)) {
             VTR_LOG("\tnode%zu[label=\"{%zu (%s)", inode, inode, device_ctx.rr_nodes[inode].type_string());
-            if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_nodes[inode].capacity()) {
+            if (route_ctx.rr_node_route_inf[inode].occ() > device_ctx.rr_graph.node_capacity(RRNodeId(inode))) {
                 VTR_LOG(" x");
             }
             VTR_LOG("}\"]\n");
