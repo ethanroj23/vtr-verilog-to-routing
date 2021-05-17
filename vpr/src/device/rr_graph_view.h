@@ -104,8 +104,6 @@ class RRGraphView {
     /* Validate the edges */
     bool node_validate() const;
 
-    /* Return the number of nodes */
-    size_t node_length() const;
 
 
 

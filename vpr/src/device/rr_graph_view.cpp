@@ -75,9 +75,5 @@ float RRGraphView::node_C(RRNodeId node) const {
 }
 
 bool RRGraphView::node_validate() const {
-    return node_storage_.node_validate());
-}
-
-size_t RRGraphView::node_length() const {
-    return node_storage_.size());
+    return node_storage_.validate();
 }
