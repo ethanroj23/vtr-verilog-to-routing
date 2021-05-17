@@ -196,9 +196,9 @@ t_rt_node* init_route_tree_to_source(ClusterNetId inet) {
 
     rt_root->inode = inode;
     rt_root->net_pin_index = OPEN;
-    rt_root->C_downstream = device_ctx.rr_nodes[inode].C();
-    rt_root->R_upstream = device_ctx.rr_nodes[inode].R();
-    rt_root->Tdel = 0.5 * device_ctx.rr_nodes[inode].R() * device_ctx.rr_nodes[inode].C();
+    rt_root->C_downstream = device_ctx.rr_graph.node_C(RRNodeId(inode));
+    rt_root->R_upstream = device_ctx.rr_graph.node_R(RRNodeId(inode));
+    rt_root->Tdel = 0.5 * device_ctx.rr_graph.node_R(RRNodeId(inode)) * device_ctx.rr_graph.node_C(RRNodeId(inode));
     rr_node_to_rt_node[inode] = rt_root;
 
     return (rt_root);
@@ -472,7 +472,7 @@ void load_new_subtree_R_upstream(t_rt_node* rt_node) {
         }
         R_upstream += device_ctx.rr_switch_inf[iswitch].R; //Parent switch R
     }
-    R_upstream += device_ctx.rr_nodes[inode].R(); //Current node R
+    R_upstream += device_ctx.rr_graph.node_R(RRNodeId(inode)); //Current node R
 
     rt_node->R_upstream = R_upstream;
 
@@ -488,7 +488,7 @@ float load_new_subtree_C_downstream(t_rt_node* rt_node) {
     if (rt_node) {
         auto& device_ctx = g_vpr_ctx.device();
 
-        C_downstream += device_ctx.rr_nodes[rt_node->inode].C();
+        C_downstream += device_ctx.rr_graph.node_C(RRNodeId(rt_node->inode));
         for (t_linked_rt_edge* edge = rt_node->u.child_list; edge != nullptr; edge = edge->next) {
             /*Similar to net_delay.cpp, this for loop traverses a rc subtree, whose edges represent enabled switches.
              * When switches such as multiplexers and tristate buffers are enabled, their fanout
@@ -581,7 +581,7 @@ void load_route_tree_Tdel(t_rt_node* subtree_rt_root, float Tarrival) {
      * along a wire segment's length.  See discussion in net_delay.c if you want
      * to change this.                                                           */
 
-    Tdel = Tarrival + 0.5 * subtree_rt_root->C_downstream * device_ctx.rr_nodes[inode].R();
+    Tdel = Tarrival + 0.5 * subtree_rt_root->C_downstream * device_ctx.rr_graph.node_R(RRNodeId(inode));
     subtree_rt_root->Tdel = Tdel;
 
     /* Now expand the children of this node to load their Tdel values (depth-
@@ -1369,20 +1369,20 @@ bool is_valid_route_tree(const t_rt_node* root) {
     short iswitch = root->parent_switch;
     if (root->parent_node) {
         if (device_ctx.rr_switch_inf[iswitch].buffered()) {
-            float R_upstream_check = device_ctx.rr_nodes[inode].R() + device_ctx.rr_switch_inf[iswitch].R;
+            float R_upstream_check = device_ctx.rr_graph.node_R(RRNodeId(inode)) + device_ctx.rr_switch_inf[iswitch].R;
             if (!vtr::isclose(root->R_upstream, R_upstream_check, RES_REL_TOL, RES_ABS_TOL)) {
                 VTR_LOG("%d mismatch R upstream %e supposed %e\n", inode, root->R_upstream, R_upstream_check);
                 return false;
             }
         } else {
-            float R_upstream_check = device_ctx.rr_nodes[inode].R() + root->parent_node->R_upstream + device_ctx.rr_switch_inf[iswitch].R;
+            float R_upstream_check = device_ctx.rr_graph.node_R(RRNodeId(inode)) + root->parent_node->R_upstream + device_ctx.rr_switch_inf[iswitch].R;
             if (!vtr::isclose(root->R_upstream, R_upstream_check, RES_REL_TOL, RES_ABS_TOL)) {
                 VTR_LOG("%d mismatch R upstream %e supposed %e\n", inode, root->R_upstream, R_upstream_check);
                 return false;
             }
         }
-    } else if (root->R_upstream != device_ctx.rr_nodes[inode].R()) {
-        VTR_LOG("%d mismatch R upstream %e supposed %e\n", inode, root->R_upstream, device_ctx.rr_nodes[inode].R());
+    } else if (root->R_upstream != device_ctx.rr_graph.node_R(RRNodeId(inode))) {
+        VTR_LOG("%d mismatch R upstream %e supposed %e\n", inode, root->R_upstream, device_ctx.rr_graph.node_R(RRNodeId(inode)));
         return false;
     }
 
@@ -1424,7 +1424,7 @@ bool is_valid_route_tree(const t_rt_node* root) {
         edge = edge->next;
     }
 
-    float C_downstream_check = C_downstream_children + device_ctx.rr_nodes[inode].C();
+    float C_downstream_check = C_downstream_children + device_ctx.rr_graph.node_C(RRNodeId(inode));
     if (!vtr::isclose(root->C_downstream, C_downstream_check, CAP_REL_TOL, CAP_ABS_TOL)) {
         VTR_LOG("%d mismatch C downstream %e supposed %e\n", inode, root->C_downstream, C_downstream_check);
         return false;
@@ -1471,9 +1471,9 @@ init_route_tree_to_source_no_net(int inode) {
     rt_root->re_expand = true;
     rt_root->inode = inode;
     rt_root->net_pin_index = OPEN;
-    rt_root->C_downstream = device_ctx.rr_nodes[inode].C();
-    rt_root->R_upstream = device_ctx.rr_nodes[inode].R();
-    rt_root->Tdel = 0.5 * device_ctx.rr_nodes[inode].R() * device_ctx.rr_nodes[inode].C();
+    rt_root->C_downstream = device_ctx.rr_graph.node_C(RRNodeId(inode));
+    rt_root->R_upstream = device_ctx.rr_graph.node_R(RRNodeId(inode));
+    rt_root->Tdel = 0.5 * device_ctx.rr_graph.node_R(RRNodeId(inode)) * device_ctx.rr_graph.node_C(RRNodeId(inode));
     rr_node_to_rt_node[inode] = rt_root;
 
     return (rt_root);

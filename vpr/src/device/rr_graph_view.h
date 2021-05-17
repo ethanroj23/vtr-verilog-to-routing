@@ -95,6 +95,20 @@ class RRGraphView {
     /* Get the cost index of a routing resource node */
     short node_cost_index(RRNodeId node) const;
 
+    /* Get the Resistance of a routing resource node */
+    float node_R(RRNodeId node) const;
+
+    /* Get Capacitance index of a routing resource node */
+    float node_C(RRNodeId node) const;
+
+    /* Validate the edges */
+    bool node_validate() const;
+
+    /* Return the number of nodes */
+    size_t node_length() const;
+
+
+
 
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */

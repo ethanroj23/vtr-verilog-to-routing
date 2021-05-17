@@ -65,3 +65,19 @@ const char* RRGraphView::node_type_string(RRNodeId node) const {
 short RRGraphView::node_cost_index(RRNodeId node) const {
     return node_storage_.node_cost_index(node);
 }
+
+float RRGraphView::node_R(RRNodeId node) const {
+    return node_storage_.node_R(node);
+}
+
+float RRGraphView::node_C(RRNodeId node) const {
+    return node_storage_.node_C(node);
+}
+
+bool RRGraphView::node_validate() const {
+    return node_storage_.node_validate());
+}
+
+size_t RRGraphView::node_length() const {
+    return node_storage_.size());
+}

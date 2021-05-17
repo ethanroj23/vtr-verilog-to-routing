@@ -56,7 +56,7 @@ void check_rr_graph(const t_graph_type graph_type,
     std::vector<std::pair<int, int>> edges;
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        device_ctx.rr_nodes[inode].validate();
+        device_ctx.rr_graph.node_validate();
 
         /* Ignore any uninitialized rr_graph nodes */
         if ((device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/ == SOURCE)
@@ -508,8 +508,8 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     }
 
     /* Check that the capacitance and resistance are reasonable. */
-    C = device_ctx.rr_nodes[inode].C();
-    R = device_ctx.rr_nodes[inode].R();
+    C = device_ctx.rr_graph.node_C(RRNodeId(inode));
+    R = device_ctx.rr_graph.node_R(RRNodeId(inode));
 
     if (rr_type == CHANX || rr_type == CHANY) {
         if (C < 0. || R < 0.) {
