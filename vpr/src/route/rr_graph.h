@@ -40,8 +40,11 @@ void create_rr_graph(const t_graph_type graph_type,
 
 void free_rr_graph();
 
+// Calls describe_rr_node(RRNodeId node), converting the input "int inode" into an "RRNodeId inode"
+std::string decribe_rr_node(int inode);
+
 //Returns a brief one-line summary of an RR node
-std::string describe_rr_node(int inode);
+std::string describe_rr_node(RRNodeId inode);
 
 // Sets the spec for the rr_switch based on the arch switch
 void load_rr_switch_from_arch_switch(int arch_switch_idx,

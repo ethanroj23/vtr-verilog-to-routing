@@ -141,8 +141,8 @@ TEST_CASE("read_rr_graph_metadata", "[vpr]") {
         }
 
         REQUIRE(src_inode >= 0);
-        sink_inode = device_ctx.rr_nodes[src_inode].edge_sink_node(0);
-        switch_id = device_ctx.rr_nodes[src_inode].edge_switch(0);
+        sink_inode = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(0)) /*ESR API*/;
+        switch_id = device_ctx.rr_graph.node_edge_switch(RREdgeId(0)) /*ESR API*/;
 
         vpr::add_rr_node_metadata(src_inode, vtr::string_view("node"), vtr::string_view("test node"));
         vpr::add_rr_edge_metadata(src_inode, sink_inode, switch_id, vtr::string_view("edge"), vtr::string_view("test edge"));

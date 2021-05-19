@@ -28,6 +28,12 @@ class MetadataStorage {
         data_.push_back(std::make_tuple(lookup_key, meta_key, meta_value));
     }
 
+    void add_metadata(std::tuple<RRNodeId, RRNodeId, short> lookup_key, vtr::interned_string meta_key, vtr::interned_string meta_value) {
+        // Can only add metadata prior to building the map.
+        VTR_ASSERT(map_.empty());
+        data_.push_back(std::make_tuple(lookup_key, meta_key, meta_value));
+    }
+
     // Use the given mapping function to change the keys
     void remap_keys(std::function<LookupKey(LookupKey)> key_map) {
         if (map_.empty()) {

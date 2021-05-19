@@ -120,7 +120,7 @@ static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, c
 static bool draw_if_net_highlighted(ClusterNetId inet);
 static int draw_check_rr_node_hit(float click_x, float click_y);
 
-static void draw_expand_non_configurable_rr_nodes_recurr(int from_node, std::set<int>& expanded_nodes);
+static void draw_expand_non_configurable_rr_nodes_recurr(RRNodeId from_node, std::set<RRNodeId>& expanded_nodes);
 static bool highlight_rr_nodes(float x, float y);
 static void highlight_blocks(double x, double y);
 static void draw_reset_blk_colors();
@@ -868,8 +868,13 @@ void alloc_draw_structs(const t_arch* arch) {
 
     /* Space is allocated for draw_rr_node but not initialized because we do *
      * not yet know information about the routing resources.				  */
-    draw_state->draw_rr_node = (t_draw_rr_node*)vtr::malloc(
-        device_ctx.rr_nodes.size() * sizeof(t_draw_rr_node));
+
+    //initialize every node in the draw_rr_node map
+    for (auto node : device_ctx.rr_nodes.size()){
+        draw_state->draw_rr_node.insert(std::pair<RRNodeId, t_draw_rr_node>(RRNodeId(node), {DEFAULT_RR_NODE_COLOR, false}));
+    }
+    //draw_state->draw_rr_node = (t_draw_rr_node*)vtr::malloc(
+    //    device_ctx.rr_nodes.size() * sizeof(t_draw_rr_node));
 
     draw_state->arch_info = arch;
 
@@ -896,9 +901,11 @@ void free_draw_structs() {
         draw_coords->tile_y = nullptr;
     }
 
+
     if (draw_state != nullptr) {
         free(draw_state->draw_rr_node);
-        draw_state->draw_rr_node = nullptr;
+        draw_state->draw_rr_node.clear(); /*ESR API*/
+        //draw_state->draw_rr_node = nullptr;
     }
 #else
     ;
@@ -919,11 +926,11 @@ void init_draw_coords(float width_val) {
     /* Each time routing is on screen, need to reallocate the color of each *
      * rr_node, as the number of rr_nodes may change.						*/
     if (device_ctx.rr_nodes.size() != 0) {
-        draw_state->draw_rr_node = (t_draw_rr_node*)vtr::realloc(draw_state->draw_rr_node,
-                                                                 (device_ctx.rr_nodes.size()) * sizeof(t_draw_rr_node));
+        //draw_state->draw_rr_node = (t_draw_rr_node*)vtr::realloc(draw_state->draw_rr_node, /*ESR API*/
+        //                                                         (device_ctx.rr_nodes.size()) * sizeof(t_draw_rr_node));
         for (size_t i = 0; i < device_ctx.rr_nodes.size(); i++) {
-            draw_state->draw_rr_node[i].color = DEFAULT_RR_NODE_COLOR;
-            draw_state->draw_rr_node[i].node_highlighted = false;
+            draw_state->draw_rr_node[RRNodeId(i)].color = DEFAULT_RR_NODE_COLOR;
+            draw_state->draw_rr_node[RRNodeId(i)].node_highlighted = false;
         }
     }
     draw_coords->tile_width = width_val;
@@ -1348,24 +1355,25 @@ void draw_rr(ezgl::renderer* g) {
     g->set_line_dash(ezgl::line_dash::none);
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        if (!draw_state->draw_rr_node[inode].node_highlighted) {
+        const auto& node = RRNodeId(inode);
+        if (!draw_state->draw_rr_node[node].node_highlighted) {
             /* If not highlighted node, assign color based on type. */
-            switch (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/) {
+            switch (device_ctx.rr_graph.node_type(node) /*ESR API*/) {
                 case CHANX:
                 case CHANY:
-                    draw_state->draw_rr_node[inode].color = DEFAULT_RR_NODE_COLOR;
+                    draw_state->draw_rr_node[node].color = DEFAULT_RR_NODE_COLOR;
                     break;
                 case OPIN:
-                    draw_state->draw_rr_node[inode].color = ezgl::PINK;
+                    draw_state->draw_rr_node[node].color = ezgl::PINK;
                     break;
                 case IPIN:
-                    draw_state->draw_rr_node[inode].color = blk_LIGHTSKYBLUE;
+                    draw_state->draw_rr_node[node].color = blk_LIGHTSKYBLUE;
                     break;
                 case SOURCE:
-                    draw_state->draw_rr_node[inode].color = ezgl::PLUM;
+                    draw_state->draw_rr_node[node].color = ezgl::PLUM;
                     break;
                 case SINK:
-                    draw_state->draw_rr_node[inode].color = ezgl::DARK_SLATE_BLUE;
+                    draw_state->draw_rr_node[node].color = ezgl::DARK_SLATE_BLUE;
                     break;
                 default:
                     break;
@@ -1373,32 +1381,32 @@ void draw_rr(ezgl::renderer* g) {
         }
 
         /* Now call drawing routines to draw the node. */
-        switch (device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/) {
+        switch (device_ctx.rr_graph.node_type(node) /*ESR API*/) {
             case SINK:
-                draw_rr_src_sink(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_src_sink(inode, draw_state->draw_rr_node[node].color, g);
                 break;
             case SOURCE:
                 draw_rr_edges(inode, g);
-                draw_rr_src_sink(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_src_sink(inode, draw_state->draw_rr_node[node].color, g);
                 break;
 
             case CHANX:
-                draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_chan(inode, draw_state->draw_rr_node[node].color, g);
                 draw_rr_edges(inode, g);
                 break;
 
             case CHANY:
-                draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_chan(inode, draw_state->draw_rr_node[node].color, g);
                 draw_rr_edges(inode, g);
                 break;
 
             case IPIN:
-                draw_rr_pin(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_pin(inode, draw_state->draw_rr_node[node].color, g);
                 draw_rr_edges(inode, g);
                 break;
 
             case OPIN:
-                draw_rr_pin(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_pin(inode, draw_state->draw_rr_node[node].color, g);
                 draw_rr_edges(inode, g);
                 break;
 
@@ -1558,11 +1566,14 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
     t_draw_state* draw_state = get_draw_state_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
+    const auto& node = RRNodeId(inode);
+
     t_rr_type from_type, to_type;
-    int to_node, from_ptc_num, to_ptc_num;
+    int from_ptc_num, to_ptc_num;
+    RRNodeId to_node;
     short switch_type;
 
-    from_type = device_ctx.rr_graph.node_type(RRNodeId(inode)) /*ESR API*/;
+    from_type = device_ctx.rr_graph.node_type(node) /*ESR API*/;
 
     if ((draw_state->draw_rr_toggle == DRAW_NODES_RR)
         || (draw_state->draw_rr_toggle == DRAW_NODES_SBOX_RR && (from_type == OPIN || from_type == SOURCE || from_type == IPIN))
@@ -1570,12 +1581,12 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
         return; /* Nothing to draw. */
     }
 
-    from_ptc_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(inode));
+    from_ptc_num = device_ctx.rr_graph.node_ptc_num(node);
 
-    for (t_edge_size iedge = 0, l = device_ctx.rr_graph.node_num_edges(RRNodeId(inode)) /*ESR API*/; iedge < l; iedge++) {
-        to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
-        to_type = device_ctx.rr_graph.node_type(RRNodeId(to_node)) /*ESR API*/;
-        to_ptc_num = device_ctx.rr_graph.node_ptc_num(RRNodeId(to_node));
+    for (t_edge_size iedge = 0, l = device_ctx.rr_graph.node_num_edges(node) /*ESR API*/; iedge < l; iedge++) {
+        to_node = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
+        to_type = device_ctx.rr_graph.node_type(to_node) /*ESR API*/;
+        to_ptc_num = device_ctx.rr_graph.node_ptc_num(to_node);
         bool edge_configurable = device_ctx.rr_nodes[inode].edge_is_configurable(iedge);
 
         switch (from_type) {
@@ -1583,13 +1594,13 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                 switch (to_type) {
                     case CHANX:
                     case CHANY:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             // If OPIN was clicked on, set color to fan-out
-                            ezgl::color color = draw_state->draw_rr_node[to_node].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
-                        } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
+                        } else if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             // If CHANX or CHANY got clicked, set color to fan-in
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else {
                             g->set_color(ezgl::PINK);
@@ -1597,11 +1608,11 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         draw_pin_to_chan_edge(inode, to_node, g);
                         break;
                     case IPIN:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else {
                             g->set_color(ezgl::MEDIUM_PURPLE);
@@ -1623,7 +1634,7 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                             break;
                         }
 
-                        if (draw_state->draw_rr_node[to_node].node_highlighted && draw_state->draw_rr_node[inode].color == DEFAULT_RR_NODE_COLOR) {
+                        if (draw_state->draw_rr_node[node].node_highlighted && draw_state->draw_rr_node[inode].color == DEFAULT_RR_NODE_COLOR) {
                             // If the IPIN is clicked on, draw connection to all the CHANX
                             // wire segments fanning into the pin. If a CHANX wire is clicked
                             // on, draw only the connection between that wire and the IPIN, with
@@ -1631,11 +1642,11 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                             break;
                         }
 
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else {
                             g->set_color(blk_LIGHTSKYBLUE);
@@ -1644,11 +1655,11 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         break;
 
                     case CHANX:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else if (!edge_configurable) {
                             ezgl::color color = blk_DARKGREY;
@@ -1656,24 +1667,24 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         } else {
                             g->set_color(blk_DARKGREEN);
                         }
-                        switch_type = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                        switch_type = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
                         draw_chanx_to_chanx_edge(inode, to_node,
                                                  to_ptc_num, switch_type, g);
                         break;
 
                     case CHANY:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else if (!edge_configurable) {
                             g->set_color(blk_DARKGREY);
                         } else {
                             g->set_color(blk_DARKGREEN);
                         }
-                        switch_type = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                        switch_type = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
                         draw_chanx_to_chany_edge(inode, from_ptc_num, to_node,
                                                  to_ptc_num, FROM_X_TO_Y, switch_type, g);
                         break;
@@ -1693,7 +1704,7 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                             break;
                         }
 
-                        if (draw_state->draw_rr_node[to_node].node_highlighted && draw_state->draw_rr_node[inode].color == DEFAULT_RR_NODE_COLOR) {
+                        if (draw_state->draw_rr_node[to_node].node_highlighted && draw_state->draw_rr_node[node].color == DEFAULT_RR_NODE_COLOR) {
                             // If the IPIN is clicked on, draw connection to all the CHANY
                             // wire segments fanning into the pin. If a CHANY wire is clicked
                             // on, draw only the connection between that wire and the IPIN, with
@@ -1701,11 +1712,11 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                             break;
                         }
 
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else {
                             g->set_color(blk_LIGHTSKYBLUE);
@@ -1714,11 +1725,11 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         break;
 
                     case CHANX:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else if (!edge_configurable) {
                             ezgl::color color = blk_DARKGREY;
@@ -1726,17 +1737,17 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         } else {
                             g->set_color(blk_DARKGREEN);
                         }
-                        switch_type = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                        switch_type = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
                         draw_chanx_to_chany_edge(to_node, to_ptc_num, inode,
                                                  from_ptc_num, FROM_Y_TO_X, switch_type, g);
                         break;
 
                     case CHANY:
-                        if (draw_state->draw_rr_node[inode].color == ezgl::MAGENTA) {
+                        if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA) {
                             ezgl::color color = draw_state->draw_rr_node[to_node].color;
                             g->set_color(color);
                         } else if (draw_state->draw_rr_node[to_node].color == ezgl::MAGENTA) {
-                            ezgl::color color = draw_state->draw_rr_node[inode].color;
+                            ezgl::color color = draw_state->draw_rr_node[node].color;
                             g->set_color(color);
                         } else if (!edge_configurable) {
                             ezgl::color color = blk_DARKGREY;
@@ -1744,7 +1755,7 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
                         } else {
                             g->set_color(blk_DARKGREEN);
                         }
-                        switch_type = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                        switch_type = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
                         draw_chany_to_chany_edge(inode, to_node,
                                                  to_ptc_num, switch_type, g);
                         break;
@@ -1861,7 +1872,7 @@ static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_
 
     g->draw_line({x1, y1}, {x2, y2});
 
-    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[chanx_node].node_highlighted) {
+    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[RRNodeId(chanx_node)].node_highlighted) {
         if (edge_dir == FROM_X_TO_Y) {
             draw_rr_switch(x1, y1, x2, y2, device_ctx.rr_switch_inf[switch_type].buffered(), device_ctx.rr_switch_inf[switch_type].configurable(), g);
         } else {
@@ -1950,7 +1961,7 @@ static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, s
 
     g->draw_line({x1, y1}, {x2, y2});
 
-    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[from_node].node_highlighted) {
+    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[RRNodeId(from_node)].node_highlighted) {
         draw_rr_switch(x1, y1, x2, y2, device_ctx.rr_switch_inf[switch_type].buffered(), device_ctx.rr_switch_inf[switch_type].configurable(), g);
     }
 }
@@ -2033,7 +2044,7 @@ static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, s
     /* UDSD Modification by WMF End */
     g->draw_line({x1, y1}, {x2, y2});
 
-    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[from_node].node_highlighted) {
+    if (draw_state->draw_rr_toggle == DRAW_ALL_RR || draw_state->draw_rr_node[RRNodeId(from_node)].node_highlighted) {
         draw_rr_switch(x1, y1, x2, y2, device_ctx.rr_switch_inf[switch_type].buffered(), device_ctx.rr_switch_inf[switch_type].configurable(), g);
     }
 }
@@ -2302,11 +2313,11 @@ static void draw_routed_net(ClusterNetId net_id, ezgl::renderer* g) {
         if (draw_if_net_highlighted(net_id)) {
             /* If a net has been highlighted, highlight the whole net in *
              * the same color.											 */
-            draw_state->draw_rr_node[inode].color = draw_state->net_color[net_id];
-            draw_state->draw_rr_node[inode].node_highlighted = true;
+            draw_state->draw_rr_node[RRNodeId(inode)].color = draw_state->net_color[net_id];
+            draw_state->draw_rr_node[RRNodeId(inode)].node_highlighted = true;
         } else {
             /* If not highlighted, draw the node in default color. */
-            draw_state->draw_rr_node[inode].color = DEFAULT_RR_NODE_COLOR;
+            draw_state->draw_rr_node[RRNodeId(inode)].color = DEFAULT_RR_NODE_COLOR;
         }
 
         rr_nodes_to_draw.push_back(inode);
@@ -2364,15 +2375,15 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
         auto prev_type = device_ctx.rr_graph.node_type(RRNodeId(prev_node)) /*ESR API*/;
 
         auto iedge = find_edge(prev_node, inode);
-        auto switch_type = device_ctx.rr_nodes[prev_node].edge_switch(iedge);
+        auto switch_type = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
 
         switch (rr_type) {
             case OPIN: {
-                draw_rr_pin(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_pin(inode, draw_state->draw_rr_node[RRNodeId(inode)].color, g);
                 break;
             }
             case IPIN: {
-                draw_rr_pin(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_pin(inode, draw_state->draw_rr_node[RRNodeId(inode)].color, g);
                 if (device_ctx.rr_graph.node_type(RRNodeId(prev_node)) /*ESR API*/ == OPIN) {
                     draw_pin_to_pin(prev_node, inode, g);
                 } else {
@@ -2385,7 +2396,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
                     chanx_track[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/]++;
 
                 int itrack = get_track_num(inode, chanx_track, chany_track);
-                draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_chan(inode, draw_state->draw_rr_node[RRNodeId(inode)].color, g);
 
                 switch (prev_type) {
                     case CHANX: {
@@ -2419,7 +2430,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
                     chany_track[device_ctx.rr_graph.node_xlow(RRNodeId(inode)) /*ESR API*/][device_ctx.rr_graph.node_ylow(RRNodeId(inode)) /*ESR API*/]++;
 
                 int itrack = get_track_num(inode, chanx_track, chany_track);
-                draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
+                draw_rr_chan(inode, draw_state->draw_rr_node[RRNodeId(inode)].color, g);
 
                 switch (prev_type) {
                     case CHANX: {
@@ -2511,14 +2522,14 @@ void highlight_nets(char* message, int hit_node) {
 
     for (auto net_id : cluster_ctx.clb_nlist.nets()) {
         for (tptr = route_ctx.trace[net_id].head; tptr != nullptr; tptr = tptr->next) {
-            if (draw_state->draw_rr_node[tptr->index].color == ezgl::MAGENTA) {
-                draw_state->net_color[net_id] = draw_state->draw_rr_node[tptr->index].color;
+            if (draw_state->draw_rr_node[RRNodeId(tptr->index)].color == ezgl::MAGENTA) {
+                draw_state->net_color[net_id] = draw_state->draw_rr_node[RRNodeId(tptr->index)].color;
                 if (tptr->index == hit_node) {
                     std::string orig_msg(message);
                     sprintf(message, "%s  ||  Net: %zu (%s)", orig_msg.c_str(), size_t(net_id),
                             cluster_ctx.clb_nlist.net_name(net_id).c_str());
                 }
-            } else if (draw_state->draw_rr_node[tptr->index].color == ezgl::WHITE) {
+            } else if (draw_state->draw_rr_node[RRNodeId(tptr->index)].color == ezgl::WHITE) {
                 // If node is de-selected.
                 draw_state->net_color[net_id] = ezgl::BLACK;
                 break;
@@ -2540,13 +2551,13 @@ void draw_highlight_fan_in_fan_out(const std::set<int>& nodes) {
     for (auto node : nodes) {
         /* Highlight the fanout nodes in red. */
         for (t_edge_size iedge = 0, l = device_ctx.rr_graph.node_num_edges(RRNodeId(node)) /*ESR API*/; iedge < l; iedge++) {
-            int fanout_node = device_ctx.rr_nodes[node].edge_sink_node(iedge);
+            RRNodeId fanout_node = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
 
-            if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA && draw_state->draw_rr_node[fanout_node].color != ezgl::MAGENTA) {
+            if (draw_state->draw_rr_node[RRNodeId(node)].color == ezgl::MAGENTA && draw_state->draw_rr_node[fanout_node].color != ezgl::MAGENTA) {
                 // If node is highlighted, highlight its fanout
                 draw_state->draw_rr_node[fanout_node].color = DRIVES_IT_COLOR;
                 draw_state->draw_rr_node[fanout_node].node_highlighted = true;
-            } else if (draw_state->draw_rr_node[node].color == ezgl::WHITE) {
+            } else if (draw_state->draw_rr_node[RRNodeId(node)].color == ezgl::WHITE) {
                 // If node is de-highlighted, de-highlight its fanout
                 draw_state->draw_rr_node[fanout_node].color = DEFAULT_RR_NODE_COLOR;
                 draw_state->draw_rr_node[fanout_node].node_highlighted = false;
@@ -2556,16 +2567,16 @@ void draw_highlight_fan_in_fan_out(const std::set<int>& nodes) {
         /* Highlight the nodes that can fanin to this node in blue. */
         for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
             for (t_edge_size iedge = 0, l = device_ctx.rr_graph.node_num_edges(RRNodeId(inode)) /*ESR API*/; iedge < l; iedge++) {
-                int fanout_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
-                if (fanout_node == node) {
-                    if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA && draw_state->draw_rr_node[inode].color != ezgl::MAGENTA) {
+                RRNodeId fanout_node = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
+                if (fanout_node == RRNodeId(node)) {
+                    if (draw_state->draw_rr_node[RRNodeId(node)].color == ezgl::MAGENTA && draw_state->draw_rr_node[RRNodeId(inode)].color != ezgl::MAGENTA) {
                         // If node is highlighted, highlight its fanin
-                        draw_state->draw_rr_node[inode].color = ezgl::BLUE;
-                        draw_state->draw_rr_node[inode].node_highlighted = true;
-                    } else if (draw_state->draw_rr_node[node].color == ezgl::WHITE) {
+                        draw_state->draw_rr_node[RRNodeId(inode)].color = ezgl::BLUE;
+                        draw_state->draw_rr_node[RRNodeId(inode)].node_highlighted = true;
+                    } else if (draw_state->draw_rr_node[RRNodeId(node)].color == ezgl::WHITE) {
                         // If node is de-highlighted, de-highlight its fanin
-                        draw_state->draw_rr_node[inode].color = DEFAULT_RR_NODE_COLOR;
-                        draw_state->draw_rr_node[inode].node_highlighted = false;
+                        draw_state->draw_rr_node[RRNodeId(inode)].color = DEFAULT_RR_NODE_COLOR;
+                        draw_state->draw_rr_node[RRNodeId(inode)].node_highlighted = false;
                     }
                 }
             }
@@ -2643,20 +2654,20 @@ static int draw_check_rr_node_hit(float click_x, float click_y) {
     return hit_node;
 }
 
-std::set<int> draw_expand_non_configurable_rr_nodes(int from_node) {
-    std::set<int> expanded_nodes;
+std::set<RRNodeId> draw_expand_non_configurable_rr_nodes(RRNodeId from_node) {
+    std::set<RRNodeId> expanded_nodes;
     draw_expand_non_configurable_rr_nodes_recurr(from_node, expanded_nodes);
     return expanded_nodes;
 }
 
-void draw_expand_non_configurable_rr_nodes_recurr(int from_node, std::set<int>& expanded_nodes) {
+void draw_expand_non_configurable_rr_nodes_recurr(RRNodeId from_node, std::set<RRNodeId>& expanded_nodes) {
     auto& device_ctx = g_vpr_ctx.device();
 
     expanded_nodes.insert(from_node);
-
+    
     for (t_edge_size iedge = 0; iedge < device_ctx.rr_graph.node_num_edges(RRNodeId(from_node)) /*ESR API*/; ++iedge) {
-        bool edge_configurable = device_ctx.rr_nodes[from_node].edge_is_configurable(iedge);
-        int to_node = device_ctx.rr_nodes[from_node].edge_sink_node(iedge);
+        bool edge_configurable = device_ctx.rr_graph.edge_is_configurable(from_node, RREdgeId(iedge));
+        RRNodeId to_node = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
 
         if (!edge_configurable && !expanded_nodes.count(to_node)) {
             draw_expand_non_configurable_rr_nodes_recurr(to_node, expanded_nodes);
@@ -2786,7 +2797,7 @@ void act_on_mouse_move(ezgl::application* app, GdkEventButton* event, double x, 
         if (hit_node != OPEN) {
             //Update message
 
-            std::string info = describe_rr_node(hit_node);
+            std::string info = describe_rr_node(RRNodeId(hit_node));
             std::string msg = vtr::string_fmt("Moused over %s", info.c_str());
             app->update_message(msg.c_str());
         } else {
@@ -2876,8 +2887,8 @@ void deselect_all() {
         draw_state->net_color[net_id] = ezgl::BLACK;
 
     for (size_t i = 0; i < device_ctx.rr_nodes.size(); i++) {
-        draw_state->draw_rr_node[i].color = DEFAULT_RR_NODE_COLOR;
-        draw_state->draw_rr_node[i].node_highlighted = false;
+        draw_state->draw_rr_node[RRNodeId(i)].color = DEFAULT_RR_NODE_COLOR;
+        draw_state->draw_rr_node[RRNodeId(i)].node_highlighted = false;
     }
     get_selected_sub_block_info().clear();
 }
@@ -3474,7 +3485,7 @@ static void draw_routed_timing_edge_connection(tatum::NodeId src_tnode, tatum::N
             //Mark all the nodes highlighted
             t_draw_state* draw_state = get_draw_state_vars();
             for (int inode : routed_rr_nodes) {
-                draw_state->draw_rr_node[inode].color = color;
+                draw_state->draw_rr_node[RRNodeId(inode)].color = color;
             }
 
             draw_partial_route((std::vector<int>)routed_rr_nodes, (ezgl::renderer*)g);
@@ -3546,7 +3557,7 @@ bool trace_routed_connection_rr_nodes_recurr(const t_rt_node* rt_node, int sink_
 static t_edge_size find_edge(int prev_inode, int inode) {
     auto& device_ctx = g_vpr_ctx.device();
     for (t_edge_size iedge = 0; iedge < device_ctx.rr_graph.node_num_edges(RRNodeId(prev_inode)) /*ESR API*/; ++iedge) {
-        if (device_ctx.rr_nodes[prev_inode].edge_sink_node(iedge) == inode) {
+        if (device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/ == RRNodeId(inode)) {
             return iedge;
         }
     }

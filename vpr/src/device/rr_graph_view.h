@@ -104,6 +104,24 @@ class RRGraphView {
     /* Validate the edges */
     bool node_validate() const;
 
+    /* Validate the edges */
+    short node_edge_switch(RREdgeId edge) const;
+
+    /* Validate the edges */
+    RRNodeId node_edge_sink_node(RREdgeId edge) const;
+
+    short node_track_num(RRNodeId node) const;
+
+    short node_length(RRNodeId node) const;
+
+    const char* node_direction_string(RRNodeId node) const;
+
+    short node_pin_num(RRNodeId node) const;
+
+    short node_class_num(RRNodeId node) const;
+
+    bool edge_is_configurable(RRNodeId node, RREdgeId edge) const;
+
 
 
 

@@ -305,7 +305,7 @@ static bool check_adjacent(int from_node, int to_node) {
     reached = false;
 
     for (t_edge_size iconn = 0; iconn < device_ctx.rr_graph.node_num_edges(RRNodeId(from_node)) /*ESR API*/; iconn++) {
-        if (device_ctx.rr_nodes[from_node].edge_sink_node(iconn) == to_node) {
+        if (device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iconn)) /*ESR API*/ == RRNodeId(to_node)) {
             reached = true;
             break;
         }

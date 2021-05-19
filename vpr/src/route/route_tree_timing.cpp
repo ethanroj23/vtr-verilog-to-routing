@@ -420,14 +420,14 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
             //Recursive case: expand children
             VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable(iedge));
 
-            int to_rr_node = device_ctx.rr_nodes[rr_node].edge_sink_node(iedge);
+            int to_rr_node = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
 
             //Recurse
             t_rt_node* child_rt_node = add_non_configurable_to_route_tree(to_rr_node, true, visited);
 
             if (!child_rt_node) continue;
 
-            int iswitch = device_ctx.rr_nodes[rr_node].edge_switch(iedge);
+            int iswitch = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
 
             //Create the edge
             t_linked_rt_edge* linked_rt_edge = alloc_linked_rt_edge();

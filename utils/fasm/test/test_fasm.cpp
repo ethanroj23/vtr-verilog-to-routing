@@ -189,11 +189,11 @@ TEST_CASE("fasm_integration_test", "[fasm]") {
         auto &device_ctx = g_vpr_ctx.mutable_device();
         for(size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
             for(t_edge_size iedge = 0; iedge < device_ctx.rr_graph.node_num_edges(RRNodeId(inode)) /*ESR API*/; ++iedge) {
-                auto sink_inode = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
-                auto switch_id = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                auto sink_inode = device_ctx.rr_graph.node_edge_sink_node(RREdgeId(iedge)) /*ESR API*/;
+                auto switch_id = device_ctx.rr_graph.node_edge_switch(RREdgeId(iedge)) /*ESR API*/;
                 auto value = vtr::string_fmt("%d_%d_%zu",
                             inode, sink_inode, switch_id);
-                vpr::add_rr_edge_metadata(inode, sink_inode, switch_id,
+                vpr::add_rr_edge_metadata(RRNodeId(inode), sink_inode, switch_id, /*ESR API Added a function here that accepts RRNodeId*/
                         vtr::string_view("fasm_features"), vtr::string_view(value.data(), value.size()));
             }
         }

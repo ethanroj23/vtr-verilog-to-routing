@@ -151,7 +151,7 @@ bool highlight_rr_nodes(int hit_node) {
         }
 
         //Show info about *only* hit node to graphics
-        std::string info = describe_rr_node(hit_node);
+        std::string info = describe_rr_node(RRNodeId(hit_node));
 
         sprintf(message, "Selected %s", info.c_str());
         rr_highlight_message = message;

@@ -77,3 +77,43 @@ float RRGraphView::node_C(RRNodeId node) const {
 bool RRGraphView::node_validate() const {
     return node_storage_.validate();
 }
+
+short RRGraphView::node_edge_switch(RREdgeId edge) const {
+    return node_storage_.edge_switch(edge);
+}
+
+RRNodeId RRGraphView::node_edge_sink_node(RREdgeId edge) const {
+    return node_storage_.edge_sink_node(edge);
+}
+
+short RRGraphView::node_track_num(RRNodeId node) const {
+    return node_storage_.node_track_num(node);
+}
+
+short RRGraphView::node_length(RRNodeId node) const {
+    return std::max(
+        RRGraphView::node_yhigh(node) - RRGraphView::node_ylow(node),
+        RRGraphView::node_xhigh(node) - RRGraphView::node_xlow(node));
+}
+
+const char* RRGraphView::node_direction_string(RRNodeId node) const {
+    return node_storage_.node_direction_string(node);
+}
+
+short RRGraphView::node_pin_num(RRNodeId node) const {
+    return node_storage_.node_pin_num(node);
+}
+
+short RRGraphView::node_class_num(RRNodeId node) const {
+    return node_storage_.node_class_num(node);
+}
+
+bool RRGraphView::edge_is_configurable(RRNodeId node, RREdgeId edge) const {
+    auto edge_range = RRGraphView::node_configurable_edges(node);
+    for (auto current_edge : edge_range){
+        if (edge == RREdgeId(current_edge)){
+            return true;
+        }
+    }
+    return false;
+}

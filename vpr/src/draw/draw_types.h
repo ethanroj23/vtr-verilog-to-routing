@@ -186,7 +186,8 @@ struct t_draw_state {
     e_route_type draw_route_type = GLOBAL;
     char default_message[vtr::bufsize];
     vtr::vector<ClusterNetId, ezgl::color> net_color;
-    t_draw_rr_node* draw_rr_node = nullptr;
+    //t_draw_rr_node* draw_rr_node = nullptr; /*ESR API*/
+    std::map<RRNodeId, t_draw_rr_node> draw_rr_node;
     std::shared_ptr<const SetupTimingInfo> setup_timing_info;
     const t_arch* arch_info = nullptr;
     std::shared_ptr<const vtr::ColorMap> color_map = nullptr;
