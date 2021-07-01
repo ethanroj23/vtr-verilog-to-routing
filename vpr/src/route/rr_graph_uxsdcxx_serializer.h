@@ -682,10 +682,12 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
 
     inline float get_node_timing_C(const t_rr_node& node) final {
-        return node.C();
+        const auto& rr_graph = (*rr_graph_);
+        return rr_graph.node_C(node.id());
     }
     inline float get_node_timing_R(const t_rr_node& node) final {
-        return node.R();
+        const auto& rr_graph = (*rr_graph_);
+        return rr_graph.node_R(node.id());
     }
 
     /** Generated for complex type "node_segment":
@@ -829,7 +831,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline uxsd::enum_node_direction get_node_direction(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
         if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
-            return to_uxsd_node_direction(node.direction());
+            return to_uxsd_node_direction(rr_graph.node_direction(node.id()));
         } else {
             return uxsd::enum_node_direction::UXSD_INVALID;
         }

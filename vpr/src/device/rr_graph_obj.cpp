@@ -168,18 +168,6 @@ e_side RRGraph::node_side(const RRNodeId& node) const {
     return node_sides_[node];
 }
 
-/* Get the resistance of a node */
-float RRGraph::node_R(const RRNodeId& node) const {
-    VTR_ASSERT_SAFE(valid_node_id(node));
-    return node_Rs_[node];
-}
-
-/* Get the capacitance of a node */
-float RRGraph::node_C(const RRNodeId& node) const {
-    VTR_ASSERT_SAFE(valid_node_id(node));
-    return node_Cs_[node];
-}
-
 /*
  * Get a segment id of a node in rr_graph 
  */
@@ -823,7 +811,7 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
     node_capacities_.push_back(-1);
     node_ptc_nums_.push_back(-1);
     node_cost_indices_.push_back(-1);
-    node_directions_.push_back(NO_DIRECTION);
+    node_directions_.push_back(INVALID_DIRECTION);
     node_sides_.push_back(NUM_SIDES);
     node_Rs_.push_back(0.);
     node_Cs_.push_back(0.);

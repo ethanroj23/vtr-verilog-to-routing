@@ -62,6 +62,31 @@ class RRGraphView {
         return node_storage_.node_capacity(node);
     }
 
+    /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
+     * INC_DIRECTION: wire driver is positioned at the low-coordinate end of the wire.
+     * DEC_DIRECTION: wire_driver is positioned at the high-coordinate end of the wire.
+     * BI_DIRECTION: wire has multiple drivers, so signals can travel either way along the wire
+     * INVALID_DIRECTION: wire does not have a valid direction set
+     */
+    inline e_direction node_direction(RRNodeId node) const {
+        return node_storage_.node_direction(node);
+    }
+
+    /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
+    inline std::string node_direction_string(RRNodeId node) const {
+        return node_storage_.node_direction_string(node);
+    }
+
+    /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
+    inline float node_C(RRNodeId node) const {
+        return node_storage_.node_C(node);
+    }
+
+    /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
+    inline float node_R(RRNodeId node) const {
+        return node_storage_.node_R(node);
+    }
+
     /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const {
         return node_lookup_;
