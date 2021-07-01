@@ -85,6 +85,10 @@ class RRGraphView {
     /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_R(RRNodeId node) const {
         return node_storage_.node_R(node);
+        
+    /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_edge_size node_fan_in(RRNodeId node) const {
+        return node_storage_.fan_in(node);
     }
 
     /* Return the fast look-up data structure for queries from client functions */
