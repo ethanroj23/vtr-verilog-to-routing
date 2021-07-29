@@ -37,8 +37,8 @@ int seg_index_of_sblock(int from_node, int to_node) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    from_rr_type = rr_graph.node_type(RRNodeId(from_node));
-    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+    from_rr_type = device_ctx.rr_nodes.node_type(RRNodeId(from_node));
+    to_rr_type = device_ctx.rr_nodes.node_type(RRNodeId(to_node));
 
     if (from_rr_type == CHANX) {
         if (to_rr_type == CHANY) {

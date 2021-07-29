@@ -46,9 +46,11 @@ void check_rr_graph(const t_graph_type graph_type,
     if (graph_type == GRAPH_GLOBAL) {
         route_type = GLOBAL;
     }
-
+    VTR_LOG("CHECK RR GRAPH .... ESR\n");
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
+    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+    
 
     auto total_edges_to_node = std::vector<int>(device_ctx.rr_nodes.size());
     auto switch_types_from_current_to_node = std::vector<unsigned char>(device_ctx.rr_nodes.size());
@@ -58,6 +60,15 @@ void check_rr_graph(const t_graph_type graph_type,
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
         device_ctx.rr_nodes[inode].validate();
+        RRNodeId current_rr_node = RRNodeId(inode);
+
+        auto legacy_type = rr_graph.node_type(RRNodeId(inode));
+        auto folded_type = device_ctx.folded_rr_graph.node_type(RRNodeId(inode));
+
+        if (legacy_type != folded_type){
+            VTR_LOG("in check_rr_graph: folded_type of %d doesn't match legacy_type of %d for node %d.\n",
+                              folded_type, legacy_type, inode);
+        }
 
         /* Ignore any uninitialized rr_graph nodes */
         if ((rr_graph.node_type(RRNodeId(inode)) == SOURCE)

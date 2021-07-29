@@ -243,7 +243,7 @@ static std::vector<size_t> count_rr_segment_types() {
     const auto& rr_graph = device_ctx.rr_graph;
 
     for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-        if (rr_graph.node_type(RRNodeId(inode)) != CHANX && rr_graph.node_type(RRNodeId(inode)) != CHANY) continue;
+        if (device_ctx.rr_nodes.node_type(RRNodeId(inode)) != CHANX && device_ctx.rr_nodes.node_type(RRNodeId(inode)) != CHANY) continue;
 
         int cost_index = device_ctx.rr_nodes[inode].cost_index();
 
@@ -344,7 +344,7 @@ static void load_rr_indexed_data_T_values() {
      * data.
      */
     for (size_t inode = 0; inode < rr_nodes.size(); inode++) {
-        t_rr_type rr_type = rr_graph.node_type(RRNodeId(inode));
+        t_rr_type rr_type = device_ctx.rr_nodes.node_type(RRNodeId(inode));
 
         if (rr_type != CHANX && rr_type != CHANY) {
             continue;

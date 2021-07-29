@@ -324,7 +324,7 @@ void create_rr_graph(const t_graph_type graph_type,
                      const int num_directs,
                      int* Warnings) {
     const auto& device_ctx = g_vpr_ctx.device();
-
+    
     if (!det_routing_arch->read_rr_graph_filename.empty()) {
         if (device_ctx.read_rr_graph_filename != det_routing_arch->read_rr_graph_filename) {
             free_rr_graph();
@@ -340,6 +340,7 @@ void create_rr_graph(const t_graph_type graph_type,
 
             reorder_rr_graph_nodes(router_opts);
         }
+        g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
     } else {
         if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
             //No change in channel width, so skip re-building RR graph
@@ -688,6 +689,8 @@ static void build_rr_graph(const t_graph_type graph_type,
     }
     /* END OPIN MAP */
 
+
+
     bool Fc_clipped = false;
     auto update_chan_width = alloc_and_load_rr_graph(
         device_ctx.rr_graph_builder,
@@ -718,11 +721,11 @@ static void build_rr_graph(const t_graph_type graph_type,
         // clock_modeling::DEDICATED_NETWORK will append some rr nodes after
         // the regular graph.
         for (int i = 0; i < num_rr_nodes; i++) {
-            if (rr_graph.node_type(RRNodeId(i)) == CHANX) {
+            if (device_ctx.rr_nodes.node_type(RRNodeId(i)) == CHANX) {
                 int ylow = device_ctx.rr_nodes[i].ylow();
                 device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.x_list[ylow]);
             }
-            if (rr_graph.node_type(RRNodeId(i)) == CHANY) {
+            if (device_ctx.rr_nodes.node_type(RRNodeId(i)) == CHANY) {
                 int xlow = device_ctx.rr_nodes[i].xlow();
                 device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.y_list[xlow]);
             }
@@ -2462,11 +2465,11 @@ std::string describe_rr_node(int inode) {
         msg += vtr::string_fmt(" <-> (%d,%d)", rr_node.xhigh(), rr_node.yhigh());
     }
 
-    if (rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_graph.node_type(RRNodeId(inode)) == CHANY) {
+    if (device_ctx.rr_nodes.node_type(RRNodeId(inode)) == CHANX || device_ctx.rr_nodes.node_type(RRNodeId(inode)) == CHANY) {
         int cost_index = rr_node.cost_index();
 
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
-        std::string rr_node_direction_string = rr_graph.node_direction_string(RRNodeId(inode));
+        std::string rr_node_direction_string = device_ctx.rr_nodes.node_direction_string(RRNodeId(inode));
 
         if (seg_index < (int)device_ctx.rr_segments.size()) {
             msg += vtr::string_fmt(" track: %d len: %d longline: %d seg_type: %s dir: %s",
@@ -2482,7 +2485,7 @@ std::string describe_rr_node(int inode) {
                                    seg_index,
                                    rr_node_direction_string.c_str());
         }
-    } else if (rr_graph.node_type(RRNodeId(inode)) == IPIN || rr_graph.node_type(RRNodeId(inode)) == OPIN) {
+    } else if (device_ctx.rr_nodes.node_type(RRNodeId(inode)) == IPIN || device_ctx.rr_nodes.node_type(RRNodeId(inode)) == OPIN) {
         auto type = device_ctx.grid[rr_node.xlow()][rr_node.ylow()].type;
         std::string pin_name = block_type_pin_index_to_name(type, rr_node.pin_num());
 
@@ -2490,13 +2493,13 @@ std::string describe_rr_node(int inode) {
                                rr_node.pin_num(),
                                pin_name.c_str());
     } else {
-        VTR_ASSERT(rr_graph.node_type(RRNodeId(inode)) == SOURCE || rr_graph.node_type(RRNodeId(inode)) == SINK);
+        VTR_ASSERT(device_ctx.rr_nodes.node_type(RRNodeId(inode)) == SOURCE || device_ctx.rr_nodes.node_type(RRNodeId(inode)) == SINK);
 
         msg += vtr::string_fmt(" class: %d", rr_node.class_num());
     }
 
-    msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(RRNodeId(inode)));
-    msg += vtr::string_fmt(" fan-in: %d", rr_graph.node_fan_in(RRNodeId(inode)));
+    msg += vtr::string_fmt(" capacity: %d", device_ctx.rr_nodes.node_capacity(RRNodeId(inode)));
+    msg += vtr::string_fmt(" fan-in: %d", device_ctx.rr_nodes.fan_in(RRNodeId(inode)));
     msg += vtr::string_fmt(" fan-out: %d", rr_node.num_edges());
 
     return msg;
@@ -2954,8 +2957,7 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const t_rr_graph_storage
     //This function attempts to pick the 'best/closest' of the candidates.
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-
-    VTR_ASSERT(rr_graph.node_type(from_rr) == OPIN);
+    VTR_ASSERT(device_ctx.rr_nodes.node_type(from_rr) == OPIN);
 
     float best_dist = std::numeric_limits<float>::infinity();
     int best_rr = OPEN;
@@ -2967,7 +2969,7 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const t_rr_graph_storage
         }
 
         for (int to_rr : candidate_rr_nodes) {
-            VTR_ASSERT(rr_graph.node_type(RRNodeId(to_rr)) == IPIN);
+            VTR_ASSERT(device_ctx.rr_nodes.node_type(RRNodeId(to_rr)) == IPIN);
             float to_dist = std::abs(rr_nodes.node_xlow(from_rr) - rr_nodes[to_rr].xlow())
                             + std::abs(rr_nodes.node_ylow(from_rr) - rr_nodes[to_rr].ylow());
 

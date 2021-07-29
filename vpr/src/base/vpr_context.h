@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "folded_rr_graph.h"
 #include "vpr_types.h"
 #include "vtr_ndmatrix.h"
 #include "vtr_vector.h"
@@ -174,7 +175,12 @@ struct DeviceContext : public Context {
     /* A read-only view of routing resource graph to be the ONLY database 
      * for client functions: GUI, placer, router, timing analyzer etc.
      */
-    RRGraphView rr_graph{rr_nodes, rr_spatial_lookup};
+    FoldedRRGraph folded_rr_graph{rr_nodes};
+
+    /* A read-only view of routing resource graph to be the ONLY database 
+     * for client functions: GUI, placer, router, timing analyzer etc.
+     */
+    RRGraphView rr_graph{rr_nodes, rr_spatial_lookup, folded_rr_graph};
 
     /* A writeable view of routing resource graph to be the ONLY database 
      * for routing resource graph builder functions.

@@ -3,6 +3,7 @@
 
 #include "rr_graph_storage.h"
 #include "rr_spatial_lookup.h"
+#include "folded_rr_graph.h"
 
 /* An read-only routing resource graph
  * which is an unified object including pointors to
@@ -31,12 +32,17 @@
  *                          in particular geometry information (type, x, y etc).
  *
  */
+
+// LEGACY OR FOLDED
+#define FOLDED
+
 class RRGraphView {
     /* -- Constructors -- */
   public:
     /* See detailed comments about the data structures in the internal data storage section of this file */
     RRGraphView(const t_rr_graph_storage& node_storage,
-                const RRSpatialLookup& node_lookup);
+                const RRSpatialLookup& node_lookup,
+                const FoldedRRGraph& folded_rr_graph);
 
     /* Disable copy constructors and copy assignment operator
      * This is to avoid accidental copy because it could be an expensive operation considering that the 
@@ -54,12 +60,22 @@ class RRGraphView {
   public:
     /* Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type(RRNodeId node) const {
+        #ifdef FOLDED
+        //return node_storage_.node_type(node);
+        return folded_rr_graph_.node_type(node);
+        #else
         return node_storage_.node_type(node);
+        #endif
     }
 
     /* Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
+        #ifdef FOLDED_DONT_USE
+        //return node_storage_.node_capacity(node);
+        return folded_rr_graph_.node_capacity(node);
+        #else
         return node_storage_.node_capacity(node);
+        #endif
     }
 
     /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
@@ -94,6 +110,8 @@ class RRGraphView {
     const t_rr_graph_storage& node_storage_;
     /* Fast look-up for rr nodes */
     const RRSpatialLookup& node_lookup_;
+    /* Folded look-up for rr nodes */
+    const FoldedRRGraph& folded_rr_graph_;
 };
 
 #endif
