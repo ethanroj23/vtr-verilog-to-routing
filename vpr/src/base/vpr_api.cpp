@@ -92,6 +92,10 @@
 #include "log.h"
 #include "iostream"
 
+#include <unistd.h>
+#include <stdio.h>
+#include <limits.h>
+
 #ifdef VPR_USE_TBB
 #    include <tbb/task_scheduler_init.h>
 
@@ -130,7 +134,17 @@ void vpr_print_title() {
     VTR_LOG("\n");
 }
 
+
+
 void vpr_print_args(int argc, const char** argv) {
+
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working dir: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+    }
+
     VTR_LOG("VPR was run with the following command-line:\n");
     for (int i = 0; i < argc; i++) {
         if (i != 0) {

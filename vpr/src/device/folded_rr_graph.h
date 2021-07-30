@@ -25,22 +25,12 @@ class FoldedRRGraph {
   // dx, dy, type, capacity, direction, side, C, R, segment
   t_rr_type node_type(RRNodeId id) const {
       int idx = rr_node_id_to_x_y_idx_[id][2];
-      std::string rr_node_type = all_node_patterns_[idx][2];
-      //std::cout << "Getting Type " << rr_node_type << "\n";
-
-        if (rr_node_type=="CHANX") return CHANX;
-        else if (rr_node_type=="CHANY") return CHANY;
-        else if (rr_node_type=="SOURCE") return SOURCE;
-        else if (rr_node_type=="SINK") return SINK;
-        else if (rr_node_type=="IPIN") return IPIN;
-        else if (rr_node_type=="OPIN") return OPIN;
-        else return NUM_RR_TYPES;
+      return all_node_patterns_[idx].type;
     }
    
   short node_capacity(RRNodeId id) const {
         int idx = rr_node_id_to_x_y_idx_[id][2];
-        short rr_node_capacity = std::stoi(all_node_patterns_[idx][3]);
-        return rr_node_capacity;
+        return all_node_patterns_[idx].capacity;
     }
 
     /* -- Mutators -- */
@@ -55,6 +45,19 @@ class FoldedRRGraph {
 
     /* -- Internal data storage -- */
   private:
+
+    struct FoldedNodePattern {
+      int dx;
+      int dy;
+      t_rr_type type;
+      short capacity;
+      Direction direction;
+      std::string side;
+      float C;
+      float R;
+      std::string segment;
+    };  
+
     /* TODO: When the refactoring effort finishes, 
      * the data structure will be the owner of the data storages. 
      * That is why the reference is used here.
@@ -67,7 +70,7 @@ class FoldedRRGraph {
 
     // Contains every pattern needed to specify an RRNode's data members
     // dx, dy, type, capacity, direction, side, C, R, segment
-    std::vector<std::array<std::string, 9>> all_node_patterns_;
+    std::vector<FoldedNodePattern> all_node_patterns_;
     // Values in array are: x, y, pattern_idx
     vtr::vector<RRNodeId, std::array<int, 3>> rr_node_id_to_x_y_idx_;
     /* node-level storage including edge storages */

@@ -34,7 +34,7 @@
  */
 
 // LEGACY OR FOLDED
-#define FOLDED
+#define LEGACY
 
 class RRGraphView {
     /* -- Constructors -- */
@@ -69,8 +69,8 @@ class RRGraphView {
     }
 
     /* Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
-    inline short node_capacity(RRNodeId node) const {
-        #ifdef FOLDED_DONT_USE
+    inline short node_capacity(RRNodeId node) const{
+        #ifdef FOLDED
         //return node_storage_.node_capacity(node);
         return folded_rr_graph_.node_capacity(node);
         #else
@@ -84,19 +84,22 @@ class RRGraphView {
      * Direction::BIDIR: wire has multiple drivers, so signals can travel either way along the wire
      * Direction::NONE: node does not have a direction, such as IPIN/OPIN
      */
-    inline Direction node_direction(RRNodeId node) const {
+    inline Direction node_direction(RRNodeId node) const{
         return node_storage_.node_direction(node);
     }
 
     /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
-    inline const std::string& node_direction_string(RRNodeId node) const {
+    inline const std::string& node_direction_string(RRNodeId node) const{
         return node_storage_.node_direction_string(node);
     }
 
     /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
-    inline t_edge_size node_fan_in(RRNodeId node) const {
+    inline t_edge_size node_fan_in(RRNodeId node) const{
         return node_storage_.fan_in(node);
     }
+
+    /* Return the fast look-up data structure for queries from client functions */
+    void print_stats();
 
     /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const {
@@ -106,12 +109,23 @@ class RRGraphView {
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */
   private:
+
+    struct NodeFunctionCalls {
+      int node_type;
+      int node_capacity;
+      int node_direction;
+      int node_direction_string;
+      int node_fan_in;
+    };  
+
     /* node-level storage including edge storages */
     const t_rr_graph_storage& node_storage_;
     /* Fast look-up for rr nodes */
     const RRSpatialLookup& node_lookup_;
     /* Folded look-up for rr nodes */
     const FoldedRRGraph& folded_rr_graph_;
+
+    RRGraphView::NodeFunctionCalls function_calls_ = {0, 0, 0, 0, 0};
 };
 
 #endif

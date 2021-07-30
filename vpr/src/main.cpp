@@ -72,6 +72,7 @@ int main(int argc, const char** argv) {
         /* free data structures */
         vpr_free_all(Arch, vpr_setup);
 
+        //g_vpr_ctx.device().rr_graph.print_stats();
         VTR_LOG("VPR succeeded\n");
 
     } catch (const tatum::Error& tatum_error) {

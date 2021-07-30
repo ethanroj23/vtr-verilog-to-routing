@@ -58,16 +58,7 @@ void FoldedRRGraph::initialize_folded_rr_graph(){
 }
 
 void FoldedRRGraph::add_empty_pattern(){
-    std::array<std::string, 9> pattern_array;
-    pattern_array[0] = "EMPTY";
-    pattern_array[1] = "EMPTY";
-    pattern_array[2] = "EMPTY";
-    pattern_array[3] = "EMPTY";
-    pattern_array[4] = "EMPTY";
-    pattern_array[5] = "EMPTY";
-    pattern_array[6] = "EMPTY";
-    pattern_array[7] = "EMPTY";
-    pattern_array[8] = "EMPTY";
+    FoldedNodePattern pattern_array = { -1, -1, NUM_RR_TYPES, -1, Direction::NONE, "EMPTY", 0, 0, "EMPTY"};
     all_node_patterns_.push_back(pattern_array);
 }
 
@@ -79,21 +70,25 @@ void FoldedRRGraph::build_folded_rr_graph(){
     // dx, dy, type, capacity, direction, side, C, R, segment
     for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
         RRNodeId id = RRNodeId(idx);
-        std::string dx = std::to_string(node_storage_.node_xhigh(id) - node_storage_.node_xlow(id));
-        std::string dy = std::to_string(node_storage_.node_yhigh(id) - node_storage_.node_ylow(id));
-        std::string node_type = node_storage_.node_type_string(id);
-        std::string capacity = std::to_string(node_storage_.node_capacity(id));
-        std::string direction = "NONE";
-        if (node_type=="CHANX" || node_type=="CHANY"){
-            direction = node_storage_.node_direction_string(id);
+        auto dx = node_storage_.node_xhigh(id) - node_storage_.node_xlow(id);
+        auto dy = node_storage_.node_yhigh(id) - node_storage_.node_ylow(id);
+        auto node_type = node_storage_.node_type(id);
+        auto capacity = node_storage_.node_capacity(id);
+        auto direction = Direction::NONE;
+        std::string direction_string = "NONE";
+        if (node_type==CHANX || node_type==CHANY){
+            direction = node_storage_.node_direction(id);
+            direction_string = node_storage_.node_direction_string(id);
         }
-        std::string side = "NONE";
-        if (node_type=="IPIN" || node_type=="OPIN"){
+        auto side = "NONE";
+        if (node_type==IPIN || node_type==OPIN){
             side = node_storage_.node_side_string(id);
         }
-        std::string C = std::to_string(node_storage_.node_C(id));
-        std::string R = std::to_string(node_storage_.node_R(id));
-        std::string pattern = dx + " " + dy + " " + node_type + " " + capacity + " " + direction + " " + side + " " + C + " " + R;
+        auto C = node_storage_.node_C(id);
+        auto R = node_storage_.node_R(id);
+
+
+        std::string pattern = std::to_string(dx) + " " + std::to_string(dy) + " " + std::to_string(node_type) + " " + std::to_string(capacity) + " " + direction_string + " " + side + " " + std::to_string(C) + " " + std::to_string(R);
 
         int index_of_pattern = -1;
         for(std::size_t i=0; i<temp_node_patterns.size(); i++) {
@@ -106,16 +101,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
             temp_node_patterns.push_back(pattern);
             index_of_pattern = temp_node_patterns.size()-1;
 
-            std::array<std::string, 9> pattern_array;
-            pattern_array[0] = dx;
-            pattern_array[1] = dy;
-            pattern_array[2] = node_type;
-            pattern_array[3] = capacity;
-            pattern_array[4] = direction;
-            pattern_array[5] = side;
-            pattern_array[6] = C; //temp
-            pattern_array[7] = R;
-            pattern_array[8] = "t";
+            FoldedNodePattern pattern_array = { dx, dy, node_type, capacity, direction, side, C, R, "EMPTY"};
             all_node_patterns_.push_back(pattern_array);
 
         }

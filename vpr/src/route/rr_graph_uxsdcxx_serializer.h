@@ -630,13 +630,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void set_node_loc_side(uxsd::enum_loc_side side, int& inode) final {
         auto node = (*rr_nodes_)[inode];
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
 
         if (uxsd::enum_loc_side::UXSD_INVALID == side) {
             // node_loc.side is only expected on IPIN/OPIN.
-            if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+            if (rr_nodes.node_type(node.id()) == IPIN || rr_nodes.node_type(node.id()) == OPIN) {
                 report_error(
                     "inode %d is type %d, which requires a side, but no side was supplied.",
-                    inode, rr_graph.node_type(node.id()));
+                    inode, rr_nodes.node_type(node.id()));
             }
         } else {
             std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
@@ -649,7 +650,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     inline uxsd::enum_loc_side get_node_loc_side(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
-        if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+        const auto& rr_nodes = (*rr_nodes_);
+        if (rr_nodes.node_type(node.id()) == IPIN || rr_nodes.node_type(node.id()) == OPIN) {
             std::bitset<NUM_SIDES> sides_bitset;
             for (const e_side& side : SIDES) {
                 if (node.is_node_on_specific_side(side)) {
@@ -695,6 +697,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      */
     inline int init_node_segment(int& inode, int segment_id) final {
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         if (segment_id > (ssize_t)segment_inf_.size()) {
             report_error(
                 "Specified segment %d is larger than number of known segments %zu",
@@ -704,10 +707,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         auto node = (*rr_nodes_)[inode];
         if (GRAPH_GLOBAL == graph_type_) {
             node.set_cost_index(0);
-        } else if (rr_graph.node_type(node.id()) == CHANX) {
+        } else if (rr_nodes.node_type(node.id()) == CHANX) {
             node.set_cost_index(CHANX_COST_INDEX_START + segment_id);
             seg_index_[node.cost_index()] = segment_id;
-        } else if (rr_graph.node_type(node.id()) == CHANY) {
+        } else if (rr_nodes.node_type(node.id()) == CHANY) {
             node.set_cost_index(CHANX_COST_INDEX_START + segment_inf_.size() + segment_id);
             seg_index_[node.cost_index()] = segment_id;
         }
@@ -758,13 +761,15 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         // make_room_in_vector will use an allocation pattern that is
         // amoritized O(1).
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         rr_nodes_->make_room_for_node(RRNodeId(id));
         auto node = (*rr_nodes_)[id];
 
         node.set_capacity(capacity);
         node.set_type(from_uxsd_node_type(type));
 
-        switch (rr_graph.node_type(node.id())) {
+        //switch (rr_nodes.node_type(node.id())) { //ESR API
+        switch (rr_nodes.node_type(node.id())) {
             case CHANX:
                 break;
             case CHANY:
@@ -802,6 +807,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
     inline unsigned int get_node_capacity(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         return rr_graph.node_capacity(node.id());
     }
 
@@ -810,17 +816,19 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     inline uxsd::enum_node_type get_node_type(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
-        return to_uxsd_node_type(rr_graph.node_type(node.id()));
+        const auto& rr_nodes = (*rr_nodes_);
+        return to_uxsd_node_type(rr_nodes.node_type(node.id()));
     }
 
     inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         auto node = (*rr_nodes_)[inode];
         if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
-            if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+            if (rr_nodes.node_type(node.id()) == CHANX || rr_nodes.node_type(node.id()) == CHANY) {
                 report_error(
                     "inode %d is type %d, which requires a direction, but no direction was supplied.",
-                    inode, rr_graph.node_type(node.id()));
+                    inode, rr_nodes.node_type(node.id()));
             }
         } else {
             node.set_direction(from_uxsd_node_direction(direction));
@@ -828,7 +836,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     inline uxsd::enum_node_direction get_node_direction(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
-        if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+        const auto& rr_nodes = (*rr_nodes_);
+        if (rr_nodes.node_type(node.id()) == CHANX || rr_nodes.node_type(node.id()) == CHANY) {
             return to_uxsd_node_direction(rr_graph.node_direction(node.id()));
         } else {
             return uxsd::enum_node_direction::UXSD_INVALID;
@@ -942,6 +951,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
          * There should be only one wire to ipin switch. In case there are more, make sure to
          * store the most frequent switch */
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         std::vector<int> count_for_wire_to_ipin_switches;
         count_for_wire_to_ipin_switches.resize(rr_switch_inf_->size(), 0);
         //first is index, second is count
@@ -973,8 +983,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
                 /*Keeps track of the number of the specific type of switch that connects a wire to an ipin
                  * use the pair data structure to keep the maximum*/
-                if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
-                    if (rr_graph.node_type(RRNodeId(sink_node)) == IPIN) {
+                if (rr_nodes.node_type(node.id()) == CHANX || rr_nodes.node_type(node.id()) == CHANY) {
+                    if (rr_nodes.node_type(RRNodeId(sink_node)) == IPIN) {
                         count_for_wire_to_ipin_switches[switch_id]++;
                         if (count_for_wire_to_ipin_switches[switch_id] > most_frequent_switch.second) {
                             most_frequent_switch.first = switch_id;
@@ -1567,6 +1577,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      *share the same look up table. CHANX and CHANY have individual look ups */
     void process_rr_node_indices() {
         const auto& rr_graph = (*rr_graph_);
+        const auto& rr_nodes = (*rr_nodes_);
         /* Alloc the lookup table */
         auto& indices = *rr_node_indices_;
 
@@ -1602,7 +1613,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
          */
         for (size_t inode = 0; inode < rr_nodes_->size(); inode++) {
             auto node = (*rr_nodes_)[inode];
-            if (rr_graph.node_type(node.id()) == SOURCE || rr_graph.node_type(node.id()) == SINK) {
+            if (rr_nodes.node_type(node.id()) == SOURCE || rr_nodes.node_type(node.id()) == SINK) {
                 for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                     for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                         if (node.ptc_num() >= (int)indices[SOURCE][ix][iy][0].size()) {
@@ -1611,10 +1622,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
                         if (node.ptc_num() >= (int)indices[SINK][ix][iy][0].size()) {
                             indices[SINK][ix][iy][0].resize(node.ptc_num() + 1, OPEN);
                         }
-                        indices[rr_graph.node_type(node.id())][ix][iy][0][node.ptc_num()] = inode;
+                        indices[rr_nodes.node_type(node.id())][ix][iy][0][node.ptc_num()] = inode;
                     }
                 }
-            } else if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+            } else if (rr_nodes.node_type(node.id()) == IPIN || rr_nodes.node_type(node.id()) == OPIN) {
                 for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                     for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                         for (const e_side& side : SIDES) {
@@ -1627,17 +1638,17 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
                             if (node.ptc_num() >= (int)indices[IPIN][ix][iy][side].size()) {
                                 indices[IPIN][ix][iy][side].resize(node.ptc_num() + 1, OPEN);
                             }
-                            indices[rr_graph.node_type(node.id())][ix][iy][side][node.ptc_num()] = inode;
+                            indices[rr_nodes.node_type(node.id())][ix][iy][side][node.ptc_num()] = inode;
                         }
                     }
                 }
-            } else if (rr_graph.node_type(node.id()) == CHANX) {
+            } else if (rr_nodes.node_type(node.id()) == CHANX) {
                 for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                     for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                         coordinates_max_ptc[iy][ix].chanx_max_ptc = std::max(coordinates_max_ptc[iy][ix].chanx_max_ptc, node.ptc_num());
                     }
                 }
-            } else if (rr_graph.node_type(node.id()) == CHANY) {
+            } else if (rr_nodes.node_type(node.id()) == CHANY) {
                 for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                     for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                         coordinates_max_ptc[ix][iy].chany_max_ptc = std::max(coordinates_max_ptc[ix][iy].chany_max_ptc, node.ptc_num());
@@ -1667,7 +1678,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         /* CHANX and CHANY need to reevaluated with its ptc num as the correct index*/
         for (size_t inode = 0; inode < rr_nodes_->size(); inode++) {
             auto node = (*rr_nodes_)[inode];
-            if (rr_graph.node_type(node.id()) == CHANX) {
+            if (rr_nodes.node_type(node.id()) == CHANX) {
                 for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                     for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                         count = node.ptc_num();
@@ -1679,7 +1690,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
                         indices[CHANX][iy][ix][0][count] = inode;
                     }
                 }
-            } else if (rr_graph.node_type(node.id()) == CHANY) {
+            } else if (rr_nodes.node_type(node.id()) == CHANY) {
                 for (int ix = node.xlow(); ix <= node.xhigh(); ix++) {
                     for (int iy = node.ylow(); iy <= node.yhigh(); iy++) {
                         count = node.ptc_num();
