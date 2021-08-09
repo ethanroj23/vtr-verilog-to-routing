@@ -34,7 +34,7 @@
  */
 
 // LEGACY OR FOLDED
-#define LEGACY
+#define FOLDED
 
 class RRGraphView {
     /* -- Constructors -- */

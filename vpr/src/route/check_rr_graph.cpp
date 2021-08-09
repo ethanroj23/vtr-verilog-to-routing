@@ -49,7 +49,7 @@ void check_rr_graph(const t_graph_type graph_type,
     VTR_LOG("CHECK RR GRAPH .... ESR\n");
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+    //g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
     
 
     auto total_edges_to_node = std::vector<int>(device_ctx.rr_nodes.size());
@@ -66,8 +66,9 @@ void check_rr_graph(const t_graph_type graph_type,
         auto folded_type = device_ctx.folded_rr_graph.node_type(RRNodeId(inode));
 
         if (legacy_type != folded_type){
-            VTR_LOG("in check_rr_graph: folded_type of %d doesn't match legacy_type of %d for node %d.\n",
-                              folded_type, legacy_type, inode);
+            std::array<size_t, 2> x_y = device_ctx.folded_rr_graph.find_tile_coords(current_rr_node);
+            VTR_LOG("in check_rr_graph: folded_type of %d doesn't match legacy_type of %d for node %d in tile (%d, %d).\n",
+                              folded_type, legacy_type, inode, x_y[0], x_y[1]);
         }
 
         /* Ignore any uninitialized rr_graph nodes */
@@ -310,13 +311,13 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     float C, R;
     const auto& rr_graph = device_ctx.rr_graph;
 
-    rr_type = rr_graph.node_type(RRNodeId(inode));
+    rr_type = device_ctx.rr_nodes.node_type(RRNodeId(inode));
     xlow = device_ctx.rr_nodes[inode].xlow();
     xhigh = device_ctx.rr_nodes[inode].xhigh();
     ylow = device_ctx.rr_nodes[inode].ylow();
     yhigh = device_ctx.rr_nodes[inode].yhigh();
     ptc_num = device_ctx.rr_nodes[inode].ptc_num();
-    capacity = rr_graph.node_capacity(RRNodeId(inode));
+    capacity = device_ctx.rr_nodes.node_capacity(RRNodeId(inode));
     cost_index = device_ctx.rr_nodes[inode].cost_index();
     type = nullptr;
 

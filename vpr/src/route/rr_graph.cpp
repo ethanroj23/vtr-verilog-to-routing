@@ -370,6 +370,7 @@ void create_rr_graph(const t_graph_type graph_type,
                        &det_routing_arch->wire_to_rr_ipin_switch,
                        Warnings);
         reorder_rr_graph_nodes(router_opts);
+        g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
     }
 
     process_non_config_sets();
