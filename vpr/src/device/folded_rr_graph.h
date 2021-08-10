@@ -22,8 +22,17 @@ class FoldedRRGraph {
 
     /* -- Accessors -- */
   public:
-  // dx, dy, type, capacity, direction, side, C, R, segment
   // every function takes in an RRNodeId that has not been remapped yet
+  /* The general method for accessing data from the FoldedRRGraph is as follows:
+   * 1. Obtain the remapped_id from remapped_ids data member.
+   * 2. Find the x and y coordinates of the tile that contains the input RRNode
+   * 3. Obtain the node_patterns_idx from the tile
+   * 4. Calculate the relative offset for the given RRNodeId
+   * 5. Access the desired data with something like 
+   *      node_pattern_data[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
+   */
+
+  /*Return an RRNode's type.*/
   inline t_rr_type node_type(RRNodeId id) const{
       if (!built){
         return node_storage_.node_type(id);
@@ -62,17 +71,6 @@ class FoldedRRGraph {
       return node_pattern_data[node_patterns[node_patterns_idx][offset]].capacity_;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     /* -- Mutators -- */
   public:
     void build_folded_rr_graph();
@@ -86,6 +84,7 @@ class FoldedRRGraph {
     /* -- Internal data storage -- */
   private:
 
+  /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
     struct FoldedNodePattern { // 12 Bytes
           int16_t cost_index_; // 2 Bytes
           int16_t rc_index_; // 2 Bytes
@@ -117,35 +116,56 @@ class FoldedRRGraph {
 
           }
 
-
-      
-
+    /* Every tile has its own FoldedTilePattern. starting_node_id_ refers to the first node id in the tile.
+     * node_patterns_idx_ refers to the index within node_patterns that contains the 
+     */
     struct FoldedTilePattern { // 6 Bytes
         RRNodeId starting_node_id_ = RRNodeId(-1); // 4 Bytes
         int16_t node_patterns_idx_ = -1; // 2 Bytes  -> FoldedNodePattern
       }; 
 
-    struct AbnormalWire {
-      int16_t x; // 2 Bytes
-      int16_t y; // 2 Bytes
-      int16_t node_pattern_data_idx; // 2 Bytes
-    };
 
-    // 2d vector the indexes into the vector are the tile's x and y position
+    /*        GENERAL DATA FLOW
+
+    tile X-----------.
+    tile Y--------.  |
+                  V  V
+    tile_patterns[x][y].node_patterns_idx----.
+                                             |
+    relative_id_offset-----------------------|-----.
+                                             V     V             
+                              node_patterns[idx][offset]-----.
+                                                             V
+                                          node_pattern_data[idx]
+
+
+    // to find X and Y
+    tile_patterns[x][y].starting_node_id_ < RRNodeId < tile_patterns[any_other_x][any_other_y].starting_node_id_
+
+    // to find relative_id_offset
+    RRNodeId - tile_patterns[x][y].starting_node_id_
+
+    */
+
+
+
+    /* 2d vector. The indexes into the vector are the tile's x and y position */
     std::vector<std::vector<FoldedTilePattern>> tile_patterns; // Every tile has a starting_node_id and node_patterns_idx
 
-    std::vector<std::vector<int>> node_patterns; // Every Tile Type has a set of FoldedNodePatterns
+    /* Every Tile Type has a set of FoldedNodePatterns */
+    std::vector<std::vector<int>> node_patterns; 
 
+    /* Raw FoldedNodePattern data is stored here */
     std::vector<FoldedNodePattern> node_pattern_data;
 
-    // due to the current gaps in ids, this vector remaps them so that there are no gaps
+    /* Due to the current gaps in RRNodeIds, this vector remaps them so that there are no gaps */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
 
 
     /* node-level storage including edge storages */
     const t_rr_graph_storage& node_storage_;
 
-    bool built = false;
+    bool built = false; // flag for determining if the FoldedRRGraph has been built yet
 
 
 };

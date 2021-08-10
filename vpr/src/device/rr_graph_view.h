@@ -99,9 +99,6 @@ class RRGraphView {
     }
 
     /* Return the fast look-up data structure for queries from client functions */
-    void print_stats();
-
-    /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const {
         return node_lookup_;
     }
@@ -110,14 +107,6 @@ class RRGraphView {
     /* Note: only read-only object or data structures are allowed!!! */
   private:
 
-    struct NodeFunctionCalls {
-      int node_type;
-      int node_capacity;
-      int node_direction;
-      int node_direction_string;
-      int node_fan_in;
-    };  
-
     /* node-level storage including edge storages */
     const t_rr_graph_storage& node_storage_;
     /* Fast look-up for rr nodes */
@@ -125,7 +114,6 @@ class RRGraphView {
     /* Folded look-up for rr nodes */
     const FoldedRRGraph& folded_rr_graph_;
 
-    RRGraphView::NodeFunctionCalls function_calls_ = {0, 0, 0, 0, 0};
 };
 
 #endif
