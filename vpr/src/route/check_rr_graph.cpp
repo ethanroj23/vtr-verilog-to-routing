@@ -244,18 +244,18 @@ void check_rr_graph(const t_graph_type graph_type,
                                     continue;
                                 }
                                 VTR_LOG_ERROR("in check_rr_graph: node %d (%s) at (%d,%d) block=%s side=%s pin=%s has no fanin.\n",
-                                              inode, node.type_string(), rr_graph.node_xlow(node.id()), rr_graph.node_ylow(node.id()), block_type->name, SIDE_STRING[node_side], pin_name.c_str());
+                                              inode, rr_graph.node_type_string(node.id()), rr_graph.node_xlow(node.id()), rr_graph.node_ylow(node.id()), block_type->name, SIDE_STRING[node_side], pin_name.c_str());
                             }
                         }
                     } else {
                         VTR_LOG_ERROR("in check_rr_graph: node %d (%s) has no fanin.\n",
-                                      inode, device_ctx.rr_nodes[inode].type_string());
+                                      inode, rr_graph.node_type_string(RRNodeId(inode)));
                     }
                 } else if (!is_chain && !is_fringe_warning_sent) {
                     VTR_LOG_WARN(
                         "in check_rr_graph: fringe node %d %s at (%d,%d) has no fanin.\n"
                         "\t This is possible on a fringe node based on low Fc_out, N, and certain lengths.\n",
-                        inode, device_ctx.rr_nodes[inode].type_string(), rr_graph.node_xlow(RRNodeId(inode)), rr_graph.node_ylow(RRNodeId(inode)));
+                        inode, rr_graph.node_type_string(RRNodeId(inode)), rr_graph.node_xlow(RRNodeId(inode)), rr_graph.node_ylow(RRNodeId(inode)));
                     is_fringe_warning_sent = true;
                 }
             }

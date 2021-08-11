@@ -1242,7 +1242,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                     int jlow = rr_graph.node_ylow(RRNodeId(inode));
 
                     fprintf(fp, "Node:\t%d\t%6s (%d,%d) ", inode,
-                            device_ctx.rr_nodes[inode].type_string(), ilow, jlow);
+                            rr_graph.node_type_string(RRNodeId(inode)), ilow, jlow);
 
                     if ((ilow != rr_graph.node_xhigh(RRNodeId(inode)))
                         || (jlow != rr_graph.node_yhigh(RRNodeId(inode))))
@@ -1276,7 +1276,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                         default:
                             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                             "in print_route: Unexpected traceback element type: %d (%s).\n",
-                                            rr_type, device_ctx.rr_nodes[inode].type_string());
+                                            rr_type, rr_graph.node_type_string(RRNodeId(inode)));
                             break;
                     }
 

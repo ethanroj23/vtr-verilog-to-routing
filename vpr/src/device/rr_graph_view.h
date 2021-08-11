@@ -57,6 +57,11 @@ class RRGraphView {
         return node_storage_.node_type(node);
     }
 
+    /* Get the type of a routing resource node. This function is inlined for runtime optimization. */
+    inline const char* node_type_string(RRNodeId node) const {
+        return node_storage_.node_type_string(node);
+    }
+
     /* Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
         return node_storage_.node_capacity(node);

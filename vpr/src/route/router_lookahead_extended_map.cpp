@@ -202,8 +202,8 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
         // there is no route
         VTR_LOGV_DEBUG(f_router_debug,
                        "Not connected %d (%s, %d) -> %d (%s)\n",
-                       size_t(from_node), device_ctx.rr_nodes[size_t(from_node)].type_string(), from_seg_index,
-                       size_t(to_node), device_ctx.rr_nodes[size_t(to_node)].type_string());
+                       size_t(from_node), rr_graph.node_type_string(from_node), from_seg_index,
+                       size_t(to_node), rr_graph.node_type_string(to_node));
         float infinity = std::numeric_limits<float>::infinity();
         return std::make_pair(infinity, infinity);
     }

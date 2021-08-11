@@ -2458,7 +2458,7 @@ std::string describe_rr_node(int inode) {
 
     auto rr_node = device_ctx.rr_nodes[inode];
 
-    msg += vtr::string_fmt(" type: %s", rr_node.type_string());
+    msg += vtr::string_fmt(" type: %s", rr_graph.node_type_string(rr_node.id()));
 
     msg += vtr::string_fmt(" location: (%d,%d)", rr_graph.node_xlow(rr_node.id()), rr_graph.node_ylow(rr_node.id()));
     if (rr_graph.node_xlow(rr_node.id()) != rr_graph.node_xhigh(rr_node.id()) || rr_graph.node_ylow(rr_node.id()) != rr_graph.node_yhigh(rr_node.id())) {

@@ -89,7 +89,7 @@ void report_overused_nodes() {
 
         /* Report selective info based on the rr node type */
         auto node_type = rr_graph.node_type(node_id);
-        os << "Node type = " << device_ctx.rr_nodes.node_type_string(node_id) << '\n';
+        os << "Node type = " << device_ctx.rr_graph.node_type_string(node_id) << '\n';
 
         switch (node_type) {
             case IPIN:
