@@ -910,7 +910,7 @@ static void power_usage_routing(t_power_usage* power_usage,
                 } else if (rr_graph.node_type(RRNodeId(rr_node_idx)) == CHANY) {
                     wire_length = rr_graph.node_yhigh(node.id()) - rr_graph.node_ylow(node.id()) + 1;
                 }
-                int seg_index = device_ctx.rr_indexed_data[node.cost_index()].seg_index;
+                int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index(RRNodeId(rr_node_idx))].seg_index;
                 C_wire = wire_length * device_ctx.rr_segments[seg_index].Cmetal;
                 //(double)power_ctx.commonly_used->tile_length);
                 VTR_ASSERT(node_power->selected_input < node_fan_in);

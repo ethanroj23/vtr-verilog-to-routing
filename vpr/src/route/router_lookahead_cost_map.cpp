@@ -62,7 +62,7 @@ int CostMap::node_to_segment(int from_node_ind) const {
 
     auto& from_node = device_ctx.rr_nodes[from_node_ind];
 
-    int from_cost_index = from_node.cost_index();
+    int from_cost_index = device_ctx.rr_graph.node_cost_index(RRNodeId(from_node_ind));
     return device_ctx.rr_indexed_data[from_cost_index].seg_index;
 }
 

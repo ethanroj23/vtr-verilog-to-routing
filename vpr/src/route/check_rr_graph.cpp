@@ -306,7 +306,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     yhigh = rr_graph.node_yhigh(RRNodeId(inode));
     ptc_num = device_ctx.rr_nodes[inode].ptc_num();
     capacity = rr_graph.node_capacity(RRNodeId(inode));
-    cost_index = device_ctx.rr_nodes[inode].cost_index();
+    cost_index = rr_graph.node_cost_index(RRNodeId(inode));
     type = nullptr;
 
     const auto& grid = device_ctx.grid;

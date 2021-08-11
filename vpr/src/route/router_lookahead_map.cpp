@@ -150,7 +150,7 @@ class PQ_Entry {
         this->congestion_upstream = parent_congestion_upstream;
         this->R_upstream = parent_R_upstream;
         if (!starting_node) {
-            int cost_index = device_ctx.rr_nodes.node_cost_index(RRNodeId(set_rr_node));
+            int cost_index = device_ctx.rr_graph.node_cost_index(RRNodeId(set_rr_node));
             //this->delay += rr_graph.node_C(RRNodeId(set_rr_node)) * (g_rr_switch_inf[switch_ind].R + 0.5*rr_graph.node_R(RRNodeId(set_rr_node))) +
             //              g_rr_switch_inf[switch_ind].Tdel;
 
