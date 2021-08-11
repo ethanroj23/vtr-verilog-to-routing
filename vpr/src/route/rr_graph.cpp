@@ -1401,6 +1401,9 @@ static void build_rr_sinks_sources(RRGraphBuilder& rr_graph_builder,
     int num_pins = type->num_pins;
     const std::vector<int>& pin_class = type->pin_class;
 
+    const auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
+
     /* SINK and SOURCE-to-OPIN edges */
     for (int iclass = 0; iclass < num_class; ++iclass) {
         RRNodeId inode = RRNodeId::INVALID();
@@ -1517,7 +1520,7 @@ static void build_rr_sinks_sources(RRGraphBuilder& rr_graph_builder,
                             L_rr_node.add_node_side(inode, side);
 
                             // Sanity check
-                            VTR_ASSERT(L_rr_node.is_node_on_specific_side(inode, side));
+                            VTR_ASSERT(rr_graph.is_node_on_specific_side(RRNodeId(inode), side));
                             VTR_ASSERT(type->pinloc[width_offset][height_offset][side][L_rr_node.node_pin_num(inode)]);
                         }
                     }
@@ -2962,7 +2965,7 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const t_rr_graph_storage
 
     for (const e_side& from_side : SIDES) {
         /* Bypass those side where the node does not appear */
-        if (!rr_nodes.is_node_on_specific_side(from_rr, from_side)) {
+        if (!rr_graph.is_node_on_specific_side(from_rr, from_side)) {
             continue;
         }
 
@@ -2973,7 +2976,7 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const t_rr_graph_storage
 
             for (const e_side& to_side : SIDES) {
                 /* Bypass those side where the node does not appear */
-                if (!rr_nodes[to_rr].is_node_on_specific_side(to_side)) {
+                if (!rr_graph.is_node_on_specific_side(RRNodeId(to_rr), to_side)) {
                     continue;
                 }
 

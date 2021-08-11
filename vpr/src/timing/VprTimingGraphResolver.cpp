@@ -301,7 +301,7 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
             if (rr_graph.node_type(RRNodeId(node->inode)) == OPIN || rr_graph.node_type(RRNodeId(node->inode)) == IPIN) {
                 net_component.type_name += "side: ("; //add the side of the routing resource node
                 for (const e_side& node_side : SIDES) {
-                    if (!device_ctx.rr_nodes.is_node_on_specific_side(RRNodeId(node->inode), node_side)) {
+                    if (!rr_graph.is_node_on_specific_side(RRNodeId(node->inode), node_side)) {
                         continue;
                     }
                     net_component.type_name += std::string(SIDE_STRING[node_side]) + ","; //add the side of the routing resource node

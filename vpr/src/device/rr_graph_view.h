@@ -122,6 +122,16 @@ class RRGraphView {
         return node_storage_.node_cost_index(node);
     }
 
+    /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
+    inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
+        return node_storage_.is_node_on_specific_side(node, side);
+    }
+
+    /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
+    inline const char* node_side_string(RRNodeId node) const {
+        return node_storage_.node_side_string(node);
+    }
+
     /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const {
         return node_lookup_;

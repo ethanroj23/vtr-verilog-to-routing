@@ -162,7 +162,7 @@ static void report_overused_ipin_opin(std::ostream& os, RRNodeId node_id) {
         "Non-track RR node should not span across multiple grid blocks.");
 
     os << "Pin number = " << device_ctx.rr_nodes.node_pin_num(node_id) << '\n';
-    os << "Side = " << device_ctx.rr_nodes.node_side_string(node_id) << "\n\n";
+    os << "Side = " << device_ctx.rr_graph.node_side_string(node_id) << "\n\n";
 
     //Add block type for IPINs/OPINs in overused rr-node report
     const auto& clb_nlist = g_vpr_ctx.clustering().clb_nlist;
@@ -289,7 +289,7 @@ static void log_single_overused_node_status(int overuse_index, RRNodeId node_id)
 
     //Side
     if (node_type == e_rr_type::IPIN || node_type == e_rr_type::OPIN) {
-        VTR_LOG(" %7s", device_ctx.rr_nodes.node_side_string(node_id));
+        VTR_LOG(" %7s", device_ctx.rr_graph.node_side_string(node_id));
     } else {
         VTR_LOG(" %7s", "N/A");
     }

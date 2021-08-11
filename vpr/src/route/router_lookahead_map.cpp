@@ -1023,7 +1023,7 @@ static void adjust_rr_pin_position(const RRNodeId rr, int& x, int& y) {
      */
     e_side rr_side = NUM_SIDES;
     for (const e_side& candidate_side : SIDES) {
-        if (rr_graph.is_node_on_specific_side(rr, candidate_side)) {
+        if (device_ctx.rr_graph.is_node_on_specific_side(rr, candidate_side)) {
             rr_side = candidate_side;
             break;
         }
