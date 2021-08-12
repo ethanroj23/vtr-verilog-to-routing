@@ -1150,9 +1150,10 @@ void alloc_and_load_rr_node_indices(RRGraphBuilder& rr_graph_builder,
                          CHANY, chan_details_y, rr_graph_builder, index);
 }
 
-bool verify_rr_node_indices(const DeviceGrid& grid, const t_rr_node_indices& rr_node_indices, const t_rr_graph_storage& rr_nodes) {
+bool verify_rr_node_indices(const DeviceGrid& grid, const t_rr_node_indices& rr_node_indices) {
     std::unordered_map<int, int> rr_node_counts;
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_nodes = device_ctx.rr_nodes;
     const auto& rr_graph = device_ctx.rr_graph;
 
     for (t_rr_type rr_type : RR_TYPES) {

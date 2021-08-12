@@ -3,6 +3,7 @@
 
 #include "rr_graph_storage.h"
 #include "rr_spatial_lookup.h"
+#include "folded_rr_graph.h"
 
 /* An read-only routing resource graph
  * which is an unified object including pointors to
@@ -31,12 +32,16 @@
  *                          in particular geometry information (type, x, y etc).
  *
  */
+
+
+
 class RRGraphView {
     /* -- Constructors -- */
   public:
     /* See detailed comments about the data structures in the internal data storage section of this file */
     RRGraphView(const t_rr_graph_storage& node_storage,
-                const RRSpatialLookup& node_lookup);
+                const RRSpatialLookup& node_lookup,
+                const FoldedRRGraph& folded_rr_graph);
 
     /* Disable copy constructors and copy assignment operator
      * This is to avoid accidental copy because it could be an expensive operation considering that the 
@@ -149,6 +154,8 @@ class RRGraphView {
     const t_rr_graph_storage& node_storage_;
     /* Fast look-up for rr nodes */
     const RRSpatialLookup& node_lookup_;
+    /* Folded look-up for rr nodes */
+    const FoldedRRGraph& folded_rr_graph_;
 };
 
 #endif

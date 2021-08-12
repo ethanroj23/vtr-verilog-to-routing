@@ -418,6 +418,11 @@ class t_rr_graph_storage {
         return node_storage_.empty();
     }
 
+    /* free the memory used by node_storage_. Only use this if you are accessing rr_node data elsewhere */
+    inline void clear_node_storage(){
+        vtr::vector<RRNodeId, t_rr_node_data, vtr::aligned_allocator<t_rr_node_data>>().swap(node_storage_);
+    }
+
     // Remove all nodes and edges from the RR graph.
     //
     // This method re-enables graph mutation if the graph was read-only.

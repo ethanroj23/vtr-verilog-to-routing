@@ -1,0 +1,280 @@
+#ifndef FOLDED_RR_GRAPH_H
+#define FOLDED_RR_GRAPH_H
+
+#include "vpr_types.h"
+#include <iostream>
+#include "rr_graph_storage.h"
+
+class FoldedRRGraph {
+    /* -- Constructors -- */
+  public:
+    /* Explicitly define the only way to create an object */
+    explicit FoldedRRGraph(const t_rr_graph_storage& node_storage);
+
+    /* Disable copy constructors and copy assignment operator
+     * This is to avoid accidental copy because it could be an expensive operation considering that the 
+     * memory footprint of the data structure could ~ Gb
+     * Using the following syntax, we prohibit accidental 'pass-by-value' which can be immediately caught 
+     * by compiler
+     */
+    FoldedRRGraph(const FoldedRRGraph&) = delete;
+    void operator=(const FoldedRRGraph&) = delete;
+
+    /* -- Accessors -- */
+  public:
+  // every function takes in an RRNodeId that has not been remapped yet
+  /* The general method for accessing data from the FoldedRRGraph is as follows:
+   * 1. Obtain the remapped_id from remapped_ids data member.v 
+   * 2. Find the x and y coordinates of the tile that contains the input RRNode
+   * 3. Obtain the node_patterns_idx from the tile
+   * 4. Calculate the relative offset for the given RRNodeId
+   * 5. Access the desired data with something like 
+   *      node_pattern_data[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
+   */
+
+  /*Return an RRNode's type.*/
+
+  std::array<size_t, 2> find_tile_coords(RRNodeId id) const {
+      RRNodeId remapped_id = remapped_ids_[id];
+      std::array<size_t, 2> return_x_y;
+      size_t min_id = (size_t) remapped_id;
+      for (size_t x = 0; x < tile_patterns.size(); x++){ // iterate over x
+        for (size_t y = 0; y < tile_patterns[x].size(); y++){ // iterate over y
+          if ( (size_t) tile_patterns[x][y].starting_node_id_ <= min_id){
+            return_x_y = {x, y};
+          }
+        }
+      }
+        return return_x_y; 
+  }
+
+  inline t_rr_type node_type(RRNodeId node) const{ 
+    if (!built) return node_storage_.node_type(node);
+    return get_node_pattern(node).type_;
+  }
+
+  inline short node_capacity(RRNodeId node) const{ 
+    if (!built) return node_storage_.node_capacity(node);
+    return get_node_pattern(node).capacity_;
+  }
+  
+  /* Get the type string of a routing resource node. This function is inlined for runtime optimization. */
+  inline const char* node_type_string(RRNodeId node) const {
+      return rr_node_typename[node_type(node)];
+  }
+
+  /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
+    * Direction::INC: wire driver is positioned at the low-coordinate end of the wire.
+    * Direction::DEC: wire_driver is positioned at the high-coordinate end of the wire.
+    * Direction::BIDIR: wire has multiple drivers, so signals can travel either way along the wire
+    * Direction::NONE: node does not have a direction, such as IPIN/OPIN
+    */
+  inline Direction node_direction(RRNodeId node) const {
+    if (!built) return node_storage_.node_direction(node);
+    return get_node_pattern(node).dir_side_.direction_;
+  }
+
+  /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
+  inline const std::string& node_direction_string(RRNodeId node) const {
+        Direction direction = node_direction(node);
+
+        int int_direction = static_cast<int>(direction);
+        VTR_ASSERT(int_direction >= 0 && int_direction < static_cast<int>(Direction::NUM_DIRECTIONS));
+        return CONST_DIRECTION_STRING[int_direction];
+  }
+
+  /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
+  float node_C(RRNodeId node) const;
+
+  /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
+  float node_R(RRNodeId node) const;
+
+  /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
+  inline int16_t node_rc_index(RRNodeId node) const {
+      if (!built) return node_storage_.node_rc_index(node);
+      return get_node_pattern(node).rc_index_;
+  }
+
+  /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
+  inline short node_xlow(RRNodeId node) const {
+      if (!built) return node_storage_.node_xlow(node);
+
+      std::array<size_t, 2> x_y = find_tile_coords(node);
+      return x_y[0];
+  }
+
+  /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
+  inline short node_xhigh(RRNodeId node) const {
+      if (!built) return node_storage_.node_xhigh(node);
+  
+      RRNodeId remapped_id = remapped_ids_[node];
+      std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      int node_patterns_idx = tile.node_patterns_idx_;
+      size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
+      return x_y[0] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dx_;
+  }
+
+  /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
+  inline short node_ylow(RRNodeId node) const {
+      if (!built) return node_storage_.node_ylow(node);
+  
+      std::array<size_t, 2> x_y = find_tile_coords(node);
+      return x_y[1];
+  }
+
+  /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
+  inline short node_yhigh(RRNodeId node) const {
+      if (!built) return node_storage_.node_yhigh(node);
+  
+      RRNodeId remapped_id = remapped_ids_[node];
+      std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      int node_patterns_idx = tile.node_patterns_idx_;
+      size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
+      return x_y[1] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dy_;
+  }
+
+  /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
+  inline short node_cost_index(RRNodeId node) const {
+    if (!built) return node_storage_.node_cost_index(node);
+    return get_node_pattern(node).cost_index_;
+  }
+
+  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
+  inline bool is_node_on_specific_side(RRNodeId node, e_side side){
+    if (!built) return node_storage_.is_node_on_specific_side(node, side);
+    t_rr_type current_type = node_type(node);
+    if (current_type != IPIN && current_type != OPIN){
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+          "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
+          rr_node_typename[current_type]);
+    }
+    std::bitset<NUM_SIDES> side_tt = get_node_pattern(node).dir_side_.sides_;
+    return side_tt[size_t(side)];
+  }
+
+  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
+  inline const char* node_side_string(RRNodeId node) {// ⬛️
+      for (const e_side& side : SIDES) {
+          if (is_node_on_specific_side(node, side)) {
+              return SIDE_STRING[side];
+          }
+      }
+      /* Not found, return an invalid string*/
+      return SIDE_STRING[NUM_SIDES];
+  }
+
+
+
+    /* -- Mutators -- */
+  public:
+    void build_folded_rr_graph();
+
+    void initialize_folded_rr_graph();
+
+    void add_empty_pattern();
+
+    
+
+    /* -- Internal data storage -- */
+  private:
+
+  /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
+    struct FoldedNodePattern { // 12 Bytes
+          int16_t cost_index_; // 2 Bytes
+          int16_t rc_index_; // 2 Bytes
+
+          int16_t dx_; // 2 Bytes
+          int16_t dy_; // 2 Bytes
+
+          t_rr_type type_; // 1 Byte
+
+          uint16_t capacity_; // 2 Bytes
+
+          union {
+              Direction direction_; //Valid only for CHANX/CHANY
+              unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
+          } dir_side_; // 1 Byte
+
+      };
+
+    /* Obtain node_pattern_data for specific node id */
+    inline FoldedNodePattern get_node_pattern(RRNodeId node) const {
+      RRNodeId remapped_id = remapped_ids_[node];
+      std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      int node_patterns_idx = tile.node_patterns_idx_;
+      size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
+      return node_pattern_data[node_patterns[node_patterns_idx][offset]];
+    } 
+
+
+    friend bool operator==(const FoldedNodePattern& lhs, const FoldedNodePattern& rhs)
+          {
+            return lhs.cost_index_ == rhs.cost_index_ &&
+                   lhs.rc_index_ == rhs.rc_index_ &&
+                   lhs.dx_ == rhs.dx_ &&
+                   lhs.dy_ == rhs.dy_ &&
+                   lhs.type_ == rhs.type_ &&
+                   lhs.dir_side_.direction_ == rhs.dir_side_.direction_ &&
+                   lhs.dir_side_.sides_ == rhs.dir_side_.sides_ &&
+                   lhs.capacity_ == rhs.capacity_;
+
+          }
+
+    /* Every tile has its own FoldedTilePattern. starting_node_id_ refers to the first node id in the tile.
+     * node_patterns_idx_ refers to the index within node_patterns that contains the 
+     */
+    struct FoldedTilePattern { // 6 Bytes
+        RRNodeId starting_node_id_ = RRNodeId(-1); // 4 Bytes
+        int16_t node_patterns_idx_ = -1; // 2 Bytes  -> FoldedNodePattern
+      }; 
+
+
+    /*        GENERAL DATA FLOW
+
+    tile X-----------.
+    tile Y--------.  |
+                  V  V
+    tile_patterns[x][y].node_patterns_idx----.
+                                             |
+    relative_id_offset-----------------------|-----.
+                                             V     V             
+                              node_patterns[idx][offset]-----.
+                                                             V
+                                          node_pattern_data[idx]
+
+
+    // to find X and Y
+    tile_patterns[x][y].starting_node_id_ < RRNodeId < tile_patterns[any_other_x][any_other_y].starting_node_id_
+
+    // to find relative_id_offset
+    RRNodeId - tile_patterns[x][y].starting_node_id_
+
+    */
+
+
+
+    /* 2d vector. The indexes into the vector are the tile's x and y position */
+    std::vector<std::vector<FoldedTilePattern>> tile_patterns; // Every tile has a starting_node_id and node_patterns_idx
+
+    /* Every Tile Type has a set of FoldedNodePatterns */
+    std::vector<std::vector<int>> node_patterns; 
+
+    /* Raw FoldedNodePattern data is stored here */
+    std::vector<FoldedNodePattern> node_pattern_data;
+
+    /* Due to the current gaps in RRNodeIds, this vector remaps them so that there are no gaps */
+    vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
+
+
+    /* node-level storage including edge storages */
+    const t_rr_graph_storage& node_storage_;
+
+    bool built = false; // flag for determining if the FoldedRRGraph has been built yet
+
+
+};
+
+#endif

@@ -31,7 +31,7 @@ void alloc_and_load_rr_node_indices(RRGraphBuilder& rr_graph_builder,
                                     const t_chan_details& chan_details_x,
                                     const t_chan_details& chan_details_y);
 
-bool verify_rr_node_indices(const DeviceGrid& grid, const t_rr_node_indices& rr_node_indices, const t_rr_graph_storage& rr_nodes);
+bool verify_rr_node_indices(const DeviceGrid& grid, const t_rr_node_indices& rr_node_indices);
 
 int get_rr_node_index(int x,
                       int y,
