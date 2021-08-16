@@ -34,7 +34,7 @@
  * index "inode". This is okay because the mapping is only used in this file to  *
  * quickly figure out where rt_nodes that we are branching off of (for nets with *
  * fanout > 1) are, and we will never branch off a SINK.                         */
-static std::vector<t_rt_node*> rr_node_to_rt_node; /* [0..device_ctx.rr_nodes.size()-1] */
+static std::vector<t_rt_node*> rr_node_to_rt_node; /* [0..device_ctx.rr_graph.size()-1] */
 
 /* Frees lists for fast addition and deletion of nodes and edges. */
 
@@ -80,7 +80,7 @@ bool alloc_route_tree_timing_structs(bool exists_ok) {
     /* Allocates any structures needed to build the routing trees. */
 
     auto& device_ctx = g_vpr_ctx.device();
-    bool route_tree_structs_are_allocated = (rr_node_to_rt_node.size() == size_t(device_ctx.rr_nodes.size())
+    bool route_tree_structs_are_allocated = (rr_node_to_rt_node.size() == size_t(device_ctx.rr_graph.size())
                                              || rt_node_free_list != nullptr);
     if (route_tree_structs_are_allocated) {
         if (exists_ok) {
@@ -91,7 +91,7 @@ bool alloc_route_tree_timing_structs(bool exists_ok) {
         }
     }
 
-    rr_node_to_rt_node = std::vector<t_rt_node*>(device_ctx.rr_nodes.size(), nullptr);
+    rr_node_to_rt_node = std::vector<t_rt_node*>(device_ctx.rr_graph.size(), nullptr);
 
     return true;
 }

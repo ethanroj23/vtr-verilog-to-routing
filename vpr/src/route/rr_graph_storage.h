@@ -12,6 +12,7 @@
 #include "vpr_utils.h"
 #include "vtr_strong_id_range.h"
 #include "vtr_array_view.h"
+#include "rr_graph_view_interface.h"
 
 /* Main structure describing one routing resource node.  Everything in       *
  * this structure should describe the graph -- information needed only       *
@@ -141,7 +142,7 @@ class t_rr_graph_view;
 // methods can be found underneath the header "Node methods" and the edge
 // methods can be found underneath the header "Edge methods".
 //
-class t_rr_graph_storage {
+class t_rr_graph_storage : public RRGraphViewInterface {
   public:
     t_rr_graph_storage() {
         clear();
@@ -157,6 +158,10 @@ class t_rr_graph_storage {
     /****************
      * Node methods *
      ****************/
+
+    void rr_graph_name() const{
+        VTR_LOG("rr_graph_storage\n");
+    }
 
     t_rr_type node_type(RRNodeId id) const {
         return node_storage_[id].type_;
@@ -730,6 +735,10 @@ class t_rr_graph_view {
 
     size_t size() const {
         return node_storage_.size();
+    }
+
+    void rr_graph_name(){
+        VTR_LOG("rr_graph_storage\n");
     }
 
     t_rr_type node_type(RRNodeId id) const {

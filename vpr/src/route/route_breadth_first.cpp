@@ -72,7 +72,7 @@ bool try_breadth_first_route(const t_router_opts& router_opts) {
     BinaryHeap heap;
     heap.init_heap(device_ctx.grid);
 
-    OveruseInfo overuse_info(device_ctx.rr_nodes.size());
+    OveruseInfo overuse_info(device_ctx.rr_graph.size());
 
     for (itry = 1; itry <= router_opts.max_router_iterations; itry++) {
         VTR_LOG("Routing Iteration %d\n", itry);

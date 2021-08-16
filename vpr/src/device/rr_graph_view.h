@@ -4,6 +4,7 @@
 #include "rr_graph_storage.h"
 #include "rr_spatial_lookup.h"
 #include "folded_rr_graph.h"
+#include "rr_graph_view_interface.h"
 
 /* An read-only routing resource graph
  * which is an unified object including pointors to
@@ -35,13 +36,14 @@
 
 
 
-class RRGraphView {
+
+class RRGraphView : public RRGraphViewInterface {
     /* -- Constructors -- */
   public:
     /* See detailed comments about the data structures in the internal data storage section of this file */
     RRGraphView(const t_rr_graph_storage& node_storage,
                 const RRSpatialLookup& node_lookup,
-                const FoldedRRGraph& folded_rr_graph);
+                RRGraphViewInterface* primary_rr_graph);
 
     /* Disable copy constructors and copy assignment operator
      * This is to avoid accidental copy because it could be an expensive operation considering that the 
@@ -59,17 +61,17 @@ class RRGraphView {
   public:
     /* Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type(RRNodeId node) const {
-        return node_storage_.node_type(node);
+        return primary_rr_graph_->node_type(node);
     }
 
     /* Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
-        return node_storage_.node_type_string(node);
+        return primary_rr_graph_->node_type_string(node);
     }
 
     /* Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
-        return node_storage_.node_capacity(node);
+        return primary_rr_graph_->node_capacity(node);
     }
 
     /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
@@ -79,27 +81,27 @@ class RRGraphView {
      * Direction::NONE: node does not have a direction, such as IPIN/OPIN
      */
     inline Direction node_direction(RRNodeId node) const {
-        return node_storage_.node_direction(node);
+        return primary_rr_graph_->node_direction(node);
     }
 
     /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
     inline const std::string& node_direction_string(RRNodeId node) const {
-        return node_storage_.node_direction_string(node);
+        return primary_rr_graph_->node_direction_string(node);
     }
 
     /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_C(RRNodeId node) const {
-        return node_storage_.node_C(node);
+        return primary_rr_graph_->node_C(node);
     }
 
     /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_R(RRNodeId node) const {
-        return node_storage_.node_R(node);
+        return primary_rr_graph_->node_R(node);
     }
 
     /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
     inline int16_t node_rc_index(RRNodeId node) const {
-        return node_storage_.node_rc_index(node);
+        return primary_rr_graph_->node_rc_index(node);
     }
 
     /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
@@ -109,42 +111,55 @@ class RRGraphView {
 
     /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xlow(RRNodeId node) const {
-        return node_storage_.node_xlow(node);
+        return primary_rr_graph_->node_xlow(node);
     }
 
     /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xhigh(RRNodeId node) const {
-        return node_storage_.node_xhigh(node);
+        return primary_rr_graph_->node_xhigh(node);
     }
 
     /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_ylow(RRNodeId node) const {
-        return node_storage_.node_ylow(node);
+        return primary_rr_graph_->node_ylow(node);
     }
 
     /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_yhigh(RRNodeId node) const {
-        return node_storage_.node_yhigh(node);
+        return primary_rr_graph_->node_yhigh(node);
     }
 
     /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_cost_index(RRNodeId node) const {
-        return node_storage_.node_cost_index(node);
+        return primary_rr_graph_->node_cost_index(node);
     }
+
 
     /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
     inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
-        return node_storage_.is_node_on_specific_side(node, side);
+        return primary_rr_graph_->is_node_on_specific_side(node, side);
     }
 
     /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
     inline const char* node_side_string(RRNodeId node) const {
-        return node_storage_.node_side_string(node);
+        return primary_rr_graph_->node_side_string(node);
     }
 
     /* Return the fast look-up data structure for queries from client functions */
     const RRSpatialLookup& node_lookup() const {
         return node_lookup_;
+    }
+
+    inline void set_primary_rr_graph(RRGraphViewInterface* new_rr_graph){
+        primary_rr_graph_ = new_rr_graph;
+    }
+
+    inline void rr_graph_name() const{
+        primary_rr_graph_->rr_graph_name();
+    }
+
+    inline size_t size() const{
+        return primary_rr_graph_->size();
     }
 
     /* -- Internal data storage -- */
@@ -155,7 +170,8 @@ class RRGraphView {
     /* Fast look-up for rr nodes */
     const RRSpatialLookup& node_lookup_;
     /* Folded look-up for rr nodes */
-    const FoldedRRGraph& folded_rr_graph_;
+    RRGraphViewInterface* primary_rr_graph_;
 };
 
 #endif
+

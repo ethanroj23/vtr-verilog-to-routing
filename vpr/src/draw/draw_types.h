@@ -156,7 +156,7 @@ typedef struct {
  * draw_rr_node: stores the state information of each routing resource.
  *				 Used to control drawing each routing resource when
  *				 ROUTING is on screen.
- *				 [0..device_ctx.rr_nodes.size()-1]
+ *				 [0..device_ctx.rr_graph.size()-1]
  * save_graphics: Whether to generate an output graphcis file
  * force_pause: Should we pause for user interaction (since the user requested it)
  * save_graphics_file_base: Base of save graphis file name (i.e. before extension)

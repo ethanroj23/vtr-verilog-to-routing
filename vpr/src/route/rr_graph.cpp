@@ -322,6 +322,7 @@ void create_rr_graph(const t_graph_type graph_type,
                      const int num_directs,
                      int* Warnings) {
     const auto& device_ctx = g_vpr_ctx.device();
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
 
     if (!det_routing_arch->read_rr_graph_filename.empty()) {
         if (device_ctx.read_rr_graph_filename != det_routing_arch->read_rr_graph_filename) {
@@ -371,7 +372,10 @@ void create_rr_graph(const t_graph_type graph_type,
 
     process_non_config_sets();
 
+    // ESR HERE
     verify_rr_node_indices(grid, device_ctx.rr_node_indices);
+
+    
 
     print_rr_graph_stats();
 
@@ -379,6 +383,12 @@ void create_rr_graph(const t_graph_type graph_type,
     if (!det_routing_arch->write_rr_graph_filename.empty()) {
         write_rr_graph(det_routing_arch->write_rr_graph_filename.c_str());
     }
+    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
+    // delete rr_nodes.node_storage_...
+    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    
+
 }
 
 void print_rr_graph_stats() {
@@ -389,7 +399,7 @@ void print_rr_graph_stats() {
         num_rr_edges += rr_node.edges().size();
     }
 
-    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_nodes.size());
+    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.size());
     VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
 }
 
@@ -705,14 +715,14 @@ static void build_rr_graph(const t_graph_type graph_type,
         clock_modeling);
 
     // Verify no incremental node allocation.
-    if (device_ctx.rr_nodes.size() > expected_node_count) {
+    if (device_ctx.rr_graph.size() > expected_node_count) {
         VTR_LOG_ERROR("Expected no more than %zu nodes, have %zu nodes\n",
-                      expected_node_count, device_ctx.rr_nodes.size());
+                      expected_node_count, device_ctx.rr_graph.size());
     }
 
     /* Update rr_nodes capacities if global routing */
     if (graph_type == GRAPH_GLOBAL) {
-        // Using num_rr_nodes here over device_ctx.rr_nodes.size() because
+        // Using num_rr_nodes here over device_ctx.rr_graph.size() because
         // clock_modeling::DEDICATED_NETWORK will append some rr nodes after
         // the regular graph.
         for (int i = 0; i < num_rr_nodes; i++) {
@@ -746,8 +756,12 @@ static void build_rr_graph(const t_graph_type graph_type,
 
     check_rr_graph(graph_type, grid, types);
 
-    // delete rr_nodes.node_storage_...
-    //device_ctx.rr_nodes.clear_node_storage();
+    //RRNodeId test = RRNodeId(0);
+    //t_rr_type this_type = device_ctx.rr_graph.node_type(test);
+    //device_ctx.rr_graph.set_primary_rr_graph(&device_ctx.folded_rr_graph);
+
+    //t_rr_type other_type = device_ctx.rr_graph.node_type(test);
+
 
     /* Free all temp structs */
     if (seg_details) {
@@ -1523,7 +1537,7 @@ static void build_rr_sinks_sources(RRGraphBuilder& rr_graph_builder,
                             L_rr_node.add_node_side(inode, side);
 
                             // Sanity check
-                            VTR_ASSERT(rr_graph.is_node_on_specific_side(RRNodeId(inode), side));
+                            VTR_ASSERT(rr_graph.is_node_on_specific_side(inode, side));
                             VTR_ASSERT(type->pinloc[width_offset][height_offset][side][L_rr_node.node_pin_num(inode)]);
                         }
                     }

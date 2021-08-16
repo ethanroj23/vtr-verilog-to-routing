@@ -89,7 +89,10 @@ void FoldedRRGraph::build_folded_rr_graph(){
     //std::vector<std::vector<int>> node_patterns; // Every Tile Type has a set of FoldedNodePatterns
 
     //std::vector<FoldedNodePattern> node_pattern_data;
-
+    tile_patterns.clear();
+    node_pattern_data.clear();
+    node_patterns.clear();
+    remapped_ids_.clear();
 
     std::vector<std::string> temp_node_patterns;
     std::vector<std::vector<std::vector<RRNodeId>>> ids_in_tile; // 
@@ -223,5 +226,5 @@ void FoldedRRGraph::build_folded_rr_graph(){
 
     std::cout << "Done\n";
     built = true;
-
+    size_ = node_storage_.size();
 }

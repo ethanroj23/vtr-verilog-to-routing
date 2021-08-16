@@ -4,8 +4,9 @@
 #include "vpr_types.h"
 #include <iostream>
 #include "rr_graph_storage.h"
+#include "rr_graph_view_interface.h"
 
-class FoldedRRGraph {
+class FoldedRRGraph : public RRGraphViewInterface{
     /* -- Constructors -- */
   public:
     /* Explicitly define the only way to create an object */
@@ -33,6 +34,16 @@ class FoldedRRGraph {
    */
 
   /*Return an RRNode's type.*/
+
+  /* Print the current rr_graph type */
+  void rr_graph_name() const{
+    VTR_LOG("FoldedRRGraph\n");
+  }
+
+  /* Return the number of RRNodes */
+  size_t size() const{
+      return size_;
+  }
 
   std::array<size_t, 2> find_tile_coords(RRNodeId id) const {
       RRNodeId remapped_id = remapped_ids_[id];
@@ -142,7 +153,7 @@ class FoldedRRGraph {
   }
 
   /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline bool is_node_on_specific_side(RRNodeId node, e_side side){
+  inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{
     if (!built) return node_storage_.is_node_on_specific_side(node, side);
     t_rr_type current_type = node_type(node);
     if (current_type != IPIN && current_type != OPIN){
@@ -155,7 +166,7 @@ class FoldedRRGraph {
   }
 
   /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline const char* node_side_string(RRNodeId node) {// ⬛️
+  inline const char* node_side_string(RRNodeId node) const {// ⬛️
       for (const e_side& side : SIDES) {
           if (is_node_on_specific_side(node, side)) {
               return SIDE_STRING[side];
@@ -268,6 +279,7 @@ class FoldedRRGraph {
     /* Due to the current gaps in RRNodeIds, this vector remaps them so that there are no gaps */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
 
+    size_t size_;
 
     /* node-level storage including edge storages */
     const t_rr_graph_storage& node_storage_;

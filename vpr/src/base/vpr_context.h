@@ -11,6 +11,7 @@
 #include "atom_netlist.h"
 #include "clustered_netlist.h"
 #include "rr_graph_view.h"
+#include "rr_graph_view_interface.h"
 #include "rr_graph_storage.h"
 #include "rr_graph_builder.h"
 #include "rr_node.h"
@@ -175,12 +176,18 @@ struct DeviceContext : public Context {
     /* A read-only view of routing resource graph to be the ONLY database 
      * for client functions: GUI, placer, router, timing analyzer etc.
      */
-    RRGraphView rr_graph{rr_nodes, rr_spatial_lookup, folded_rr_graph};
+
 
     /* A read-only view of routing resource graph to be the ONLY database 
      * for client functions: GUI, placer, router, timing analyzer etc.
      */
     FoldedRRGraph folded_rr_graph{rr_nodes};
+
+//DisablePairCollision* pCallback;
+//pCallback = new DerivedClass;
+    RRGraphViewInterface* primary_rr_graph = &rr_nodes;
+
+    RRGraphView rr_graph{rr_nodes, rr_spatial_lookup, primary_rr_graph};
 
     /* A writeable view of routing resource graph to be the ONLY database 
      * for routing resource graph builder functions.
