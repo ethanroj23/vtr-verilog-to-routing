@@ -60,12 +60,10 @@ class FoldedRRGraph : public RRGraphViewInterface{
   }
 
   inline t_rr_type node_type(RRNodeId node) const{ 
-    if (!built) return node_storage_.node_type(node);
     return get_node_pattern(node).type_;
   }
 
   inline short node_capacity(RRNodeId node) const{ 
-    if (!built) return node_storage_.node_capacity(node);
     return get_node_pattern(node).capacity_;
   }
   
@@ -81,7 +79,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
     * Direction::NONE: node does not have a direction, such as IPIN/OPIN
     */
   inline Direction node_direction(RRNodeId node) const {
-    if (!built) return node_storage_.node_direction(node);
     return get_node_pattern(node).dir_side_.direction_;
   }
 
@@ -102,59 +99,46 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
   /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
   inline int16_t node_rc_index(RRNodeId node) const {
-      if (!built) return node_storage_.node_rc_index(node);
       return get_node_pattern(node).rc_index_;
   }
 
   /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_xlow(RRNodeId node) const {
-      if (!built) return node_storage_.node_xlow(node);
-
-      std::array<size_t, 2> x_y = find_tile_coords(node);
-      return x_y[0];
+      return node_to_x_y_[node][0];
   }
 
   /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_xhigh(RRNodeId node) const {
-      if (!built) return node_storage_.node_xhigh(node);
-  
+  inline short node_xhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
-      std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      //std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return x_y[0] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dx_;
+      return node_to_x_y_[node][0] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dx_;
   }
 
   /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_ylow(RRNodeId node) const {
-      if (!built) return node_storage_.node_ylow(node);
-  
-      std::array<size_t, 2> x_y = find_tile_coords(node);
-      return x_y[1];
+      return node_to_x_y_[node][1];
   }
 
   /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_yhigh(RRNodeId node) const {
-      if (!built) return node_storage_.node_yhigh(node);
-  
+  inline short node_yhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
-      std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      //std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return x_y[1] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dy_;
+      return node_to_x_y_[node][1] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dy_;
   }
 
   /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_cost_index(RRNodeId node) const {
-    if (!built) return node_storage_.node_cost_index(node);
     return get_node_pattern(node).cost_index_;
   }
 
   /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
   inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{
-    if (!built) return node_storage_.is_node_on_specific_side(node, side);
     t_rr_type current_type = node_type(node);
     if (current_type != IPIN && current_type != OPIN){
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -213,8 +197,8 @@ class FoldedRRGraph : public RRGraphViewInterface{
     /* Obtain node_pattern_data for specific node id */
     inline FoldedNodePattern get_node_pattern(RRNodeId node) const {
       RRNodeId remapped_id = remapped_ids_[node];
-      std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns[x_y[0]][x_y[1]];
+      //std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
       return node_pattern_data[node_patterns[node_patterns_idx][offset]];
@@ -278,6 +262,10 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
     /* Due to the current gaps in RRNodeIds, this vector remaps them so that there are no gaps */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
+
+    /* Map of RRNodeId to  x_low and y_low*/ 
+    vtr::vector<RRNodeId, std::array<int16_t, 2>> node_to_x_y_;
+
 
     size_t size_;
 

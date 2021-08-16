@@ -83,7 +83,7 @@ void FoldedRRGraph::add_empty_pattern(){
 
 void FoldedRRGraph::build_folded_rr_graph(){
 
-
+    VTR_LOG("Building FoldedRRGraph\n");
     //std::vector<std::vector<FoldedTilePattern>> tile_patterns; // Every tile has a starting_node_id and node_patterns_idx
 
     //std::vector<std::vector<int>> node_patterns; // Every Tile Type has a set of FoldedNodePatterns
@@ -93,18 +93,23 @@ void FoldedRRGraph::build_folded_rr_graph(){
     node_pattern_data.clear();
     node_patterns.clear();
     remapped_ids_.clear();
+    node_to_x_y_.clear();
 
     std::vector<std::string> temp_node_patterns;
     std::vector<std::vector<std::vector<RRNodeId>>> ids_in_tile; // 
     node_patterns.clear();
     // dx, dy, type, capacity, direction, side, C, R, segment
+
+    if (node_to_x_y_.size() < node_storage_.size()){
+            node_to_x_y_.resize((size_t) node_storage_.size());
+        }
     for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
         RRNodeId id = RRNodeId(idx);
         int16_t x = node_storage_.node_xlow(id);
         int16_t y = node_storage_.node_ylow(id);
         int16_t dx = node_storage_.node_xhigh(id) - x;
         int16_t dy = node_storage_.node_yhigh(id) - y;
-
+        node_to_x_y_[id] = { x, y };
         
         FoldedNodePattern node_pattern = { 
                                             node_storage_.node_cost_index(id),

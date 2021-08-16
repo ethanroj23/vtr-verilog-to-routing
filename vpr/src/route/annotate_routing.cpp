@@ -52,7 +52,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_nets(const DeviceContext& d
                  * whose capacity is 1 
                  */
                 if ((rr_node_nets[rr_node])
-                    && (1 == device_ctx.rr_nodes.node_capacity(rr_node))
+                    && (1 == device_ctx.rr_graph.node_capacity(rr_node))
                     && (net_id != rr_node_nets[rr_node])) {
                     VPR_FATAL_ERROR(VPR_ERROR_ANALYSIS,
                                     "Detect two nets '%s' and '%s' that are mapped to the same rr_node '%ld'!\n%s\n",

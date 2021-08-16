@@ -322,6 +322,7 @@ void create_rr_graph(const t_graph_type graph_type,
                      const int num_directs,
                      int* Warnings) {
     const auto& device_ctx = g_vpr_ctx.device();
+    // Set primary rr_graph to be the rr_graph_storage version
     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
 
     if (!det_routing_arch->read_rr_graph_filename.empty()) {
@@ -383,11 +384,12 @@ void create_rr_graph(const t_graph_type graph_type,
     if (!det_routing_arch->write_rr_graph_filename.empty()) {
         write_rr_graph(det_routing_arch->write_rr_graph_filename.c_str());
     }
+    // build folded rr_graph from rr_graph_storage version
     g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+    // Set primary rr_graph to the FoldedRRGraph
     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
-    // delete rr_nodes.node_storage_...
+    /// delete rr_nodes.node_storage_ as it will no longer be used
     g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
-    
 
 }
 
@@ -752,16 +754,8 @@ static void build_rr_graph(const t_graph_type graph_type,
 
     rr_graph_externals(segment_inf, *wire_to_rr_ipin_switch, base_cost_type);
 
-    //device_ctx.folded_rr_graph.build_folded_rr_graph();
 
     check_rr_graph(graph_type, grid, types);
-
-    //RRNodeId test = RRNodeId(0);
-    //t_rr_type this_type = device_ctx.rr_graph.node_type(test);
-    //device_ctx.rr_graph.set_primary_rr_graph(&device_ctx.folded_rr_graph);
-
-    //t_rr_type other_type = device_ctx.rr_graph.node_type(test);
-
 
     /* Free all temp structs */
     if (seg_details) {
