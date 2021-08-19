@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include "globals.h"
+#include "vtr_time.h"
 
 
 
@@ -82,8 +83,7 @@ void FoldedRRGraph::add_empty_pattern(){
 }
 
 void FoldedRRGraph::build_folded_rr_graph(){
-
-    VTR_LOG("Building FoldedRRGraph\n");
+    vtr::ScopedStartFinishTimer timer("Build FoldedRRGraph");
     //std::vector<std::vector<FoldedTilePattern>> tile_patterns; // Every tile has a starting_node_id and node_patterns_idx
 
     //std::vector<std::vector<int>> node_patterns; // Every Tile Type has a set of FoldedNodePatterns
@@ -91,17 +91,20 @@ void FoldedRRGraph::build_folded_rr_graph(){
     //std::vector<FoldedNodePattern> node_pattern_data;
     tile_patterns.clear();
     node_pattern_data.clear();
-    node_patterns.clear();
+    node_patterns_.clear();
     remapped_ids_.clear();
     node_to_x_y_.clear();
+    node_type_.clear();
 
     std::vector<std::string> temp_node_patterns;
     std::vector<std::vector<std::vector<RRNodeId>>> ids_in_tile; // 
-    node_patterns.clear();
     // dx, dy, type, capacity, direction, side, C, R, segment
 
     if (node_to_x_y_.size() < node_storage_.size()){
             node_to_x_y_.resize((size_t) node_storage_.size());
+        }
+    if (node_type_.size() < node_storage_.size()){
+            node_type_.resize((size_t) node_storage_.size());
         }
     for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
         RRNodeId id = RRNodeId(idx);
@@ -110,18 +113,19 @@ void FoldedRRGraph::build_folded_rr_graph(){
         int16_t dx = node_storage_.node_xhigh(id) - x;
         int16_t dy = node_storage_.node_yhigh(id) - y;
         node_to_x_y_[id] = { x, y };
+        t_rr_type current_type = node_storage_.node_type(id);
+        node_type_[id] = current_type;
         
         FoldedNodePattern node_pattern = { 
                                             node_storage_.node_cost_index(id),
                                             node_storage_.node_rc_index(id),
                                             dx,
                                             dy,
-                                            node_storage_.node_type(id),
                                             (uint16_t) node_storage_.node_capacity(id),
                                             {Direction::NUM_DIRECTIONS}
 
         };
-        if (node_pattern.type_ == CHANX || node_pattern.type_ == CHANY){
+        if (current_type== CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(id);
         }
 
@@ -174,7 +178,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
                 continue; // there are no nodes in this tile, so skip it
             }
 
-            std::vector<int> node_pattern_list;
+            std::vector<int16_t> node_pattern_list;
             // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_pattern_data for each node
             for (auto id : ids_in_tile[x][y]){
                 // iterate until the previous id is not one less than the current id, then create a new node_pattern_list
@@ -188,31 +192,30 @@ void FoldedRRGraph::build_folded_rr_graph(){
                                                             (int16_t) node_storage_.node_rc_index(id),
                                                             (int16_t) (node_storage_.node_xhigh(id) - node_storage_.node_xlow(id)),
                                                             (int16_t) (node_storage_.node_yhigh(id) - node_storage_.node_ylow(id)),
-                                                            node_storage_.node_type(id),
                                                             (uint16_t) node_storage_.node_capacity(id),
                                                             {Direction::NUM_DIRECTIONS}
 
                         };
-                if (node_pattern.type_ == CHANX || node_pattern.type_ == CHANY){
+                if (node_type_[id] == CHANX || node_type_[id] == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(id);
                 }
                 auto it = std::find(node_pattern_data.begin(), node_pattern_data.end(), node_pattern);
                 // Check if element was found in node_pattern_data
                 VTR_ASSERT(it != node_pattern_data.end());
 
-                int node_pattern_data_idx = std::distance(node_pattern_data.begin(), it);
+                int16_t node_pattern_data_idx = std::distance(node_pattern_data.begin(), it);
                 node_pattern_list.push_back(node_pattern_data_idx);
             }
 
             // find the node_pattern_list in node_patterns. If it is not found, insert it.
-            auto it = std::find(node_patterns.begin(), node_patterns.end(), node_pattern_list);
-            int node_pattern_idx = -1;
-            if (it != node_patterns.end()){ // node_pattern_list found
-                node_pattern_idx = std::distance(node_patterns.begin(), it);
+            auto it = std::find(node_patterns_.begin(), node_patterns_.end(), node_pattern_list);
+            int16_t node_pattern_idx = -1;
+            if (it != node_patterns_.end()){ // node_pattern_list found
+                node_pattern_idx = std::distance(node_patterns_.begin(), it);
             }
             else{ //node_pattern_list not found
-                node_patterns.push_back(node_pattern_list);
-                node_pattern_idx = node_patterns.size() - 1;
+                node_patterns_.push_back(node_pattern_list);
+                node_pattern_idx = node_patterns_.size() - 1;
             }
             tile_patterns[x][y].node_patterns_idx_ = node_pattern_idx;            
 

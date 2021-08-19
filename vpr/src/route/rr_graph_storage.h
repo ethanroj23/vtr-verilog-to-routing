@@ -13,6 +13,7 @@
 #include "vtr_strong_id_range.h"
 #include "vtr_array_view.h"
 #include "rr_graph_view_interface.h"
+#include "vtr_time.h"
 
 /* Main structure describing one routing resource node.  Everything in       *
  * this structure should describe the graph -- information needed only       *
@@ -77,11 +78,12 @@ struct alignas(16) t_rr_node_data {
     uint16_t capacity_ = 0;
 };
 
+const int t_rr_node_data_byte_count = 16;
 // t_rr_node_data is a key data structure, so fail at compile time if the
 // structure gets bigger than expected (16 bytes right now). Developers
 // should only expand it after careful consideration and measurement.
-static_assert(sizeof(t_rr_node_data) == 16, "Check t_rr_node_data size");
-static_assert(alignof(t_rr_node_data) == 16, "Check t_rr_node_data size");
+static_assert(sizeof(t_rr_node_data) == t_rr_node_data_byte_count, "Check t_rr_node_data size");
+static_assert(alignof(t_rr_node_data) == t_rr_node_data_byte_count, "Check t_rr_node_data size");
 
 /* t_rr_node_ptc_data is cold data is therefore kept seperate from
  * t_rr_node_data.
@@ -162,8 +164,8 @@ class t_rr_graph_storage : public RRGraphViewInterface {
      * Node methods *
      ****************/
 
-    void rr_graph_name() const{
-        VTR_LOG("rr_graph_storage\n");
+    inline const char* rr_graph_name() const{
+        return "rr_graph_storage";
     }
 
     t_rr_type node_type(RRNodeId id) const {
@@ -426,15 +428,26 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         return node_storage_.empty();
     }
 
+    // Bytes used by the node_storage_ object
+    inline int memory_used() const {
+        return node_storage_.size()*t_rr_node_data_byte_count;
+    }
+
     /* free the memory used by node_storage_. Only use this if you are accessing rr_node data elsewhere */
     inline void clear_node_storage(){
+        vtr::ScopedStartFinishTimer timer("clear_node_storage()");
         vtr::vector<RRNodeId, t_rr_node_data, vtr::aligned_allocator<t_rr_node_data>>().swap(node_storage_);
+        //node_storage_.clear();
+        //std::vector<int> v;
+        //node_storage_.shrink_to_fit();
+        //std::vector<int>().swap(node_storage_);
     }
 
     // Remove all nodes and edges from the RR graph.
     //
     // This method re-enables graph mutation if the graph was read-only.
     void clear() {
+        vtr::ScopedStartFinishTimer timer("t_rr_graph_storage::clear()");
         node_storage_.clear();
         node_ptc_.clear();
         node_first_edge_.clear();
@@ -740,8 +753,8 @@ class t_rr_graph_view {
         return node_storage_.size();
     }
 
-    void rr_graph_name(){
-        VTR_LOG("rr_graph_storage\n");
+    inline const char* rr_graph_name() const{
+        return "rr_graph_storage";
     }
 
     t_rr_type node_type(RRNodeId id) const {

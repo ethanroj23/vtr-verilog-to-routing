@@ -655,7 +655,7 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
         RRNodeId child_node = rr_nodes.edge_sink_node(edge);
         int switch_ind = rr_nodes.edge_switch(edge);
 
-        if (temp_rr_graph.node_type(child_node) == SINK) return;
+        if (temp_rr_graph.node_type(child_node) == SINK) return; // ESR Memory Profiling
 
         /* skip this child if it has already been expanded from */
         if (node_expanded[child_node]) {

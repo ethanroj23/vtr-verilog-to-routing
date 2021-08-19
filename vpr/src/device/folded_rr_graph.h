@@ -36,8 +36,8 @@ class FoldedRRGraph : public RRGraphViewInterface{
   /*Return an RRNode's type.*/
 
   /* Print the current rr_graph type */
-  void rr_graph_name() const{
-    VTR_LOG("FoldedRRGraph\n");
+  inline const char* rr_graph_name() const{
+    return "FoldedRRGraph";
   }
 
   /* Return the number of RRNodes */
@@ -60,7 +60,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
   }
 
   inline t_rr_type node_type(RRNodeId node) const{ 
-    return get_node_pattern(node).type_;
+    return node_type_[node];
   }
 
   inline short node_capacity(RRNodeId node) const{ 
@@ -114,7 +114,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
       auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_to_x_y_[node][0] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dx_;
+      return node_to_x_y_[node][0] + node_pattern_data[node_patterns_[node_patterns_idx][offset]].dx_;
   }
 
   /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
@@ -129,7 +129,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
       auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_to_x_y_[node][1] + node_pattern_data[node_patterns[node_patterns_idx][offset]].dy_;
+      return node_to_x_y_[node][1] + node_pattern_data[node_patterns_[node_patterns_idx][offset]].dy_;
   }
 
   /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
@@ -160,7 +160,30 @@ class FoldedRRGraph : public RRGraphViewInterface{
       return SIDE_STRING[NUM_SIDES];
   }
 
+  // Is the RR graph currently empty?
+  inline bool empty() const {
+        return node_patterns_.empty();
+    }
 
+  // Estimate of memory taken by FoldedRRGraph
+  inline int memory_used() const {
+        //int tile_patterns_memory;
+        //int node_patterns_memory = node_patterns_.size() * ;
+        int tile_patterns_memory = 0;
+        int node_patterns_memory = 0;
+        for (auto x : tile_patterns){
+            tile_patterns_memory += x.size() * 6; // 6 bytes stored for every TilePattern struct
+        }
+        for (auto pattern_list : node_patterns_){
+            node_patterns_memory += pattern_list.size() * 2; // 2 bytes for each idx into node_pattern_data
+        }
+        int node_pattern_data_memory = node_pattern_data.size() * 12; // Size of node_pattern_data * 12 bytes for each FoldedNodePattern
+        int remapped_ids_memory = size() * 4; // RRNode Count * 4 bytes for each remapped id
+        int node_to_x_y_memory = size() * (2 + 2); // RRNode Count * (2 bytes for x, 2 bytes for y)
+        int node_type_memory = size() * 1; // RRNode Count * 1 byte for the t_rr_type node type
+        int size_memory = 8; // 8 bytes for size_t
+        return tile_patterns_memory + node_patterns_memory + node_pattern_data_memory + remapped_ids_memory + node_to_x_y_memory + node_type_memory + size_memory;
+    }
 
     /* -- Mutators -- */
   public:
@@ -176,14 +199,14 @@ class FoldedRRGraph : public RRGraphViewInterface{
   private:
 
   /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
-    struct FoldedNodePattern { // 12 Bytes
+    struct FoldedNodePattern { // 12 Bytes total
           int16_t cost_index_; // 2 Bytes
           int16_t rc_index_; // 2 Bytes
 
           int16_t dx_; // 2 Bytes
           int16_t dy_; // 2 Bytes
 
-          t_rr_type type_; // 1 Byte
+          //t_rr_type type_; // 1 Byte
 
           uint16_t capacity_; // 2 Bytes
 
@@ -201,7 +224,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
       auto tile = tile_patterns[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_pattern_data[node_patterns[node_patterns_idx][offset]];
+      return node_pattern_data[node_patterns_[node_patterns_idx][offset]];
     } 
 
 
@@ -211,7 +234,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
                    lhs.rc_index_ == rhs.rc_index_ &&
                    lhs.dx_ == rhs.dx_ &&
                    lhs.dy_ == rhs.dy_ &&
-                   lhs.type_ == rhs.type_ &&
+                   //lhs.type_ == rhs.type_ &&
                    lhs.dir_side_.direction_ == rhs.dir_side_.direction_ &&
                    lhs.dir_side_.sides_ == rhs.dir_side_.sides_ &&
                    lhs.capacity_ == rhs.capacity_;
@@ -219,7 +242,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
           }
 
     /* Every tile has its own FoldedTilePattern. starting_node_id_ refers to the first node id in the tile.
-     * node_patterns_idx_ refers to the index within node_patterns that contains the 
+     * node_patterns_idx_ refers to the index within node_patterns_ that contains the 
      */
     struct FoldedTilePattern { // 6 Bytes
         RRNodeId starting_node_id_ = RRNodeId(-1); // 4 Bytes
@@ -255,7 +278,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
     std::vector<std::vector<FoldedTilePattern>> tile_patterns; // Every tile has a starting_node_id and node_patterns_idx
 
     /* Every Tile Type has a set of FoldedNodePatterns */
-    std::vector<std::vector<int>> node_patterns; 
+    std::vector<std::vector<int16_t>> node_patterns_; // 2 bytes
 
     /* Raw FoldedNodePattern data is stored here */
     std::vector<FoldedNodePattern> node_pattern_data;
@@ -266,6 +289,8 @@ class FoldedRRGraph : public RRGraphViewInterface{
     /* Map of RRNodeId to  x_low and y_low*/ 
     vtr::vector<RRNodeId, std::array<int16_t, 2>> node_to_x_y_;
 
+
+    vtr::vector<RRNodeId, t_rr_type> node_type_;
 
     size_t size_;
 

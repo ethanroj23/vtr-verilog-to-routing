@@ -34,6 +34,7 @@
  *
  */
 
+//#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 
 
 
@@ -154,13 +155,36 @@ class RRGraphView : public RRGraphViewInterface {
         primary_rr_graph_ = new_rr_graph;
     }
 
-    inline void rr_graph_name() const{
-        primary_rr_graph_->rr_graph_name();
+    inline const char* rr_graph_name() const{
+        return primary_rr_graph_->rr_graph_name();
+    }
+
+    inline void print_rr_graph_name(){
+        VTR_LOG("Current RRGraph in use: %s\n", rr_graph_name() );
     }
 
     inline size_t size() const{
         return primary_rr_graph_->size();
     }
+
+    inline bool empty() const{
+        return primary_rr_graph_->empty();
+    }
+
+    inline short node_length(RRNodeId node) const{
+        return std::max(
+            node_yhigh(node) - node_ylow(node),
+            node_xhigh(node) - node_xlow(node));
+    }
+
+    inline int memory_used() const{
+        return primary_rr_graph_->memory_used();
+    }
+
+    inline void print_memory_used() const {
+        VTR_LOG("RRGraph[%s] is using %f MiB of memory'\n", rr_graph_name(), memory_used() / 1024 / 1024.0 );
+    }
+
 
     /* -- Internal data storage -- */
     /* Note: only read-only object or data structures are allowed!!! */

@@ -24,8 +24,10 @@ class RRGraphViewInterface {
       virtual short node_cost_index(RRNodeId node) const=0;
       virtual bool is_node_on_specific_side(RRNodeId node, e_side side) const=0;
       virtual const char* node_side_string(RRNodeId node) const=0;
-      virtual void rr_graph_name() const=0;
+      virtual const char* rr_graph_name() const=0;
       virtual size_t size() const=0;
+      virtual bool empty() const=0;
+      virtual int memory_used() const=0;
 
       /* destructor */
       virtual ~RRGraphViewInterface() {}

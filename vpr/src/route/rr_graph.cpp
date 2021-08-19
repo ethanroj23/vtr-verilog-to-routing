@@ -105,7 +105,6 @@ static void build_bidir_rr_opins(RRGraphBuilder& rr_graph_builder,
                                  const int j,
                                  const e_side side,
                                  const t_rr_node_indices& L_rr_node_indices,
-                                 const t_rr_graph_storage& rr_nodes,
                                  const t_pin_to_track_lookup& opin_to_track_map,
                                  const std::vector<vtr::Matrix<int>>& Fc_out,
                                  t_rr_edge_info_set& created_rr_edges,
@@ -132,7 +131,6 @@ static void build_unidir_rr_opins(RRGraphBuilder& rr_graph_builder,
                                   t_rr_edge_info_set& created_rr_edges,
                                   bool* Fc_clipped,
                                   const t_rr_node_indices& L_rr_node_indices,
-                                  const t_rr_graph_storage& rr_nodes,
                                   const t_direct_inf* directs,
                                   const int num_directs,
                                   const t_clb_to_clb_directs* clb_to_clb_directs,
@@ -322,8 +320,8 @@ void create_rr_graph(const t_graph_type graph_type,
                      const int num_directs,
                      int* Warnings) {
     const auto& device_ctx = g_vpr_ctx.device();
-    // Set primary rr_graph to be the rr_graph_storage version
-    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
+    
+    
 
     if (!det_routing_arch->read_rr_graph_filename.empty()) {
         if (device_ctx.read_rr_graph_filename != det_routing_arch->read_rr_graph_filename) {
@@ -341,13 +339,22 @@ void create_rr_graph(const t_graph_type graph_type,
             reorder_rr_graph_nodes(router_opts);
         }
     } else {
-        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
+        // Set primary rr_graph to be the rr_graph_storage version
+        if (device_ctx.rr_graph.empty()){
+            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
+        }
+        //if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
+        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_graph.empty()) {
             //No change in channel width, so skip re-building RR graph
             VTR_LOG("RR graph channel widths unchanged, skipping RR graph rebuild\n");
             return;
         }
 
+        vtr::Timer a;
+
         free_rr_graph();
+
+        vtr::Timer b;
 
         build_rr_graph(graph_type,
                        block_types,
@@ -371,6 +378,8 @@ void create_rr_graph(const t_graph_type graph_type,
         reorder_rr_graph_nodes(router_opts);
     }
 
+    vtr::Timer c;
+
     process_non_config_sets();
 
     // ESR HERE
@@ -384,12 +393,7 @@ void create_rr_graph(const t_graph_type graph_type,
     if (!det_routing_arch->write_rr_graph_filename.empty()) {
         write_rr_graph(det_routing_arch->write_rr_graph_filename.c_str());
     }
-    // build folded rr_graph from rr_graph_storage version
-    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
-    // Set primary rr_graph to the FoldedRRGraph
-    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
-    /// delete rr_nodes.node_storage_ as it will no longer be used
-    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    
 
 }
 
@@ -401,6 +405,7 @@ void print_rr_graph_stats() {
         num_rr_edges += rr_node.edges().size();
     }
 
+    device_ctx.rr_graph.print_memory_used();
     VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.size());
     VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
 }
@@ -440,7 +445,7 @@ static void build_rr_graph(const t_graph_type graph_type,
                            int* wire_to_rr_ipin_switch,
                            int* Warnings) {
     vtr::ScopedStartFinishTimer timer("Build routing resource graph");
-
+    vtr::Timer myTimer;
     /* Reset warning flag */
     *Warnings = RR_GRAPH_NO_WARN;
 
@@ -598,8 +603,9 @@ static void build_rr_graph(const t_graph_type graph_type,
         expected_node_count += ClockRRGraphBuilder::estimate_additional_nodes(grid);
         device_ctx.rr_nodes.reserve(expected_node_count);
     }
+    vtr::Timer d;
     device_ctx.rr_nodes.resize(num_rr_nodes);
-
+    vtr::Timer e;
     /* These are data structures used by the the unidir opin mapping. They are used
      * to spread connections evenly for each segment type among the available
      * wire start points */
@@ -774,6 +780,18 @@ static void build_rr_graph(const t_graph_type graph_type,
     if (clb_to_clb_directs != nullptr) {
         free(clb_to_clb_directs);
     }
+
+    #ifdef PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
+
+    /* USE FOLDED RR GRAPH */
+    // build folded rr_graph from rr_graph_storage version
+    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+    // Set primary rr_graph to the FoldedRRGraph
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
+    /// delete rr_nodes.node_storage_ as it will no longer be used
+    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    #endif
+
 }
 
 /* Allocates and loads the global rr_switch_inf array based on the global
@@ -1188,6 +1206,7 @@ static std::function<void(t_chan_width*)> alloc_and_load_rr_graph(RRGraphBuilder
     //node, which avoids resizing the RR edge arrays (which can cause significant memory
     //fragmentation, and significantly increasing peak memory usage). This is important since
     //RR graph creation is the high-watermark of VPR's memory use.
+    
     t_rr_edge_info_set rr_edges_to_create;
 
     t_opin_connections_scratchpad scratchpad;
@@ -1213,7 +1232,7 @@ static std::function<void(t_chan_width*)> alloc_and_load_rr_graph(RRGraphBuilder
         for (size_t j = 0; j < grid.height(); ++j) {
             for (e_side side : SIDES) {
                 if (BI_DIRECTIONAL == directionality) {
-                    build_bidir_rr_opins(rr_graph_builder, i, j, side, L_rr_node_indices, L_rr_node,
+                    build_bidir_rr_opins(rr_graph_builder, i, j, side, L_rr_node_indices,
                                          opin_to_track_map, Fc_out, rr_edges_to_create, chan_details_x, chan_details_y,
                                          grid,
                                          directs, num_directs, clb_to_clb_directs, num_seg_types, &scratchpad);
@@ -1222,7 +1241,7 @@ static std::function<void(t_chan_width*)> alloc_and_load_rr_graph(RRGraphBuilder
                     bool clipped;
                     build_unidir_rr_opins(rr_graph_builder, i, j, side, grid, Fc_out, max_chan_width,
                                           chan_details_x, chan_details_y, Fc_xofs, Fc_yofs,
-                                          rr_edges_to_create, &clipped, L_rr_node_indices, L_rr_node,
+                                          rr_edges_to_create, &clipped, L_rr_node_indices,
                                           directs, num_directs, clb_to_clb_directs, num_seg_types, &scratchpad);
                     if (clipped) {
                         *Fc_clipped = true;
@@ -1297,7 +1316,6 @@ static void build_bidir_rr_opins(RRGraphBuilder& rr_graph_builder,
                                  const int j,
                                  const e_side side,
                                  const t_rr_node_indices& L_rr_node_indices,
-                                 const t_rr_graph_storage& rr_nodes,
                                  const t_pin_to_track_lookup& opin_to_track_map,
                                  const std::vector<vtr::Matrix<int>>& Fc_out,
                                  t_rr_edge_info_set& rr_edges_to_create,
@@ -2530,7 +2548,6 @@ static void build_unidir_rr_opins(RRGraphBuilder& rr_graph_builder,
                                   t_rr_edge_info_set& rr_edges_to_create,
                                   bool* Fc_clipped,
                                   const t_rr_node_indices& L_rr_node_indices,
-                                  const t_rr_graph_storage& rr_nodes,
                                   const t_direct_inf* directs,
                                   const int num_directs,
                                   const t_clb_to_clb_directs* clb_to_clb_directs,
