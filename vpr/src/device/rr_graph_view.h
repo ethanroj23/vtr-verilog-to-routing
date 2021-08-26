@@ -3,7 +3,6 @@
 
 #include "rr_graph_storage.h"
 #include "rr_spatial_lookup.h"
-#include "folded_rr_graph.h"
 #include "rr_graph_view_interface.h"
 
 /* An read-only routing resource graph
@@ -34,9 +33,8 @@
  *
  */
 
-//#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
-
-
+#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
+//#define PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
 
 class RRGraphView : public RRGraphViewInterface {
     /* -- Constructors -- */

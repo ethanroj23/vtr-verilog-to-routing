@@ -792,6 +792,17 @@ static void build_rr_graph(const t_graph_type graph_type,
     g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
     #endif
 
+    #ifdef PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
+
+    /* USE PARTIAL FOLDED RR GRAPH */
+    // build folded rr_graph from rr_graph_storage version
+    g_vpr_ctx.mutable_device().partial_folded_rr_graph.build_folded_rr_graph();
+    // Set primary rr_graph to the FoldedRRGraph
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().partial_folded_rr_graph);
+    /// delete rr_nodes.node_storage_ as it will no longer be used
+    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    #endif
+
 }
 
 /* Allocates and loads the global rr_switch_inf array based on the global

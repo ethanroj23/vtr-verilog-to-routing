@@ -1064,7 +1064,6 @@ static void adjust_rr_src_sink_position(const RRNodeId rr, int& x, int& y) {
     //Use the average position.
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the rr_graph below is unneeded
-    auto& rr_nodes = device_ctx.rr_nodes;
 
     VTR_ASSERT_SAFE(is_src_sink(temp_rr_graph.node_type(rr)));
 
