@@ -58,6 +58,10 @@ class RRGraphView : public RRGraphViewInterface {
      * kind of accessors
      */
   public:
+    /* ************************************************************* */
+    /*                       NODE METHODS                            */
+    /* ************************************************************* */
+    
     /* Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type(RRNodeId node) const {
         return primary_rr_graph_->node_type(node);
@@ -144,10 +148,15 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->node_side_string(node);
     }
 
-    /* Return the fast look-up data structure for queries from client functions */
-    const RRSpatialLookup& node_lookup() const {
-        return node_lookup_;
+    inline short node_length(RRNodeId node) const{
+        return std::max(
+            node_yhigh(node) - node_ylow(node),
+            node_xhigh(node) - node_xlow(node));
     }
+
+    /* ************************************************************* */
+    /*                   RR GRAPH METHODS                            */
+    /* ************************************************************* */
 
     inline void set_primary_rr_graph(RRGraphViewInterface* new_rr_graph){
         primary_rr_graph_ = new_rr_graph;
@@ -169,12 +178,6 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->empty();
     }
 
-    inline short node_length(RRNodeId node) const{
-        return std::max(
-            node_yhigh(node) - node_ylow(node),
-            node_xhigh(node) - node_xlow(node));
-    }
-
     inline int memory_used() const{
         return primary_rr_graph_->memory_used();
     }
@@ -182,6 +185,135 @@ class RRGraphView : public RRGraphViewInterface {
     inline void print_memory_used() const {
         VTR_LOG("RRGraph[%s] is using %f MiB of memory'\n", rr_graph_name(), memory_used() / 1024 / 1024.0 );
     }
+    /* ***************************************************************** */
+    /* THE FOLLOWING FUNCTIONS HAVE NOT BEEN REPLACED THROUGHOUT VTR YET */
+    /* ***************************************************************** */
+
+    /* get PTC num. This function is inlined for runtime optimization. */
+    inline short node_ptc_num(RRNodeId node) const {
+        return node_storage_.node_ptc_num(node);
+    }
+
+    /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
+    inline short node_pin_num(RRNodeId node) const {
+        return node_storage_.node_pin_num(node);
+    }
+
+    /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
+    inline short node_track_num(RRNodeId node) const {
+        return node_storage_.node_track_num(node);
+    }
+
+    /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
+    inline short node_class_num(RRNodeId node) const {
+        return node_storage_.node_class_num(node);
+    }
+
+    /* ************************************************************* */
+    /*                       EDGE METHODS                            */
+    /* ************************************************************* */
+
+
+    /* Only call these methods after partition_edges has been invoked. */
+
+    
+    inline edge_idx_range edges(const RRNodeId& node) const {
+        return node_storage_.edges(node);
+    }
+    inline edge_idx_range configurable_edges(const RRNodeId& node) const {
+        return node_storage_.configurable_edges(node);
+    }
+    inline edge_idx_range non_configurable_edges(const RRNodeId& node) const {
+        return node_storage_.non_configurable_edges(node);
+    }
+
+    inline t_edge_size num_edges(const RRNodeId& node) const {
+        return node_storage_.num_edges(node);
+    }
+    inline t_edge_size num_configurable_edges(const RRNodeId& node) const{
+        return node_storage_.num_configurable_edges(node);
+    }
+    inline t_edge_size num_non_configurable_edges(const RRNodeId& node) const {
+        return node_storage_.num_non_configurable_edges(node);
+    }
+
+    // Get the first and last RREdgeId for the specified RRNodeId.
+    //
+    // The edges belonging to RRNodeId is [first_edge, last_edge), excluding
+    // last_edge.
+    //
+    // If first_edge == last_edge, then a RRNodeId has no edges.
+    inline RREdgeId first_edge(const RRNodeId& node) const {
+        return node_storage_.first_edge(node);
+    }
+
+    // Return the first_edge of the next rr_node, which is one past the edge
+    // id range for the node we care about.
+    //
+    // This implies we have one dummy rr_node at the end of first_edge_, and
+    // we always allocate that dummy node. We also assume that the edges have
+    // been sorted by rr_node, which is true after partition_edges().
+    inline RREdgeId last_edge(const RRNodeId& node) const {
+        return node_storage_.last_edge(node);
+    }
+
+    // Returns a range of RREdgeId's belonging to RRNodeId id.
+    //
+    // If this range is empty, then RRNodeId id has no edges.
+    inline vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId node) const {
+        return node_storage_.edge_range(node);
+    }
+
+    // Retrieve the RREdgeId for iedge'th edge in RRNodeId.
+    //
+    // This method should generally not be used, and instead first_edge and
+    // last_edge should be used.
+    inline RREdgeId edge_id(const RRNodeId& node, t_edge_size iedge) const {
+        return node_storage_.edge_id(node, iedge);
+    }
+
+    // Get the destination node for the specified edge.
+    inline RRNodeId edge_sink_node(const RREdgeId& edge) const {
+        return node_storage_.edge_sink_node(edge);
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
+        node_storage_.for_each_edge(apply);
+    }
+
+    // Get the destination node for the iedge'th edge from specified RRNodeId.
+    //
+    // This method should generally not be used, and instead first_edge and
+    // last_edge should be used.
+    inline RRNodeId edge_sink_node(const RRNodeId& node, t_edge_size iedge) const {
+        return node_storage_.edge_sink_node(node, iedge);
+    }
+
+    // Get the switch used for the specified edge.
+    inline short edge_switch(const RREdgeId& edge) const {
+        return node_storage_.edge_switch(edge);
+    }
+
+    // Get the switch used for the iedge'th edge from specified RRNodeId.
+    //
+    // This method should generally not be used, and instead first_edge and
+    // last_edge should be used.
+    inline short edge_switch(const RRNodeId& node, t_edge_size iedge) const {
+        return node_storage_.edge_switch(node, iedge);
+    }
+
+
+
+/* Return the fast look-up data structure for queries from client functions */
+    const RRSpatialLookup& node_lookup() const {
+        return node_lookup_;
+    }
+
+
+
+
+
 
 
     /* -- Internal data storage -- */

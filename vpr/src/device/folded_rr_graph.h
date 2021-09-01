@@ -177,11 +177,11 @@ class FoldedRRGraph : public RRGraphViewInterface{
         for (auto pattern_list : node_patterns_){
             node_patterns_memory += pattern_list.size() * 2; // 2 bytes for each idx into node_pattern_data_
         }
-        int node_pattern_data_memory = 0; // Size of node_pattern_data : 12 + 5*edges_.size() for each FoldedNodePattern
-        for (auto node_data : node_pattern_data_){
+        int node_pattern_data_memory = node_pattern_data_.size() * 12; // Size of node_pattern_data : 12 + 5*edges_.size() for each FoldedNodePattern
+        //for (auto node_data : node_pattern_data_){
           //node_pattern_data_memory += ( 12 + 5*node_data.edges_.size() );
-          node_pattern_data_memory += 12;
-        }
+        //  node_pattern_data_memory += 12;
+        //}
 
         int remapped_ids_memory = size() * 4; // RRNode Count * 4 bytes for each remapped id
         int node_to_x_y_memory = size() * (2 + 2); // RRNode Count * (2 bytes for x, 2 bytes for y)
