@@ -145,8 +145,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
           "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
           rr_node_typename[current_type]);
     }
-    std::bitset<NUM_SIDES> side_tt = get_node_pattern(node).dir_side_.sides_;
-    return side_tt[size_t(side)];
+    return SIDES[get_node_pattern(node).dir_side_.sides_]==side;
   }
 
   /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
@@ -198,6 +197,9 @@ class FoldedRRGraph : public RRGraphViewInterface{
       }
       return memory_used;
   }
+
+  /* Compare folded rr_graph vs node_storage_ */
+  void verify_folded_rr_graph();
 
     /* -- Mutators -- */
   public:

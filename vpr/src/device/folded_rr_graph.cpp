@@ -50,7 +50,7 @@ read_file_2.close();
 }
 
 
-  /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
+  /* Get the capacitance of a routing resource node.*/
   float FoldedRRGraph::node_C(RRNodeId node) const {
     if (!built) return node_storage_.node_C(node);
     auto& device_ctx = g_vpr_ctx.device();
@@ -58,7 +58,7 @@ read_file_2.close();
     return device_ctx.rr_rc_data[node_rc_index(node)].C;
   }
 
-  /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
+  /* Get the resistance of a routing resource node. */
   float FoldedRRGraph::node_R(RRNodeId node) const {
     if (!built) return node_storage_.node_R(node);
     auto& device_ctx = g_vpr_ctx.device();
@@ -108,8 +108,8 @@ void FoldedRRGraph::build_folded_rr_graph(){
         node_to_x_y_[id] = { x, y };
         t_rr_type current_type = node_storage_.node_type(id);
 
+        #ifdef FOLDED_RR_GRAPH_USING_EDGES
         std::vector<FoldedEdgePattern> temp_edge_patterns;
-
         std::vector<FoldedEdgePattern> edge_patterns;
         for (RREdgeId from_edge : node_storage_.edge_range(id)) {
             RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
@@ -125,6 +125,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
            // VTR_LOG( "dx:%d, dy:%d, switch:%d\n", edge_dx, edge_dy, switch_id);
             edge_patterns.push_back(edge_pattern);
         }
+        #endif
 
         FoldedNodePattern node_pattern = { 
                                             node_storage_.node_cost_index(id),
@@ -138,6 +139,13 @@ void FoldedRRGraph::build_folded_rr_graph(){
         };
         if (current_type== CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(id);
+        }
+        if (current_type== IPIN || current_type == OPIN){
+                for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
+                    if (strcmp(SIDE_STRING[side],node_storage_.node_side_string(id))==0){
+                        node_pattern.dir_side_.sides_ = side;
+                    }
+                }
         }
 
         FoldedTilePattern tile_pattern = {RRNodeId(-1), -1};
@@ -200,6 +208,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
                 remapped_ids_[id] = RRNodeId(current_remapped_id);
                 current_remapped_id++;
 
+                #ifdef FOLDED_RR_GRAPH_USING_EDGES
                 std::vector<FoldedEdgePattern> edge_patterns;
                 for (RREdgeId from_edge : node_storage_.edge_range(id)) {
                     RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
@@ -214,6 +223,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
                     };
                     edge_patterns.push_back(edge_pattern);
                 }
+                #endif
                 t_rr_type current_type = node_storage_.node_type(id);
                 FoldedNodePattern node_pattern = { 
                                                             (int16_t) node_storage_.node_cost_index(id),
@@ -228,6 +238,15 @@ void FoldedRRGraph::build_folded_rr_graph(){
                 if (current_type == CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(id);
                 }
+                if (current_type== IPIN || current_type == OPIN){
+                for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
+                    if (strcmp(SIDE_STRING[side],node_storage_.node_side_string(id))==0){
+                        node_pattern.dir_side_.sides_ = side;
+                    }
+                }
+        }
+
+
                 auto it = std::find(node_pattern_data_.begin(), node_pattern_data_.end(), node_pattern);
                 // Check if element was found in node_pattern_data_
                 VTR_ASSERT(it != node_pattern_data_.end());
@@ -311,17 +330,45 @@ void FoldedRRGraph::build_folded_rr_graph(){
         edge_storage_.push_back(cur_pattern);
         
         });*/
-    std::cout << "Flat Representation: " <<node_storage_memory_used()/1024/1024.0 << " MiB" << "\n";
-    std::cout << "This Folded Representation: " <<memory_used()/1024/1024.0 << " MiB" << "\n";
+    std::cout << "Flat Representation: (including edges)" <<node_storage_memory_used()/1024/1024.0 << " MiB" << "\n";
+    std::cout << "This Folded Representation: (no edges)" <<memory_used()/1024/1024.0 << " MiB" << "\n";
     std::cout << "Done\n";
-    for (int i=0; i<node_patterns_.size(); i++){
-        std::sort(node_patterns_[i].begin(), node_patterns_[i].end());
-    }
+    
+    //for (int i=0; i<node_patterns_.size(); i++){
+    //    std::sort(node_patterns_[i].begin(), node_patterns_[i].end());
+    //}
     built = true;
     size_ = node_storage_.size();
+    verify_folded_rr_graph();
 }
 
+void FoldedRRGraph::verify_folded_rr_graph(){
+    vtr::ScopedStartFinishTimer timer("Verify FoldedRRGraph");
+    for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
+        RRNodeId id = RRNodeId(idx);
+        VTR_ASSERT(node_storage_.node_xlow(id) == node_xlow(id));
+        VTR_ASSERT(node_storage_.node_xhigh(id) == node_xhigh(id));
+        VTR_ASSERT(node_storage_.node_ylow(id) == node_ylow(id));
+        VTR_ASSERT(node_storage_.node_yhigh(id) == node_yhigh(id));
 
+        VTR_ASSERT(node_storage_.node_R(id) == node_R(id));
+        VTR_ASSERT(node_storage_.node_C(id) == node_C(id));
+
+        VTR_ASSERT(node_storage_.node_cost_index(id) == node_cost_index(id));
+        VTR_ASSERT(node_storage_.node_type(id) == node_type(id));
+        VTR_ASSERT(node_storage_.node_capacity(id) == node_capacity(id));
+        
+
+        if (node_type(id) == CHANX || node_type(id) == CHANY) 
+            VTR_ASSERT(node_storage_.node_direction(id) == node_direction(id));
+        
+        if(node_type(id) == IPIN || node_type(id) == OPIN)
+            VTR_ASSERT(strcmp(node_storage_.node_side_string(id),node_side_string(id))==0);
+
+    }
+}
+
+#ifdef FOLDED_RR_GRAPH_USING_EDGES
 struct EdgePattern { // 9 Bytes
         int16_t src_node_offset_ = -1; // 2 Bytes
         int16_t src_node_patterns_idx_ = -1; // 2 Bytes
@@ -331,3 +378,4 @@ struct EdgePattern { // 9 Bytes
 
         int8_t switch_id = -1; // 1 Byte
       }; 
+#endif
