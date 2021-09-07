@@ -220,6 +220,7 @@ class RRGraphView : public RRGraphViewInterface {
     inline edge_idx_range edges(const RRNodeId& node) const {
         return node_storage_.edges(node);
     }
+    /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
     inline edge_idx_range configurable_edges(const RRNodeId& node) const {
         return node_storage_.configurable_edges(node);
     }
