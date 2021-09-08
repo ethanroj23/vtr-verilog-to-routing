@@ -33,7 +33,7 @@
  *
  */
 
-#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
+//#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 //#define PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
 
 class RRGraphView : public RRGraphViewInterface {
@@ -213,8 +213,27 @@ class RRGraphView : public RRGraphViewInterface {
     /*                       EDGE METHODS                            */
     /* ************************************************************* */
 
-
-    /* Only call these methods after partition_edges has been invoked. */
+     /* Edge accessors
+     *
+     * Preferred access methods:
+     * - first_edge(RRNodeId)
+     * - last_edge(RRNodeId)
+     * - edge_range(RRNodeId)
+     * - edge_sink_node(RREdgeId)
+     * - edge_switch(RREdgeId)
+     *
+     * Legacy/deprecated access methods:
+     * - edges(RRNodeId)
+     * - configurable_edges(RRNodeId)
+     * - non_configurable_edges(RRNodeId)
+     * - num_edges(RRNodeId)
+     * - num_configurable_edges(RRNodeId)
+     * - num_non_configurable_edges(RRNodeId)
+     * - edge_id(RRNodeId, t_edge_size)
+     * - edge_sink_node(RRNodeId, t_edge_size)
+     * - edge_switch(RRNodeId, t_edge_size)
+     *
+     * Only call these methods after partition_edges has been invoked. */
 
     
     inline edge_idx_range edges(const RRNodeId& node) const {

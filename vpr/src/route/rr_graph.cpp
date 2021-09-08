@@ -304,7 +304,8 @@ static void build_rr_graph(const t_graph_type graph_type,
                            const t_direct_inf* directs,
                            const int num_directs,
                            int* wire_to_rr_ipin_switch,
-                           int* Warnings);
+                           int* Warnings,
+                           t_det_routing_arch* det_routing_arch);
 
 /******************* Subroutine definitions *******************************/
 
@@ -374,7 +375,8 @@ void create_rr_graph(const t_graph_type graph_type,
                        router_opts.clock_modeling,
                        directs, num_directs,
                        &det_routing_arch->wire_to_rr_ipin_switch,
-                       Warnings);
+                       Warnings,
+                       det_routing_arch);
         reorder_rr_graph_nodes(router_opts);
     }
 
@@ -443,7 +445,8 @@ static void build_rr_graph(const t_graph_type graph_type,
                            const t_direct_inf* directs,
                            const int num_directs,
                            int* wire_to_rr_ipin_switch,
-                           int* Warnings) {
+                           int* Warnings,
+                           t_det_routing_arch* det_routing_arch) {
     vtr::ScopedStartFinishTimer timer("Build routing resource graph");
     vtr::Timer myTimer;
     /* Reset warning flag */
@@ -784,12 +787,14 @@ static void build_rr_graph(const t_graph_type graph_type,
     #ifdef PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 
     /* USE FOLDED RR GRAPH */
-    // build folded rr_graph from rr_graph_storage version
-    g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
-    // Set primary rr_graph to the FoldedRRGraph
-    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
-    /// delete rr_nodes.node_storage_ as it will no longer be used
-    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    // build folded rr_graph from rr_graph_storage version if not writing rr_graph (because that code still uses flat representation)
+    if (det_routing_arch->write_rr_graph_filename.empty()){
+        g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
+        // Set primary rr_graph to the FoldedRRGraph
+        g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
+        /// delete rr_nodes.node_storage_ as it will no longer be used
+        g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+    }
     #endif
 
     #ifdef PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
