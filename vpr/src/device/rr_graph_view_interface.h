@@ -16,7 +16,7 @@ class RRGraphViewInterface {
       virtual float node_C(RRNodeId node) const=0;
       virtual float node_R(RRNodeId node) const=0;
       virtual int16_t node_rc_index(RRNodeId node) const=0;
-      //virtual t_edge_size node_fan_in(RRNodeId node) const;
+      virtual t_edge_size node_fan_in(RRNodeId node) const=0;
       virtual short node_xlow(RRNodeId node) const=0;
       virtual short node_xhigh(RRNodeId node) const=0;
       virtual short node_ylow(RRNodeId node) const=0;

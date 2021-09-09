@@ -159,6 +159,11 @@ class FoldedRRGraph : public RRGraphViewInterface{
       return SIDE_STRING[NUM_SIDES];
   }
 
+  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
+  inline t_edge_size node_fan_in(RRNodeId node) const {
+    return node_storage_.node_fan_in(node);
+  }
+
   // Is the RR graph currently empty?
   inline bool empty() const {
         return node_patterns_.empty();

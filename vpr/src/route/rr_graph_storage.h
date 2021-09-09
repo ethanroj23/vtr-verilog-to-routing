@@ -235,6 +235,10 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         return node_fan_in_[id];
     }
 
+    t_edge_size node_fan_in(RRNodeId id) const {
+        return node_fan_in_[id];
+    }
+
     // This prefetechs hot RR node data required for optimization.
     //
     // Note: This is optional, but may lower time spent on memory stalls in
@@ -801,6 +805,10 @@ class t_rr_graph_view {
         return node_fan_in_[id];
     }
 
+    t_edge_size node_fan_in(RRNodeId id) const {
+        return node_fan_in_[id];
+    }
+
     // This prefetechs hot RR node data required for optimization.
     //
     // Note: This is optional, but may lower time spent on memory stalls in
@@ -883,6 +891,10 @@ class t_rr_graph_view_no_node_storage {
 
     /* Retrieve fan_in for RRNodeId. */
     t_edge_size fan_in(RRNodeId id) const {
+        return node_fan_in_[id];
+    }
+
+    t_edge_size node_fan_in(RRNodeId id) const {
         return node_fan_in_[id];
     }
 
