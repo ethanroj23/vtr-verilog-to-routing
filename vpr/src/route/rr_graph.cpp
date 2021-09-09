@@ -452,6 +452,8 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* Reset warning flag */
     *Warnings = RR_GRAPH_NO_WARN;
 
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
+
     /* Decode the graph_type */
     bool is_global_graph = ((GRAPH_GLOBAL == graph_type) ? true : false);
     bool use_full_seg_groups = ((GRAPH_UNIDIR_TILEABLE == graph_type) ? true : false);

@@ -33,7 +33,7 @@
  *
  */
 
-//#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
+#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 //#define PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
 
 class RRGraphView : public RRGraphViewInterface {
