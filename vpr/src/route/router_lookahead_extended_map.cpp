@@ -66,7 +66,7 @@ static std::pair<float, int> run_dijkstra(RRNodeId start_node,
 
 std::pair<float, float> ExtendedMapLookahead::get_src_opin_cost(RRNodeId from_node, int delta_x, int delta_y, const t_conn_cost_params& params) const {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     //When estimating costs from a SOURCE/OPIN we look-up to find which wire types (and the
     //cost to reach them) in f_src_opin_delays. Once we know what wire types are
@@ -141,7 +141,7 @@ std::pair<float, float> ExtendedMapLookahead::get_src_opin_cost(RRNodeId from_no
 
 float ExtendedMapLookahead::get_chan_ipin_delays(RRNodeId to_node) const {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     e_rr_type to_type = rr_graph.node_type(to_node);
     VTR_ASSERT(to_type == SINK || to_type == IPIN);
@@ -313,7 +313,7 @@ bool ExtendedMapLookahead::add_paths(RRNodeId start_node,
 
         if (size_t(this_node) != size_t(start_node)) {
             auto& parent_node = device_ctx.rr_nodes[size_t(parent)];
-            start_to_here = Entry(this_node, parent_node.edge_switch(paths[*it].edge), &start_to_here);
+            start_to_here = Entry(this_node, rr_graph.edge_switch(parent, paths[*it].edge), &start_to_here);
             parent = this_node;
         }
 

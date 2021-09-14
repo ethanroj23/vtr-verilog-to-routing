@@ -401,10 +401,11 @@ void create_rr_graph(const t_graph_type graph_type,
 
 void print_rr_graph_stats() {
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
     size_t num_rr_edges = 0;
-    for (auto& rr_node : device_ctx.rr_nodes) {
-        num_rr_edges += rr_node.edges().size();
+    for (size_t rr_node=0; rr_node < rr_graph.size(); rr_node++) {
+        num_rr_edges += rr_graph.edges(RRNodeId(rr_node)).size();
     }
 
     device_ctx.rr_graph.print_memory_used();
@@ -2547,7 +2548,7 @@ std::string describe_rr_node(int inode) {
 
     msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(RRNodeId(inode)));
     msg += vtr::string_fmt(" fan-in: %d", rr_graph.node_fan_in(RRNodeId(inode)));
-    msg += vtr::string_fmt(" fan-out: %d", rr_node.num_edges());
+    msg += vtr::string_fmt(" fan-out: %d", rr_graph.num_edges(RRNodeId(inode)));
 
     return msg;
 }
@@ -3059,10 +3060,11 @@ static RRNodeId pick_best_direct_connect_target_rr_node(RRNodeId from_rr,
 static void create_edge_groups(EdgeGroups* groups) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& rr_nodes = device_ctx.rr_nodes;
+    const auto& rr_graph = device_ctx.rr_graph;
 
     rr_nodes.for_each_edge(
         [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
-            if (!device_ctx.rr_switch_inf[rr_nodes.edge_switch(edge)].configurable()) {
+            if (!device_ctx.rr_switch_inf[rr_graph.edge_switch(edge)].configurable()) {
                 groups->add_non_config_edge(size_t(src), size_t(sink));
             }
         });

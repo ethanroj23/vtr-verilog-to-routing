@@ -230,7 +230,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
     struct FoldedEdgePattern { // 9 Bytes
         int16_t dx;
         int16_t dy;
-        int8_t switch_id; 
+        int16_t offset; 
       }; 
 
   /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
@@ -240,7 +240,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
           int16_t dx_; // 2 Bytes
           int16_t dy_; // 2 Bytes
-          //std::vector<FoldedEdgePattern> edges_; // 5 Bytes for each edge
 
           t_rr_type type_; // 1 Byte
 
@@ -251,6 +250,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
               unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
           } dir_side_; // 1 Byte
 
+          std::vector<FoldedEdgePattern> edges_; // 5 Bytes for each edge
       };
 
     /* Obtain node_pattern_data_ for specific node id */
@@ -276,6 +276,18 @@ class FoldedRRGraph : public RRGraphViewInterface{
       return tile.node_patterns_idx_;
     }
 
+    /* Obtain node_pattern_data_ for specific node id */
+    inline void set_node_edges(RRNodeId node, std::vector<FoldedEdgePattern> edges) {
+      RRNodeId remapped_id = remapped_ids_[node];
+      //std::array<size_t, 2> x_y = find_tile_coords(node);
+      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      int node_patterns_idx = tile.node_patterns_idx_;
+      size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
+      node_pattern_data_[node_patterns_[node_patterns_idx][offset]].edges_ = edges;
+    } 
+
+
+
 
     friend bool operator==(const FoldedNodePattern& lhs, const FoldedNodePattern& rhs)
           {
@@ -283,7 +295,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
                    lhs.rc_index_ == rhs.rc_index_ &&
                    lhs.dx_ == rhs.dx_ &&
                    lhs.dy_ == rhs.dy_ &&
-                   //lhs.edges_ == rhs.edges_ &&
+                   lhs.edges_ == rhs.edges_ &&
                    lhs.type_ == rhs.type_ &&
                    lhs.dir_side_.direction_ == rhs.dir_side_.direction_ &&
                    lhs.dir_side_.sides_ == rhs.dir_side_.sides_ &&
@@ -298,7 +310,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
         {
           return lhs.dx == rhs.dx &&
                   lhs.dy == rhs.dy &&
-                  lhs.switch_id == rhs.switch_id;
+                  lhs.offset == rhs.offset;
         }
 
 
@@ -361,8 +373,23 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
     bool built = false; // flag for determining if the FoldedRRGraph has been built yet
 
-
-
 };
 
 #endif
+
+/*
+  You need to implement the following: 
+        const vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
+        const vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge,
+        const vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in,
+        const vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node,
+        const vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node,
+        const vtr::array_view_id<RREdgeId, const short> edge_switch)
+        : node_storage_(node_storage)
+        , node_ptc_(node_ptc)
+        , node_first_edge_(node_first_edge)
+        , node_fan_in_(node_fan_in)
+        , edge_src_node_(edge_src_node)
+        , edge_dest_node_(edge_dest_node)
+        , edge_switch_(edge_switch) {}
+*/

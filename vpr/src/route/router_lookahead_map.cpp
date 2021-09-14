@@ -275,7 +275,7 @@ std::pair<float, float> MapLookahead::get_expected_delay_and_cong(RRNodeId from_
         t_physical_tile_type_ptr tile_type = device_ctx.grid[temp_rr_graph.node_xlow(from_node)][temp_rr_graph.node_ylow(from_node)].type;
         auto tile_index = std::distance(&device_ctx.physical_tile_types[0], tile_type);
 
-        auto from_ptc = rr_nodes.node_ptc_num(from_node);
+        auto from_ptc = temp_rr_graph.node_ptc_num(from_node);
 
         if (this->src_opin_delays[tile_index][from_ptc].empty()) {
             //During lookahead profiling we were unable to find any wires which connected
@@ -651,9 +651,9 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
 
     RRNodeId parent = parent_entry.rr_node;
 
-    for (RREdgeId edge : rr_nodes.edge_range(parent)) {
-        RRNodeId child_node = rr_nodes.edge_sink_node(edge);
-        int switch_ind = rr_nodes.edge_switch(edge);
+    for (RREdgeId edge : temp_rr_graph.edge_range(parent)) {
+        RRNodeId child_node = temp_rr_graph.edge_sink_node(edge);
+        int switch_ind = temp_rr_graph.edge_switch(edge);
 
         if (temp_rr_graph.node_type(child_node) == SINK) return; // ESR Memory Profiling
 

@@ -8,6 +8,7 @@
 #include "globals.h"
 #include "vtr_time.h"
 
+#define FOLDED_RR_GRAPH_USING_EDGES
 
 
 FoldedRRGraph::FoldedRRGraph(const t_rr_graph_storage& node_storage) : node_storage_(node_storage){
@@ -108,7 +109,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
         node_to_x_y_[id] = { x, y };
         t_rr_type current_type = node_storage_.node_type(id);
 
-        #ifdef FOLDED_RR_GRAPH_USING_EDGES
+        #ifdef FOLDED_RR_GRAPH_USING_EDGESS
         std::vector<FoldedEdgePattern> temp_edge_patterns;
         std::vector<FoldedEdgePattern> edge_patterns;
         for (RREdgeId from_edge : node_storage_.edge_range(id)) {
@@ -127,6 +128,24 @@ void FoldedRRGraph::build_folded_rr_graph(){
         }
         #endif
 
+        std::vector<FoldedEdgePattern> edge_patterns;
+        for (RREdgeId from_edge : node_storage_.edge_range(id)) {
+            RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
+            int32_t edge_diff = (size_t) sink_node - (size_t) id;
+            auto switch_id = node_storage_.edge_switch(from_edge);
+            //int16_t offset = node_offset(sink_node);
+            int16_t offset = 0;
+            int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
+            int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
+            FoldedEdgePattern edge_pattern = {
+                edge_dx, // diff of the x position
+                edge_dy, // diff of the y position
+                offset
+            };
+            // VTR_LOG( "dx:%d, dy:%d, switch:%d\n", edge_dx, edge_dy, switch_id);
+            edge_patterns.push_back(edge_pattern);
+        }
+
         FoldedNodePattern node_pattern = { 
                                             node_storage_.node_cost_index(id),
                                             node_storage_.node_rc_index(id),
@@ -134,7 +153,8 @@ void FoldedRRGraph::build_folded_rr_graph(){
                                             dy,
                                             current_type,//edge_patterns,
                                             (uint16_t) node_storage_.node_capacity(id),
-                                            {Direction::NUM_DIRECTIONS}
+                                            {Direction::NUM_DIRECTIONS},
+                                            edge_patterns
 
         };
         if (current_type== CHANX || current_type == CHANY){
@@ -199,7 +219,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
             }
 
             std::vector<int16_t> node_pattern_list;
-            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_pattern_data_ for each node
+            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_pattern_data_ for each tile
             for (auto id : ids_in_tile[x][y]){
                 // iterate until the previous id is not one less than the current id, then create a new node_pattern_list
                 if (remapped_ids_.size() < (size_t) id + 1){
@@ -208,22 +228,23 @@ void FoldedRRGraph::build_folded_rr_graph(){
                 remapped_ids_[id] = RRNodeId(current_remapped_id);
                 current_remapped_id++;
 
-                #ifdef FOLDED_RR_GRAPH_USING_EDGES
                 std::vector<FoldedEdgePattern> edge_patterns;
                 for (RREdgeId from_edge : node_storage_.edge_range(id)) {
                     RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
                     int32_t edge_diff = (size_t) sink_node - (size_t) id;
                     auto switch_id = node_storage_.edge_switch(from_edge);
+                    //int16_t offset = node_offset(sink_node);
+                    int16_t offset = 0;
                     int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
                     int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
                     FoldedEdgePattern edge_pattern = {
                         edge_dx, // diff of the x position
                         edge_dy, // diff of the x position
-                        switch_id
+                        offset
                     };
+                    // VTR_LOG( "dx:%d, dy:%d, switch:%d\n", edge_dx, edge_dy, switch_id);
                     edge_patterns.push_back(edge_pattern);
                 }
-                #endif
                 t_rr_type current_type = node_storage_.node_type(id);
                 FoldedNodePattern node_pattern = { 
                                                             (int16_t) node_storage_.node_cost_index(id),
@@ -232,8 +253,8 @@ void FoldedRRGraph::build_folded_rr_graph(){
                                                             (int16_t) (node_storage_.node_yhigh(id) - node_storage_.node_ylow(id)),
                                                             current_type,
                                                             (uint16_t) node_storage_.node_capacity(id),
-                                                            {Direction::NUM_DIRECTIONS}
-
+                                                            {Direction::NUM_DIRECTIONS},
+                                                            edge_patterns
                         };
                 if (current_type == CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(id);
@@ -301,6 +322,31 @@ void FoldedRRGraph::build_folded_rr_graph(){
     
 
 
+    // iterate over every node and look for edge patterns
+    // for the edge pattern, store dx, dy and offset into the tile
+    /*
+    for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
+            RRNodeId id = RRNodeId(idx);
+            std::vector<FoldedEdgePattern> temp_edge_patterns;
+            std::vector<FoldedEdgePattern> edge_patterns;
+            for (RREdgeId from_edge : node_storage_.edge_range(id)) {
+            RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
+            int32_t edge_diff = (size_t) sink_node - (size_t) id;
+            auto switch_id = node_storage_.edge_switch(from_edge);
+            int16_t offset = node_offset(sink_node);
+            int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
+            int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
+            FoldedEdgePattern edge_pattern = {
+                edge_dx, // diff of the x position
+                edge_dy, // diff of the x position
+                offset
+            };
+           // VTR_LOG( "dx:%d, dy:%d, switch:%d\n", edge_dx, edge_dy, switch_id);
+            edge_patterns.push_back(edge_pattern);
+            }
+            set_node_edges(id, edge_patterns);
+    }
+    */
 
 
     /*for (size_t idx = 0; idx < node_storage_.size(); idx++) {   

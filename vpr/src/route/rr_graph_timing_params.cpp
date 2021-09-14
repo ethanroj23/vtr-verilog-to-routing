@@ -54,12 +54,12 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         from_rr_type = rr_graph.node_type(RRNodeId(inode));
 
         if (from_rr_type == CHANX || from_rr_type == CHANY) {
-            for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[inode].num_edges(); iedge++) {
-                to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
                 if (to_rr_type == CHANX || to_rr_type == CHANY) {
-                    switch_index = device_ctx.rr_nodes[inode].edge_switch(iedge);
+                    switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
                     Cin = device_ctx.rr_switch_inf[switch_index].Cin;
                     Cout = device_ctx.rr_switch_inf[switch_index].Cout;
                     buffered = device_ctx.rr_switch_inf[switch_index].buffered();
@@ -121,7 +121,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
             /* Method below would be faster for very unpopulated segments, but I  *
              * think it would be slower overall for most FPGAs, so commented out. */
 
-            /*   for (iedge=0;iedge<device_ctx.rr_nodes[inode].num_edges();iedge++) {
+            /*   for (iedge=0;iedge<rr_graph.num_edges(RRNodeId(inode));iedge++) {
              * to_node = device_ctx.rr_nodes[inode].edges[iedge];
              * if (rr_graph.node_type(RRNodeId(to_node)) == IPIN) {
              * icblock = seg_index_of_cblock (from_rr_type, to_node);
@@ -149,9 +149,9 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         }
         /* End node is CHANX or CHANY */
         else if (from_rr_type == OPIN) {
-            for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[inode].num_edges(); iedge++) {
-                switch_index = device_ctx.rr_nodes[inode].edge_switch(iedge);
-                to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+                switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
+                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
                 if (to_rr_type != CHANX && to_rr_type != CHANY)
@@ -159,7 +159,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
 
                 if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
                     Cout = device_ctx.rr_switch_inf[switch_index].Cout;
-                    to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge); /* Will be CHANX or CHANY */
+                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); /* Will be CHANX or CHANY */
                     rr_node_C[to_node] += Cout;
                 }
             }
@@ -173,9 +173,9 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
      * out what the Cout's should be */
     Couts_to_add = (float*)vtr::calloc(device_ctx.rr_graph.size(), sizeof(float));
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
-        for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[inode].num_edges(); iedge++) {
-            switch_index = device_ctx.rr_nodes[inode].edge_switch(iedge);
-            to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+        for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+            switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
+            to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
             to_rr_type = rr_graph.node_type(RRNodeId(to_node));
             if (to_rr_type == CHANX || to_rr_type == CHANY) {
                 if (rr_graph.node_direction(RRNodeId(to_node)) != Direction::BIDIR) {

@@ -505,11 +505,11 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     if (prev_node == node) return false;
 
     auto& device_ctx = g_vpr_ctx.device();
-    const auto& rr_graph = device_ctx.rr_nodes;
+    const auto& rr_graph = device_ctx.rr_graph;
     const auto& switch_info = device_ctx.rr_switch_inf;
 
     // If it's starting a new sub branch this is ok
-    if (device_ctx.rr_graph.node_type(prev_node) == SINK) return true;
+    if (rr_graph.node_type(prev_node) == SINK) return true;
 
     for (RREdgeId edge : rr_graph.edge_range(prev_node)) {
         //If the sink node is reachable by previous node return true

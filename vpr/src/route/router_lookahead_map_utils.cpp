@@ -262,10 +262,11 @@ void expand_dijkstra_neighbours(const t_rr_graph_storage& rr_nodes,
     RRNodeId parent = parent_entry.rr_node;
 
     auto& parent_node = rr_nodes[size_t(parent)];
+    const auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
-    for (int iedge = 0; iedge < parent_node.num_edges(); iedge++) {
-        int child_node_ind = parent_node.edge_sink_node(iedge);
-        int switch_ind = parent_node.edge_switch(iedge);
+    for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) {
+        int child_node_ind = (size_t) rr_graph.edge_sink_node(parent_node.id(), iedge);
+        int switch_ind = rr_graph.edge_switch(parent_node.id(), iedge);
 
         /* skip this child if it has already been expanded from */
         if ((*node_expanded)[child_node_ind]) {
@@ -305,6 +306,7 @@ t_src_opin_delays compute_router_src_opin_lookahead() {
     vtr::ScopedStartFinishTimer timer("Computing src/opin lookahead");
     auto& device_ctx = g_vpr_ctx.device();
     auto& rr_nodes = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     t_src_opin_delays src_opin_delays;
 
@@ -344,7 +346,7 @@ t_src_opin_delays compute_router_src_opin_lookahead() {
 
                     RRNodeId node_id(inode);
 
-                    int ptc = rr_nodes.node_ptc_num(node_id);
+                    int ptc = rr_graph.node_ptc_num(node_id);
 
                     if (ptc >= int(src_opin_delays[itile].size())) {
                         src_opin_delays[itile].resize(ptc + 1); //Inefficient but functional...
@@ -444,7 +446,7 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
     root.delay = 0.;
     root.node = node;
 
-    int ptc = rr_nodes.node_ptc_num(node);
+    int ptc = rr_graph.node_ptc_num(node);
 
     /*
      * Perform Djikstra from the SOURCE/OPIN of interest, stopping at the the first
@@ -504,11 +506,11 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             int cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            for (RREdgeId edge : rr_nodes.edge_range(curr.node)) {
-                int iswitch = rr_nodes.edge_switch(edge);
+            for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
+                int iswitch = rr_graph.edge_switch(edge);
                 float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 
-                RRNodeId next_node = rr_nodes.edge_sink_node(edge);
+                RRNodeId next_node = rr_graph.edge_sink_node(edge);
 
                 t_pq_entry next;
                 next.congestion = curr.congestion + incr_cong; //Of current node
@@ -579,7 +581,7 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             auto tile_type = device_ctx.grid[node_x][node_y].type;
             int itile = tile_type->index;
 
-            int ptc = rr_nodes.node_ptc_num(curr.node);
+            int ptc = rr_graph.node_ptc_num(curr.node);
 
             if (ptc >= int(chan_ipins_delays[itile].size())) {
                 chan_ipins_delays[itile].resize(ptc + 1); //Inefficient but functional...
@@ -599,11 +601,11 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             int cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            for (RREdgeId edge : rr_nodes.edge_range(curr.node)) {
+            for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
                 int iswitch = rr_nodes.edge_switch(edge);
                 float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 
-                RRNodeId next_node = rr_nodes.edge_sink_node(edge);
+                RRNodeId next_node = rr_graph.edge_sink_node(edge);
 
                 t_pq_entry next;
                 next.congestion = new_cong; //Of current node

@@ -463,7 +463,7 @@ static void calculate_average_switch(int inode, double& avg_switch_R, double& av
     for (const auto& edge : fan_in_list[node]) {
         /* want to get C/R/Tdel/Cinternal of switches that connect this track segment to other track segments */
         if (rr_graph.node_type(node) == CHANX || rr_graph.node_type(node) == CHANY) {
-            int switch_index = rr_nodes.edge_switch(edge);
+            int switch_index = rr_graph.edge_switch(edge);
 
             if (device_ctx.rr_switch_inf[switch_index].type() == SwitchType::SHORT) continue;
 
