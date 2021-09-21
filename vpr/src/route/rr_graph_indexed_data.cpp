@@ -451,7 +451,6 @@ static void load_rr_indexed_data_T_values() {
 static void calculate_average_switch(int inode, double& avg_switch_R, double& avg_switch_T, double& avg_switch_Cinternal, int& num_switches, short& buffered, vtr::vector<RRNodeId, std::vector<RREdgeId>>& fan_in_list) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    const auto& rr_nodes = device_ctx.rr_nodes.view();
 
     auto node = RRNodeId(inode);
 
