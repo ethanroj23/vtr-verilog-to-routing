@@ -68,6 +68,21 @@ read_file_2.close();
   }
   
 
+t_edge_size FoldedRRGraph::num_configurable_edges(const RRNodeId& id) const {
+    VTR_ASSERT(!get_edges(id).empty()); // make sure there are edges
+
+    const auto& device_ctx = g_vpr_ctx.device();
+    auto first_id = size_t(first_edge(id));
+    auto last_id = size_t(last_edge(id));
+    for (size_t idx = first_id; idx < last_id; ++idx) {
+        auto switch_idx = edge_switch(RREdgeId(idx));
+        if (!device_ctx.rr_switch_inf[switch_idx].configurable()) {
+            return idx - first_id;
+        }
+    }
+    return last_id - first_id;
+}
+
 void FoldedRRGraph::initialize_folded_rr_graph(){
     // empty out the data structures
     /*all_node_patterns_.clear();
@@ -436,9 +451,9 @@ void FoldedRRGraph::build_folded_rr_graph(){
 
     RRNodeId first_node = get_edge_src_node(RREdgeId(0));
     RRNodeId rand_node = get_edge_src_node(RREdgeId(124));
-    auto rand_edges = edge_range(rand_node);
-    RRNodeId rand_dest = get_edge_dest_node(RREdgeId(124));
-    short rand_switch = get_edge_switch(RREdgeId(124));
+    auto rand_edges = get_edges(rand_node);
+    RRNodeId rand_dest = edge_sink_node(RREdgeId(124));
+    short rand_switch = edge_switch(RREdgeId(124));
 
     verify_folded_rr_graph();
 }
@@ -467,7 +482,7 @@ void FoldedRRGraph::verify_folded_rr_graph(){
             VTR_ASSERT(strcmp(node_storage_.node_side_string(id),node_side_string(id))==0);
         
         // verify edges
-        auto edges = edge_range(id);
+        auto edges = get_edges(id);
         int edge_idx = 0;
         for (RREdgeId edge : node_storage_.edge_range(id)) {
             RRNodeId legacy_src_node = id;

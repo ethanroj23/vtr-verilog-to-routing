@@ -178,7 +178,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
         int8_t switch_id;
       }; 
 
-  std::vector<FoldedEdge> edge_range(RRNodeId node) const {
+  std::vector<FoldedEdge> get_edges(RRNodeId node) const {
     std::vector<FoldedEdge> edges;
     RRNodeId remapped_id = remapped_ids_[node];
     int x = node_to_x_y_[node][0];
@@ -261,6 +261,50 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
   /* Compare folded rr_graph vs node_storage_ */
   void verify_folded_rr_graph();
+
+  /* PUBLIC EDGE METHODS */
+
+  // input: legacy node
+  inline edge_idx_range edges(const RRNodeId& node) const {
+    return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(node)));
+  }
+
+  RREdgeId first_edge(const RRNodeId& node) const {
+      RREdgeId first = node_first_edge_id_[remapped_ids_[node]];
+      return (first) ? first : RREdgeId(1); // if the RREdge is -1, return 1 because negative edge ids will throw error
+  }
+
+  RREdgeId last_edge(const RRNodeId& node) const {
+      return RREdgeId((size_t)first_edge(node) + (size_t)get_edges(node).size());
+  }
+
+  /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
+  edge_idx_range configurable_edges(const RRNodeId& id) const {
+        return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)));
+    }
+  edge_idx_range non_configurable_edges(const RRNodeId& id) const {
+      return vtr::make_range(edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)), edge_idx_iterator(num_edges(id)));
+  }
+
+  t_edge_size num_edges(const RRNodeId& id) const {
+      return size_t(last_edge(id)) - size_t(first_edge(id));
+  }
+  t_edge_size num_configurable_edges(const RRNodeId& id) const;
+
+  t_edge_size num_non_configurable_edges(const RRNodeId& id) const {
+    return num_edges(id) - num_configurable_edges(id);
+  }
+
+  // Returns a range of RREdgeId's belonging to RRNodeId id.
+  //
+  // If this range is empty, then RRNodeId id has no edges.
+  vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId id) const {
+      return vtr::StrongIdRange<RREdgeId>(first_edge(id), last_edge(id));
+  }
+
+  
+
+
 
     /* -- Mutators -- */
   public:
@@ -357,7 +401,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
       return RRNodeId(closest_node_id); // case for the very last edge
     }
 
-  inline RRNodeId get_edge_dest_node(RREdgeId edge) const {
+  inline RRNodeId edge_sink_node(const RREdgeId& edge) const {
     RRNodeId src = get_edge_src_node(edge);
     int edge_offset = (size_t) edge - (size_t) node_first_edge_id_[src];
     RRNodeId remapped_src = remapped_ids_[src];
@@ -375,7 +419,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
     return dest_node;
   }
 
-  inline short get_edge_switch(RREdgeId edge) const {
+  inline short edge_switch(const RREdgeId& edge) const {
     RRNodeId src = get_edge_src_node(edge);
     int edge_offset = (size_t) edge - (size_t) node_first_edge_id_[src];
     RRNodeId remapped_src = remapped_ids_[src];
@@ -390,6 +434,8 @@ class FoldedRRGraph : public RRGraphViewInterface{
     auto edge_data = edge_data_[all_edges[edge_offset]];
     return edge_data.switch_id;
   }
+
+  
 
 
 
@@ -495,7 +541,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
     /* First edge id of given node (RRNodeId is a remapped node)*/
     vtr::vector<RRNodeId, RREdgeId> node_first_edge_id_;
 
-    /* remapped_ids_[legacy_node] = legacy_node */
+    /* remapped_ids_[legacy_node] = remapped_node */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
 
     /* Map of RRNodeId to  x_low and y_low*/ 

@@ -511,6 +511,7 @@ static void compute_router_wire_lookahead(const std::vector<t_segment_inf>& segm
                 for (RRNodeId sample_node : sample_nodes[chan_type]) {
                     int sample_x = temp_rr_graph.node_xlow(sample_node);
                     int sample_y = temp_rr_graph.node_ylow(sample_node);
+                    VTR_LOG("cur node: %d\n", (size_t) sample_node);
 
                     if (temp_rr_graph.node_direction(sample_node) == Direction::DEC) {
                         sample_x = temp_rr_graph.node_xhigh(sample_node);
@@ -613,7 +614,6 @@ static void run_dijkstra(RRNodeId start_node, int start_x, int start_y, t_routin
     while (!pq.empty()) {
         PQ_Entry current = pq.top();
         pq.pop();
-
         RRNodeId curr_node = current.rr_node;
 
         /* check that we haven't already expanded from this node */

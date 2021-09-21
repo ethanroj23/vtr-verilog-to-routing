@@ -28,6 +28,21 @@ class RRGraphViewInterface {
       virtual size_t size() const=0;
       virtual bool empty() const=0;
       virtual int memory_used() const=0;
+      /* Edge Methods */
+      virtual edge_idx_range edges(const RRNodeId& node) const=0;
+      virtual edge_idx_range configurable_edges(const RRNodeId& node) const=0;
+      virtual edge_idx_range non_configurable_edges(const RRNodeId& node) const=0;
+      virtual t_edge_size num_edges(const RRNodeId& node) const=0;
+      virtual t_edge_size num_configurable_edges(const RRNodeId& node) const=0;
+      virtual t_edge_size num_non_configurable_edges(const RRNodeId& node) const=0;
+      virtual RREdgeId first_edge(const RRNodeId& node) const=0;
+      virtual RREdgeId last_edge(const RRNodeId& node) const=0;
+      virtual vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId node) const=0;
+      virtual RRNodeId edge_sink_node(const RREdgeId& edge) const=0;
+      virtual short edge_switch(const RREdgeId& edge) const=0;
+
+
+
 
       /* destructor */
       virtual ~RRGraphViewInterface() {}

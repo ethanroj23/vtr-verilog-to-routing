@@ -182,7 +182,7 @@ struct DeviceContext : public Context {
     /* Partially folded routing resource graph. Some aspects of folding were not used due to the increased access time caused by these methods
      */
 
-    PartialFoldedRRGraph partial_folded_rr_graph{rr_nodes};
+    //PartialFoldedRRGraph partial_folded_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;
 //pCallback = new DerivedClass;

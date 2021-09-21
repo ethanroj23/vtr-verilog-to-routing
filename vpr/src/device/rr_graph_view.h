@@ -237,24 +237,24 @@ class RRGraphView : public RRGraphViewInterface {
 
     
     inline edge_idx_range edges(const RRNodeId& node) const {
-        return node_storage_.edges(node);
+        return primary_rr_graph_->edges(node);
     }
     /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
     inline edge_idx_range configurable_edges(const RRNodeId& node) const {
-        return node_storage_.configurable_edges(node);
+        return primary_rr_graph_->configurable_edges(node);
     }
     inline edge_idx_range non_configurable_edges(const RRNodeId& node) const {
-        return node_storage_.non_configurable_edges(node);
+        return primary_rr_graph_->non_configurable_edges(node);
     }
 
     inline t_edge_size num_edges(const RRNodeId& node) const {
-        return node_storage_.num_edges(node);
+        return primary_rr_graph_->num_edges(node);
     }
     inline t_edge_size num_configurable_edges(const RRNodeId& node) const{
-        return node_storage_.num_configurable_edges(node);
+        return primary_rr_graph_->num_configurable_edges(node);
     }
     inline t_edge_size num_non_configurable_edges(const RRNodeId& node) const {
-        return node_storage_.num_non_configurable_edges(node);
+        return primary_rr_graph_->num_non_configurable_edges(node);
     }
 
     // Get the first and last RREdgeId for the specified RRNodeId.
@@ -264,7 +264,7 @@ class RRGraphView : public RRGraphViewInterface {
     //
     // If first_edge == last_edge, then a RRNodeId has no edges.
     inline RREdgeId first_edge(const RRNodeId& node) const {
-        return node_storage_.first_edge(node);
+        return primary_rr_graph_->first_edge(node);
     }
 
     // Return the first_edge of the next rr_node, which is one past the edge
@@ -274,14 +274,15 @@ class RRGraphView : public RRGraphViewInterface {
     // we always allocate that dummy node. We also assume that the edges have
     // been sorted by rr_node, which is true after partition_edges().
     inline RREdgeId last_edge(const RRNodeId& node) const {
-        return node_storage_.last_edge(node);
+        return primary_rr_graph_->last_edge(node);
     }
 
     // Returns a range of RREdgeId's belonging to RRNodeId id.
     //
     // If this range is empty, then RRNodeId id has no edges.
     inline vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId node) const {
-        return node_storage_.edge_range(node);
+        //return primary_rr_graph_->edge_range(node);
+        return primary_rr_graph_->edge_range(node);
     }
 
     // Retrieve the RREdgeId for iedge'th edge in RRNodeId.
@@ -294,7 +295,7 @@ class RRGraphView : public RRGraphViewInterface {
 
     // Get the destination node for the specified edge.
     inline RRNodeId edge_sink_node(const RREdgeId& edge) const {
-        return node_storage_.edge_sink_node(edge);
+        return primary_rr_graph_->edge_sink_node(edge);
     }
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
@@ -312,7 +313,7 @@ class RRGraphView : public RRGraphViewInterface {
 
     // Get the switch used for the specified edge.
     inline short edge_switch(const RREdgeId& edge) const {
-        return node_storage_.edge_switch(edge);
+        return primary_rr_graph_->edge_switch(edge);
     }
 
     // Get the switch used for the iedge'th edge from specified RRNodeId.
