@@ -255,7 +255,6 @@ float MapLookahead::get_expected_cost(RRNodeId current_node, RRNodeId target_nod
 std::pair<float, float> MapLookahead::get_expected_delay_and_cong(RRNodeId from_node, RRNodeId to_node, const t_conn_cost_params& params, float /*R_upstream*/) const {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the variable on the next line is unneeded
-    auto& rr_nodes = device_ctx.rr_nodes;
 
     int delta_x, delta_y;
     get_xy_deltas(from_node, to_node, &delta_x, &delta_y);
@@ -647,7 +646,6 @@ static void run_dijkstra(RRNodeId start_node, int start_x, int start_y, t_routin
 static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNodeId, float>& node_visited_costs, vtr::vector<RRNodeId, bool>& node_expanded, std::priority_queue<PQ_Entry>& pq) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the rr_graph below is unneeded
-    const auto& rr_nodes = device_ctx.rr_nodes;
 
     RRNodeId parent = parent_entry.rr_node;
 

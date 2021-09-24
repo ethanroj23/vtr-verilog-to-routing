@@ -607,6 +607,11 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     // Validate that edge data is partitioned correctly.
     bool validate() const;
 
+    // Return number of edges.
+    inline size_t edge_count() const {
+        return edge_dest_node_.size();
+    }
+
     /******************
      * Fan-in methods *
      ******************/

@@ -31,7 +31,7 @@ read_file_1.close();
 
 /* load in rr_node_id_to_x_y_idx_ from file */
 
-std::ifstream read_file_2("/home/ethan/rr_graphs/node_to_x_y_pattern.txt");
+std::ifstream read_file_2("/home/ethan/rr_graphs/legacy_node_to_x_y_pattern.txt");
 while (getline (read_file_2, current_line)) {
     std::istringstream ss(current_line);
     std::string token;
@@ -52,28 +52,28 @@ read_file_2.close();
 
 
   /* Get the capacitance of a routing resource node.*/
-  float FoldedRRGraph::node_C(RRNodeId node) const {
-    if (!built) return node_storage_.node_C(node);
+  float FoldedRRGraph::node_C(RRNodeId legacy_node) const {
+    if (!built) return node_storage_.node_C(legacy_node);
     auto& device_ctx = g_vpr_ctx.device();
-    VTR_ASSERT(node_rc_index(node) < (short)device_ctx.rr_rc_data.size());
-    return device_ctx.rr_rc_data[node_rc_index(node)].C;
+    VTR_ASSERT(node_rc_index(legacy_node) < (short)device_ctx.rr_rc_data.size());
+    return device_ctx.rr_rc_data[node_rc_index(legacy_node)].C;
   }
 
   /* Get the resistance of a routing resource node. */
-  float FoldedRRGraph::node_R(RRNodeId node) const {
-    if (!built) return node_storage_.node_R(node);
+  float FoldedRRGraph::node_R(RRNodeId legacy_node) const {
+    if (!built) return node_storage_.node_R(legacy_node);
     auto& device_ctx = g_vpr_ctx.device();
-    VTR_ASSERT(node_rc_index(node) < (short)device_ctx.rr_rc_data.size());
-    return device_ctx.rr_rc_data[node_rc_index(node)].R;
+    VTR_ASSERT(node_rc_index(legacy_node) < (short)device_ctx.rr_rc_data.size());
+    return device_ctx.rr_rc_data[node_rc_index(legacy_node)].R;
   }
   
 
-t_edge_size FoldedRRGraph::num_configurable_edges(const RRNodeId& id) const {
-    VTR_ASSERT(!get_edges(id).empty()); // make sure there are edges
+t_edge_size FoldedRRGraph::num_configurable_edges(const RRNodeId& legacy_node) const {
+    VTR_ASSERT(!folded_node_first_edge_id_.empty()); // make sure there are edges
 
     const auto& device_ctx = g_vpr_ctx.device();
-    auto first_id = size_t(first_edge(id));
-    auto last_id = size_t(last_edge(id));
+    auto first_id = size_t(first_edge(legacy_node));
+    auto last_id = size_t(last_edge(legacy_node));
     for (size_t idx = first_id; idx < last_id; ++idx) {
         auto switch_idx = edge_switch(RREdgeId(idx));
         if (!device_ctx.rr_switch_inf[switch_idx].configurable()) {
@@ -83,53 +83,44 @@ t_edge_size FoldedRRGraph::num_configurable_edges(const RRNodeId& id) const {
     return last_id - first_id;
 }
 
-void FoldedRRGraph::initialize_folded_rr_graph(){
-    // empty out the data structures
-    /*all_node_patterns_.clear();
-    rr_node_id_to_x_y_idx_.resize(node_storage_.size());
-    for (int i=0; i<node_storage_.size(); i++){
-        //initialize empty
-        rr_node_id_to_x_y_idx_[RRNodeId(i)] = {-1, -1, -1};
-    }*/
-}
-
-void FoldedRRGraph::add_empty_pattern(){
-    //FoldedNodePattern pattern_array = { -1, -1, NUM_RR_TYPES, -1, Direction::NONE, "EMPTY", 0, 0, "EMPTY"};
-    //all_node_patterns_.push_back(pattern_array);
-}
-
 void FoldedRRGraph::build_folded_rr_graph(){
     // Begin timing 
     vtr::ScopedStartFinishTimer timer("Build FoldedRRGraph");
 
     // Clear all data structures of any previous data
     tile_patterns_.clear();
-    node_pattern_data_.clear();
+    node_data_.clear();
     node_patterns_.clear();
     remapped_ids_.clear();
-    node_to_x_y_.clear();
-    node_first_edge_id_.clear();
+    legacy_node_to_x_y_.clear();
+    folded_node_first_edge_id_.clear();
+    edge_src_node_.clear();
 
-    // Store every id in each tile (x, y)
-    std::vector<std::vector<std::vector<RRNodeId>>> ids_in_tile;
+    // Store every legacy_id in each tile (x, y)
+    std::vector<std::vector<std::vector<RRNodeId>>> legacy_ids_in_tile;
 
-    // Resize node_to_x_y_ so that it fits every node
-    if (node_to_x_y_.size() < node_storage_.size()){
-            node_to_x_y_.resize((size_t) node_storage_.size());
+    // Resize legacy_node_to_x_y_ so that it fits every node
+    if (legacy_node_to_x_y_.size() < node_storage_.size()){
+            legacy_node_to_x_y_.resize((size_t) node_storage_.size());
     }
-    // Resize node_first_edge_id_ so that it fits every node
-    if (node_first_edge_id_.size() < node_storage_.size()){
-            node_first_edge_id_.resize((size_t) node_storage_.size());
+    // Resize folded_node_first_edge_id_ so that it fits every node
+    if (folded_node_first_edge_id_.size() < node_storage_.size()){
+            folded_node_first_edge_id_.resize((size_t) node_storage_.size());
+    }
+    // Resize edge_src_node_ so that it fits every edge
+    if (edge_src_node_.size() < node_storage_.edge_count()){
+            edge_src_node_.resize((size_t) node_storage_.edge_count());
     }
 
-    // Iterate over every RRNodeId and find node_patterns
+
+    // Iterate over every legacy node and find node_patterns
     for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
         RRNodeId id = RRNodeId(idx);
         int16_t x = node_storage_.node_xlow(id);
         int16_t y = node_storage_.node_ylow(id);
         int16_t dx = node_storage_.node_xhigh(id) - x;
         int16_t dy = node_storage_.node_yhigh(id) - y;
-        node_to_x_y_[id] = { x, y };
+        legacy_node_to_x_y_[id] = { x, y };
         t_rr_type current_type = node_storage_.node_type(id);
 
         FoldedNodePattern node_pattern = { 
@@ -154,24 +145,25 @@ void FoldedRRGraph::build_folded_rr_graph(){
                     }
                 }
         }
+        /*  --- NODE PATTERN FOUND ---  */
 
         // initialize FoldedTilePattern
         FoldedTilePattern tile_pattern = {RRNodeId(-1), -1, -1};
 
         // Resize tile_patterns_ to fit every x             
         if (tile_patterns_.size() < (size_t) x+1){
-            ids_in_tile.resize(x+1);
+            legacy_ids_in_tile.resize(x+1);
             tile_patterns_.resize(x+1);
         }
         // Resize tile_patterns_ to fit every y          
         if (tile_patterns_[x].size() < (size_t) y+1){
             tile_patterns_[x].resize(y+1);
-            ids_in_tile[x].resize(y+1);
+            legacy_ids_in_tile[x].resize(y+1);
         }
         
         // add current tile_pattern to tile_patterns_ at the appropriate (x, y)
         tile_patterns_[x][y] = tile_pattern;
-        ids_in_tile[x][y].push_back(id);
+        legacy_ids_in_tile[x][y].push_back(id);
 
         // Set starting_node_id_ if this idx is less than the previous starting node id or the starting node id has not been set yet
         if ( idx < (size_t) tile_pattern.starting_node_id_ || tile_pattern.starting_node_id_ == RRNodeId(-1) ){
@@ -179,16 +171,16 @@ void FoldedRRGraph::build_folded_rr_graph(){
         }
 
 
-        // Search for node_pattern in node_pattern_data_ vector
+        // Search for node_pattern in node_data_ vector
         bool node_pattern_in_data = false;
-        for (size_t i = 0; i < node_pattern_data_.size(); i++){
-            if (node_pattern_data_[i] == node_pattern){
+        for (size_t i = 0; i < node_data_.size(); i++){
+            if (node_data_[i] == node_pattern){
                 // found it
                 node_pattern_in_data = true;
             }
         }
-        if (!node_pattern_in_data){ // Add node pattern to node_pattern_data_ since it was not found there yet
-            node_pattern_data_.push_back(node_pattern);
+        if (!node_pattern_in_data){ // Add node pattern to node_data_ since it was not found there yet
+            node_data_.push_back(node_pattern);
         }
 
 
@@ -198,27 +190,31 @@ void FoldedRRGraph::build_folded_rr_graph(){
     /*------------------------------------------------*/
     /*-------------SECOND LOOP OVER TILES-------------*/
     /*------------------------------------------------*/
+    /*  This loop remaps the ids and sets 
+        starting_node_id_ for each tile */
+
+
 
     // search for and set all starting_node_id_ values
-    for (size_t x = 0; x < ids_in_tile.size(); x++){ // iterate over x
+    for (size_t x = 0; x < legacy_ids_in_tile.size(); x++){ // iterate over x
         if (tile_patterns_.size() < x+1){ // Resize if necessary
-            ids_in_tile.resize(x+1);
+            legacy_ids_in_tile.resize(x+1);
             tile_patterns_.resize(x+1);
         }
-        for (size_t y = 0; y < ids_in_tile[x].size(); y++){ // iterate over y (For every tile)
+        for (size_t y = 0; y < legacy_ids_in_tile[x].size(); y++){ // iterate over y (For every tile)
             if (tile_patterns_[x].size() < y+1){ // Resize if necessary
                 tile_patterns_[x].resize(y+1);
-                ids_in_tile[x].resize(y+1);
+                legacy_ids_in_tile[x].resize(y+1);
             }
             
-            sort(ids_in_tile[x][y].begin(), ids_in_tile[x][y].end());
-            if (ids_in_tile[x][y].size() == 0){
+            sort(legacy_ids_in_tile[x][y].begin(), legacy_ids_in_tile[x][y].end());
+            if (legacy_ids_in_tile[x][y].size() == 0){
                 continue; // there are no nodes in this tile, so skip it
             }
 
             std::vector<int16_t> node_pattern_list;
-            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_pattern_data_ for each tile
-            for (auto id : ids_in_tile[x][y]){
+            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_data_ for each tile
+            for (auto id : legacy_ids_in_tile[x][y]){
                 // iterate until the previous id is not one less than the current id, then create a new node_pattern_list
                 if (remapped_ids_.size() < (size_t) id + 1){
                     remapped_ids_.resize((size_t) id + 1);
@@ -252,12 +248,12 @@ void FoldedRRGraph::build_folded_rr_graph(){
                     }
                 }
 
-                // Check if element was found in node_pattern_data_
-                auto it = std::find(node_pattern_data_.begin(), node_pattern_data_.end(), node_pattern);
-                VTR_ASSERT(it != node_pattern_data_.end());
+                // Check if element was found in node_data_
+                auto it = std::find(node_data_.begin(), node_data_.end(), node_pattern);
+                VTR_ASSERT(it != node_data_.end());
 
-                int16_t node_pattern_data_idx = std::distance(node_pattern_data_.begin(), it);
-                node_pattern_list.push_back(node_pattern_data_idx); // Add node pattern data index and edge index
+                int16_t node_data_idx = std::distance(node_data_.begin(), it);
+                node_pattern_list.push_back(node_data_idx); // Add node pattern data index and edge index
             }
 
             // Find the node_pattern_list in node_patterns. If it is not found, insert it.
@@ -272,7 +268,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
             }
             tile_patterns_[x][y].node_patterns_idx_ = node_pattern_idx;            
 
-            tile_patterns_[x][y].starting_node_id_ = remapped_ids_[ids_in_tile[x][y][0]];
+            tile_patterns_[x][y].starting_node_id_ = remapped_ids_[legacy_ids_in_tile[x][y][0]];
 
         }
     }
@@ -312,29 +308,26 @@ void FoldedRRGraph::build_folded_rr_graph(){
 
     // search for and set all starting_node_id_ values
     int edge_starting_idx = 0;
-    for (size_t x = 0; x < ids_in_tile.size(); x++){ // iterate over x
+    for (size_t x = 0; x < legacy_ids_in_tile.size(); x++){ // iterate over x
         if (tile_patterns_.size() < x+1){ // Resize if necessary
-            ids_in_tile.resize(x+1);
+            legacy_ids_in_tile.resize(x+1);
             tile_patterns_.resize(x+1);
         }
-        for (size_t y = 0; y < ids_in_tile[x].size(); y++){ // iterate over y (For every tile)
+        for (size_t y = 0; y < legacy_ids_in_tile[x].size(); y++){ // iterate over y (For every tile)
             if (tile_patterns_[x].size() < y+1){ // Resize if necessary
                 tile_patterns_[x].resize(y+1);
-                ids_in_tile[x].resize(y+1);
+                legacy_ids_in_tile[x].resize(y+1);
             }
             
-            sort(ids_in_tile[x][y].begin(), ids_in_tile[x][y].end());
-            if (ids_in_tile[x][y].size() == 0){
+            sort(legacy_ids_in_tile[x][y].begin(), legacy_ids_in_tile[x][y].end());
+            if (legacy_ids_in_tile[x][y].size() == 0){
                 continue; // there are no nodes in this tile, so skip it
             }
 
             std::vector<int16_t> edge_pattern_list;
-            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_pattern_data_ for each tile
-            for (auto id : ids_in_tile[x][y]){
-                // iterate until the previous id is not one less than the current id, then create a new node_pattern_list
-
-                
-                node_first_edge_id_[remapped_ids_[id]] = RREdgeId(edge_starting_idx); 
+            // Iterate over every node found in the tile and create a node_pattern_list of indexes to node_data_ for each tile
+            for (auto id : legacy_ids_in_tile[x][y]){                
+                folded_node_first_edge_id_[remapped_ids_[id]] = RREdgeId(edge_starting_idx); 
                 int current_edge_starting_idx = edge_starting_idx;
                 std::vector<int16_t> edge_patterns;
                 for (RREdgeId from_edge : node_storage_.edge_range(id)) {
@@ -362,11 +355,13 @@ void FoldedRRGraph::build_folded_rr_graph(){
                     }
                     edge_patterns.push_back(edge_data_idx);
 
+                    edge_src_node_[RREdgeId(edge_starting_idx)] = id; // set edge legacy source node
                     edge_starting_idx++; // increment edge_starting_idx for every edge
                 }
                 if (current_edge_starting_idx == edge_starting_idx){
-                    node_first_edge_id_[remapped_ids_[id]] = RREdgeId(-1);
+                    folded_node_first_edge_id_[remapped_ids_[id]] = RREdgeId(-1);
                 }
+
 
 
                 // Search for edge_pattern in edge_pattern_data_ vector
@@ -402,40 +397,7 @@ void FoldedRRGraph::build_folded_rr_graph(){
             tile_patterns_[x][y].edge_patterns_idx_ = edge_pattern_idx;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-    // iterate over every node and look for edge patterns
-    // for the edge pattern, store dx, dy and offset into the tile
-    
-    for (size_t idx = 0; idx < node_storage_.size(); idx++) {   
-            RRNodeId id = RRNodeId(idx);
-            std::vector<FoldedEdgePattern> edge_patterns;
-            for (RREdgeId from_edge : node_storage_.edge_range(id)) {
-            RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
-            int8_t switch_id = node_storage_.edge_switch(from_edge);
-            int16_t offset = node_offset(sink_node);
-            int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
-            int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
-            FoldedEdgePattern edge_pattern = {
-                edge_dx, // diff of the x position
-                edge_dy, // diff of the x position
-                offset,
-                switch_id
-            };
-           // VTR_LOG( "dx:%d, dy:%d, switch:%d\n", edge_dx, edge_dy, switch_id);
-            edge_patterns.push_back(edge_pattern);
-            }
-    }
-    
+    edges_size_ = edge_starting_idx; // set total number of edges
 
     
     
@@ -449,13 +411,11 @@ void FoldedRRGraph::build_folded_rr_graph(){
     std::cout << "This Folded Representation: (including edges)" <<memory_used()/1024/1024.0 << " MiB" << "\n";
     std::cout << "Done\n";
 
-    RRNodeId first_node = get_edge_src_node(RREdgeId(0));
-    RRNodeId rand_node = get_edge_src_node(RREdgeId(124));
+    RRNodeId rand_node = edge_src_node(RREdgeId(124));
     auto rand_edges = get_edges(rand_node);
-    RRNodeId rand_dest = edge_sink_node(RREdgeId(124));
-    short rand_switch = edge_switch(RREdgeId(124));
 
-    verify_folded_rr_graph();
+    /* Don't verify for now */
+    //verify_folded_rr_graph();
 }
 
 void FoldedRRGraph::verify_folded_rr_graph(){

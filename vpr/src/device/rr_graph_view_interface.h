@@ -40,9 +40,10 @@ class RRGraphViewInterface {
       virtual vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId node) const=0;
       virtual RRNodeId edge_sink_node(const RREdgeId& edge) const=0;
       virtual short edge_switch(const RREdgeId& edge) const=0;
-
-
-
+      virtual short edge_switch(const RRNodeId& node, t_edge_size iedge) const=0;
+      virtual void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const=0;
+      virtual RREdgeId edge_id(const RRNodeId& node, t_edge_size iedge) const=0;
+      virtual RRNodeId edge_sink_node(const RRNodeId& node, t_edge_size iedge) const=0;
 
       /* destructor */
       virtual ~RRGraphViewInterface() {}

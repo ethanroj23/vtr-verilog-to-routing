@@ -33,7 +33,6 @@
  *
  */
 
-#define PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 //#define PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
 
 class RRGraphView : public RRGraphViewInterface {
@@ -290,7 +289,7 @@ class RRGraphView : public RRGraphViewInterface {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     inline RREdgeId edge_id(const RRNodeId& node, t_edge_size iedge) const {
-        return node_storage_.edge_id(node, iedge);
+        return primary_rr_graph_->edge_id(node, iedge);
     }
 
     // Get the destination node for the specified edge.
@@ -300,7 +299,7 @@ class RRGraphView : public RRGraphViewInterface {
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
-        node_storage_.for_each_edge(apply);
+        primary_rr_graph_->for_each_edge(apply);
     }
 
     // Get the destination node for the iedge'th edge from specified RRNodeId.
@@ -308,7 +307,7 @@ class RRGraphView : public RRGraphViewInterface {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     inline RRNodeId edge_sink_node(const RRNodeId& node, t_edge_size iedge) const {
-        return node_storage_.edge_sink_node(node, iedge);
+        return primary_rr_graph_->edge_sink_node(node, iedge);
     }
 
     // Get the switch used for the specified edge.
@@ -321,9 +320,8 @@ class RRGraphView : public RRGraphViewInterface {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     inline short edge_switch(const RRNodeId& node, t_edge_size iedge) const {
-        return node_storage_.edge_switch(node, iedge);
+        return primary_rr_graph_->edge_switch(node, iedge);
     }
-
 
 
 /* Return the fast look-up data structure for queries from client functions */

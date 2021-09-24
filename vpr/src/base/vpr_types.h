@@ -1327,6 +1327,7 @@ struct t_analysis_opts {
  *   @param read_rr_graph_filename  File to read the RR graph from (overrides
  *             architecture)
  *   @param write_rr_graph_filename  File to write the RR graph to after generation
+ *   @param primary_rr_graph  Main rr_graph type to use (ie FoldedRRGraph, PartialFoldedRRGraph)
  */
 struct t_det_routing_arch {
     enum e_directionality directionality; /* UDSD by AY */
@@ -1343,6 +1344,7 @@ struct t_det_routing_arch {
 
     std::string read_rr_graph_filename;
     std::string write_rr_graph_filename;
+    std::string primary_rr_graph;
 };
 /*
  * Direction::INC: wire driver is positioned at the low-coordinate end of the wire.

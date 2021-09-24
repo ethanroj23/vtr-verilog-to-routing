@@ -382,7 +382,7 @@ void create_rr_graph(const t_graph_type graph_type,
 
     vtr::Timer c;
 
-    process_non_config_sets();
+    process_non_config_sets(); // folded edges taking a while
 
     // ESR HERE
     verify_rr_node_indices(grid, device_ctx.rr_node_indices);
@@ -787,18 +787,17 @@ static void build_rr_graph(const t_graph_type graph_type,
         free(clb_to_clb_directs);
     }
 
-    #ifdef PRIMARY_RR_GRAPH_IS_FOLDED_RR_GRAPH
 
     /* USE FOLDED RR GRAPH */
     // build folded rr_graph from rr_graph_storage version if not writing rr_graph (because that code still uses flat representation)
-    if (det_routing_arch->write_rr_graph_filename.empty()){
+    if (det_routing_arch->write_rr_graph_filename.empty() &&
+        det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
         g_vpr_ctx.mutable_device().folded_rr_graph.build_folded_rr_graph();
         // Set primary rr_graph to the FoldedRRGraph
         g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
         /// delete rr_nodes.node_storage_ as it will no longer be used
         g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
     }
-    #endif
 
     #ifdef PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
 

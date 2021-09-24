@@ -34,7 +34,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
    * 3. Obtain the node_patterns_idx from the tile
    * 4. Calculate the relative offset for the given RRNodeId
    * 5. Access the desired data with something like 
-   *      node_pattern_data_[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
+   *      node_data_[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
    */
 
   /*Return an RRNode's type.*/
@@ -108,32 +108,32 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
   /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_xlow(RRNodeId node) const {
-      return node_to_x_y_[node][0];
+      return legacy_node_to_x_y_[node][0];
   }
 
   /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_xhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
       //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_to_x_y_[node][0] + node_pattern_data_[node_patterns_[node_patterns_idx][offset]].dx_;
+      return legacy_node_to_x_y_[node][0] + node_data_[node_patterns_[node_patterns_idx][offset]].dx_;
   }
 
   /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_ylow(RRNodeId node) const {
-      return node_to_x_y_[node][1];
+      return legacy_node_to_x_y_[node][1];
   }
 
   /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_yhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
       //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_to_x_y_[node][1] + node_pattern_data_[node_patterns_[node_patterns_idx][offset]].dy_;
+      return legacy_node_to_x_y_[node][1] + node_data_[node_patterns_[node_patterns_idx][offset]].dy_;
   }
 
   /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
@@ -178,36 +178,36 @@ class FoldedRRGraph : public RRGraphViewInterface{
         int8_t switch_id;
       }; 
 
-  std::vector<FoldedEdge> get_edges(RRNodeId node) const {
+  std::vector<FoldedEdge> get_edges(RRNodeId legacy_node) const {
     std::vector<FoldedEdge> edges;
-    RRNodeId remapped_id = remapped_ids_[node];
-    int x = node_to_x_y_[node][0];
-    int y = node_to_x_y_[node][1];
+    RRNodeId remapped_node = remapped_ids_[legacy_node];
+    int x = legacy_node_to_x_y_[legacy_node][0];
+    int y = legacy_node_to_x_y_[legacy_node][1];
     auto tile = tile_patterns_[x][y];
     int edge_patterns_idx = tile.edge_patterns_idx_;
-    size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
+    size_t offset = (size_t) remapped_node - (size_t) tile.starting_node_id_;
     auto all_edges = edge_pattern_data_[edge_patterns_[edge_patterns_idx][offset]];
     for (auto edge_idx : all_edges){
       auto edge = edge_data_[edge_idx];
       auto remapped_dest_node = RRNodeId((size_t) tile_patterns_[x+edge.dx][y+edge.dy].starting_node_id_+edge.offset);
-      auto dest_node = unmap_node(remapped_dest_node);
+      auto legacy_dest_node = unmap_node(remapped_dest_node);
       FoldedEdge folded_edge = {
-                        (size_t)node, //src node (currently using legacy id)
-                        (size_t)dest_node, // dest node
+                        (size_t)legacy_node,
+                        (size_t)legacy_dest_node, // dest node
                         edge.switch_id
                     };
       edges.push_back(folded_edge);
     }
     return edges;
   }
-  // TODO the dest_node above needs to be mapped back into legacy. remapped_ids_[legacy] = remapped
 
-  inline RRNodeId unmap_node(RRNodeId node) const{
+  inline RRNodeId unmap_node(RRNodeId remapped_node) const{
       for (size_t i=0; i<remapped_ids_.size(); i++){
-        if (remapped_ids_[RRNodeId(i)]==node){
-          return RRNodeId(i);
+        if (remapped_ids_[RRNodeId(i)]==remapped_node){
+          return RRNodeId(i); // legacy_node
         }
       }
+      return RRNodeId(-1); // nothing found
   }
 
 
@@ -228,12 +228,12 @@ class FoldedRRGraph : public RRGraphViewInterface{
             tile_patterns_memory += x.size() * FOLDED_TILE_PATTERN_SIZE; //  for every FoldedTilePattern struct
         }
         for (auto pattern_list : node_patterns_){
-            node_patterns_memory += pattern_list.size() * 2; // 2 bytes for each idx into node_pattern_data_
+            node_patterns_memory += pattern_list.size() * 2; // 2 bytes for each idx into node_data_
         }
         for (auto pattern_list : edge_patterns_){
             edge_patterns_memory += pattern_list.size() * 2; // 2 bytes for each idx into edge_pattern_data_
         }
-        int node_pattern_data_memory = node_pattern_data_.size() * 12; // Size of node_pattern_data : 12 + 5*edges_.size() for each FoldedNodePattern
+        int node_data_memory = node_data_.size() * 12; // Size of node_pattern_data : 12 + 5*edges_.size() for each FoldedNodePattern
         
         for (auto pattern_data : edge_pattern_data_){
             edge_pattern_data_memory += pattern_data.size() * 2; // 2 bytes for each idx into edge_data_
@@ -243,10 +243,10 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
 
         int remapped_ids_memory = size() * 4; // RRNode Count * 4 bytes for each remapped id
-        int node_to_x_y_memory = size() * (2 + 2); // RRNode Count * (2 bytes for x, 2 bytes for y)
+        int legacy_node_to_x_y_memory = size() * (2 + 2); // RRNode Count * (2 bytes for x, 2 bytes for y)
         int node_type_memory = size() * 1; // RRNode Count * 1 byte for the t_rr_type node type
         int size_memory = 8; // 8 bytes for size_t
-        return tile_patterns_memory + node_patterns_memory + node_pattern_data_memory + remapped_ids_memory + node_to_x_y_memory + 
+        return tile_patterns_memory + node_patterns_memory + node_data_memory + remapped_ids_memory + legacy_node_to_x_y_memory + 
                node_type_memory + size_memory + edge_patterns_memory + edge_pattern_data_memory + edge_data_memory;
     }
 
@@ -265,42 +265,113 @@ class FoldedRRGraph : public RRGraphViewInterface{
   /* PUBLIC EDGE METHODS */
 
   // input: legacy node
-  inline edge_idx_range edges(const RRNodeId& node) const {
-    return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(node)));
+  inline edge_idx_range edges(const RRNodeId& legacy_node) const {
+    return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(legacy_node)));
   }
 
-  RREdgeId first_edge(const RRNodeId& node) const {
-      RREdgeId first = node_first_edge_id_[remapped_ids_[node]];
+  RREdgeId first_edge(const RRNodeId& legacy_node) const {
+      RREdgeId first = folded_node_first_edge_id_[remapped_ids_[legacy_node]];
       return (first) ? first : RREdgeId(1); // if the RREdge is -1, return 1 because negative edge ids will throw error
   }
 
-  RREdgeId last_edge(const RRNodeId& node) const {
-      return RREdgeId((size_t)first_edge(node) + (size_t)get_edges(node).size());
+  RREdgeId last_edge(const RRNodeId& legacy_node) const {
+      return RREdgeId((size_t)first_edge(legacy_node) + (size_t)get_edges(legacy_node).size());
   }
 
   /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
-  edge_idx_range configurable_edges(const RRNodeId& id) const {
-        return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)));
+  edge_idx_range configurable_edges(const RRNodeId& legacy_node) const {
+        return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(legacy_node) - num_non_configurable_edges(legacy_node)));
     }
-  edge_idx_range non_configurable_edges(const RRNodeId& id) const {
-      return vtr::make_range(edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)), edge_idx_iterator(num_edges(id)));
+  edge_idx_range non_configurable_edges(const RRNodeId& legacy_node) const {
+      return vtr::make_range(edge_idx_iterator(num_edges(legacy_node) - num_non_configurable_edges(legacy_node)), edge_idx_iterator(num_edges(legacy_node)));
   }
 
-  t_edge_size num_edges(const RRNodeId& id) const {
-      return size_t(last_edge(id)) - size_t(first_edge(id));
+  t_edge_size num_edges(const RRNodeId& legacy_node) const {
+      return size_t(last_edge(legacy_node)) - size_t(first_edge(legacy_node));
   }
-  t_edge_size num_configurable_edges(const RRNodeId& id) const;
+  t_edge_size num_configurable_edges(const RRNodeId& legacy_node) const;
 
-  t_edge_size num_non_configurable_edges(const RRNodeId& id) const {
-    return num_edges(id) - num_configurable_edges(id);
+  t_edge_size num_non_configurable_edges(const RRNodeId& legacy_node) const {
+    return num_edges(legacy_node) - num_configurable_edges(legacy_node);
   }
 
   // Returns a range of RREdgeId's belonging to RRNodeId id.
   //
   // If this range is empty, then RRNodeId id has no edges.
-  vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId id) const {
-      return vtr::StrongIdRange<RREdgeId>(first_edge(id), last_edge(id));
+  vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId legacy_node) const {
+      return vtr::StrongIdRange<RREdgeId>(first_edge(legacy_node), last_edge(legacy_node));
   }
+
+inline RRNodeId edge_src_node(RREdgeId folded_edge) const{
+  return edge_src_node_[folded_edge];
+}
+
+inline RRNodeId edge_sink_node(const RREdgeId& folded_edge) const {
+  RRNodeId legacy_src = edge_src_node_[folded_edge];
+  RRNodeId remapped_src = remapped_ids_[legacy_src];
+  int edge_offset = (size_t) folded_edge - (size_t) folded_node_first_edge_id_[remapped_src];
+
+  // index into the edge data
+  auto x_y = legacy_node_to_x_y_[legacy_src];
+  int x = x_y[0];
+  int y = x_y[1];
+  auto tile = tile_patterns_[x][y];
+  
+  size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
+  auto all_edges = edge_pattern_data_[edge_patterns_[tile.edge_patterns_idx_][node_offset]];
+  auto edge_data = edge_data_[all_edges[edge_offset]];
+  auto remapped_dest_node = RRNodeId((size_t) tile_patterns_[x+edge_data.dx][y+edge_data.dy].starting_node_id_+edge_data.offset);
+  auto dest_node = unmap_node(remapped_dest_node);
+  return dest_node;
+}
+
+inline short edge_switch(const RREdgeId& folded_edge) const {
+  RRNodeId legacy_src = edge_src_node_[folded_edge];
+  RRNodeId remapped_src = remapped_ids_[legacy_src];
+  int edge_offset = (size_t) folded_edge - (size_t) folded_node_first_edge_id_[remapped_src];
+
+  // index into the edge data
+  auto x_y = legacy_node_to_x_y_[legacy_src];
+  int x = x_y[0];
+  int y = x_y[1];
+  auto tile = tile_patterns_[x][y];
+  size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
+  auto all_edges = edge_pattern_data_[edge_patterns_[tile.edge_patterns_idx_][node_offset]];
+  auto edge_data = edge_data_[all_edges[edge_offset]];
+  return edge_data.switch_id;
+}
+
+
+// Call the `apply` function with the edge id, source, and sink nodes of every edge.
+inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
+    for (size_t i = 0; i < edges_size_; i++) {
+        RREdgeId folded_edge(i);
+        apply(folded_edge, edge_src_node(folded_edge), edge_sink_node(folded_edge));
+    }
+}
+
+inline RREdgeId edge_id(const RRNodeId& legacy_node, t_edge_size iedge) const {
+    RREdgeId first_edge = this->first_edge(legacy_node);
+    RREdgeId ret(size_t(first_edge) + iedge);
+    VTR_ASSERT_SAFE(ret < last_edge(legacy_node));
+    return ret;
+}
+
+// Get the destination node for the iedge'th edge from specified RRNodeId.
+//
+// This method should generally not be used, and instead first_edge and
+// last_edge should be used.
+RRNodeId edge_sink_node(const RRNodeId& legacy_node, t_edge_size iedge) const {
+    return edge_sink_node(edge_id(legacy_node, iedge));
+}
+
+// Get the switch used for the iedge'th edge from specified RRNodeId.
+//
+// This method should generally not be used, and instead first_edge and
+// last_edge should be used.
+short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
+    return edge_switch(edge_id(legacy_node, iedge));
+}
 
   
 
@@ -310,9 +381,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
   public:
     void build_folded_rr_graph();
 
-    void initialize_folded_rr_graph();
-
-    void add_empty_pattern();
 
     
 
@@ -358,84 +426,30 @@ class FoldedRRGraph : public RRGraphViewInterface{
 
       };
 
-    /* Obtain node_pattern_data_ for specific node id */
+    /* Obtain node_data_ for specific node id */
     inline FoldedNodePattern get_node_pattern(RRNodeId node) const {
       RRNodeId remapped_id = remapped_ids_[node];
       //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      return node_pattern_data_[node_patterns_[node_patterns_idx][offset]];
+      return node_data_[node_patterns_[node_patterns_idx][offset]];
     } 
  
 
     inline int16_t node_offset(RRNodeId node){
       RRNodeId remapped_id = remapped_ids_[node];
       //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
       return offset;
     }
 
     inline int16_t get_node_patterns_idx(RRNodeId node){
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       return tile.node_patterns_idx_;
     }
 
-    /*
-       input:  RREdgeId (remapped)
-       output: RRNodeId (legacy)
-     */
-    inline RRNodeId get_edge_src_node(RREdgeId edge) const{
-      int closest_node_id;
-      // iterate over every node id
-      for (int rr_node_id=0; rr_node_id<node_first_edge_id_.size(); rr_node_id++){
-        // first check for sentinel value
-        if (node_first_edge_id_[RRNodeId(rr_node_id)] && (size_t) node_first_edge_id_[RRNodeId(rr_node_id)] <= (size_t) edge){
-            closest_node_id = rr_node_id; // find id which is the closest less than but not greater than
-        }
-        else if (node_first_edge_id_[RRNodeId(rr_node_id)] && (size_t) node_first_edge_id_[RRNodeId(rr_node_id)] > (size_t) edge){
-            return RRNodeId(closest_node_id);
-        }
-      }
-      return RRNodeId(closest_node_id); // case for the very last edge
-    }
-
-  inline RRNodeId edge_sink_node(const RREdgeId& edge) const {
-    RRNodeId src = get_edge_src_node(edge);
-    int edge_offset = (size_t) edge - (size_t) node_first_edge_id_[src];
-    RRNodeId remapped_src = remapped_ids_[src];
-
-    // index into the edge data
-    int x = node_to_x_y_[src][0];
-    int y = node_to_x_y_[src][1];
-    auto tile = tile_patterns_[x][y];
-    int edge_patterns_idx = tile.edge_patterns_idx_;
-    size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
-    auto all_edges = edge_pattern_data_[edge_patterns_[edge_patterns_idx][node_offset]];
-    auto edge_data = edge_data_[all_edges[edge_offset]];
-    auto remapped_dest_node = RRNodeId((size_t) tile_patterns_[x+edge_data.dx][y+edge_data.dy].starting_node_id_+edge_data.offset);
-    auto dest_node = unmap_node(remapped_dest_node);
-    return dest_node;
-  }
-
-  inline short edge_switch(const RREdgeId& edge) const {
-    RRNodeId src = get_edge_src_node(edge);
-    int edge_offset = (size_t) edge - (size_t) node_first_edge_id_[src];
-    RRNodeId remapped_src = remapped_ids_[src];
-
-    // index into the edge data
-    int x = node_to_x_y_[src][0];
-    int y = node_to_x_y_[src][1];
-    auto tile = tile_patterns_[x][y];
-    int edge_patterns_idx = tile.edge_patterns_idx_;
-    size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
-    auto all_edges = edge_pattern_data_[edge_patterns_[edge_patterns_idx][node_offset]];
-    auto edge_data = edge_data_[all_edges[edge_offset]];
-    return edge_data.switch_id;
-  }
-
-  
 
 
 
@@ -448,10 +462,10 @@ class FoldedRRGraph : public RRGraphViewInterface{
     inline void set_node_edges(RRNodeId node, std::vector<FoldedEdgePattern> edges) {
       RRNodeId remapped_id = remapped_ids_[node];
       //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[node_to_x_y_[node][0]][node_to_x_y_[node][1]];
+      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      //node_pattern_data_[node_patterns_[node_patterns_idx][offset]].edges_ = edges;
+      //node_data_[node_patterns_[node_patterns_idx][offset]].edges_ = edges;
     } 
     */
 
@@ -494,7 +508,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
                                              V     V             
                               node_patterns[idx][offset]-----.
                                                              V
-                                          node_pattern_data_[idx]
+                                          node_data_[idx]
 
 
     // to find X and Y
@@ -514,7 +528,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
                                              V     V             
                               node_patterns[idx][offset]-----.
                                                              V
-                                          node_pattern_data_[idx]
+                                          node_data_[idx]
 
     */
 
@@ -526,11 +540,11 @@ class FoldedRRGraph : public RRGraphViewInterface{
     /* Every Tile Type has a set of FoldedNodePatterns */
     std::vector<std::vector<int16_t>> node_patterns_; // 2 bytes // store the index into node_pattern_data
 
-    /* Every Tile Type has a set of FoldedNodePatterns */
+    /* Every Tile Type has a set of FoldedEdgePatterns */
     std::vector<std::vector<int16_t>> edge_patterns_; 
 
     /* Raw FoldedNodePattern data is stored here */
-    std::vector<FoldedNodePattern> node_pattern_data_;
+    std::vector<FoldedNodePattern> node_data_;
 
     /* Indexes into edge_data_ are stored here */
     std::vector<std::vector<int16_t>> edge_pattern_data_; // vector of vectors of indexes into edge_data_
@@ -539,15 +553,21 @@ class FoldedRRGraph : public RRGraphViewInterface{
     std::vector<FoldedEdgePattern> edge_data_; // this is where actual edge data is stored
 
     /* First edge id of given node (RRNodeId is a remapped node)*/
-    vtr::vector<RRNodeId, RREdgeId> node_first_edge_id_;
+    vtr::vector<RRNodeId, RREdgeId> folded_node_first_edge_id_;
+
+    /* FoldedEdge's legacy_src_node*/
+    vtr::vector<RREdgeId, RRNodeId> edge_src_node_;
 
     /* remapped_ids_[legacy_node] = remapped_node */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
 
     /* Map of RRNodeId to  x_low and y_low*/ 
-    vtr::vector<RRNodeId, std::array<int16_t, 2>> node_to_x_y_;
+    vtr::vector<RRNodeId, std::array<int16_t, 2>> legacy_node_to_x_y_;
 
     size_t size_;
+
+    /* number of edges */
+    size_t edges_size_;
 
     /* node-level storage including edge storages */
     const t_rr_graph_storage& node_storage_;

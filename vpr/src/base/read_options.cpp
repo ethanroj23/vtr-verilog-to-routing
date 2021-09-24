@@ -1411,6 +1411,11 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
         .help("Writes the routing resource graph to the specified file")
         .metavar("RR_GRAPH_FILE")
         .show_in(argparse::ShowIn::HELP_ONLY);
+    
+    file_grp.add_argument(args.primary_rr_graph, "--primary_rr_graph")
+        .help("Main rr_graph type to use (ie FoldedRRGraph, PartialFoldedRRGraph)")
+        .metavar("RR_GRAPH_FILE")
+        .show_in(argparse::ShowIn::HELP_ONLY);
 
     file_grp.add_argument(args.read_vpr_constraints_file, "--read_vpr_constraints")
         .help("Reads the floorplanning constraints that packing and placement must respect from the specified XML file.")

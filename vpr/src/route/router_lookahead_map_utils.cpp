@@ -305,7 +305,6 @@ template void expand_dijkstra_neighbours(const t_rr_graph_storage& rr_nodes,
 t_src_opin_delays compute_router_src_opin_lookahead() {
     vtr::ScopedStartFinishTimer timer("Computing src/opin lookahead");
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_nodes = device_ctx.rr_nodes;
     auto& rr_graph = device_ctx.rr_graph;
 
     t_src_opin_delays src_opin_delays;
