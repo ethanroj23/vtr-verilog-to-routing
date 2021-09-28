@@ -414,7 +414,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //
     for (RREdgeId from_edge : edges) {
         RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
-        //rr_nodes_.prefetch_node(to_node);
+        rr_graph_->prefetch_node(to_node);
 
         int switch_idx = rr_graph_->edge_switch(from_edge);
         VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "folded_rr_graph.h"
-#include "partial_folded_rr_graph.h"
+#include "folded_edges_rr_graph.h"
 #include "vpr_types.h"
 #include "vtr_ndmatrix.h"
 #include "vtr_vector.h"
@@ -174,15 +174,18 @@ struct DeviceContext : public Context {
      */
     RRSpatialLookup rr_spatial_lookup{rr_node_indices};
 
-    /* Completely folded routing resource graph. Every possible way to fold the rr_graph was taken advantage of here
-     */
+    /*  Completely folded routing resource graph. 
+        Every possible way to fold the rr_graph was taken advantage of here
+    */
+    //FoldedRRGraph folded_rr_graph{rr_nodes};
 
-    FoldedRRGraph folded_rr_graph{rr_nodes};
+    /* Folded Nodes routing resource graph. 
+        Only the nodes were folded in this instance */
+    //FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
 
-    /* Partially folded routing resource graph. Some aspects of folding were not used due to the increased access time caused by these methods
-     */
-
-    //PartialFoldedRRGraph partial_folded_rr_graph{rr_nodes};
+    /* Folded Edges routing resource graph. 
+        Only the edges were folded in this instance */
+    FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;
 //pCallback = new DerivedClass;

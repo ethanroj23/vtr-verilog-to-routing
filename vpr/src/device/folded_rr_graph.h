@@ -168,6 +168,17 @@ class FoldedRRGraph : public RRGraphViewInterface{
     return node_storage_.fan_in(node);
   }
 
+  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
+  inline t_edge_size fan_in(RRNodeId node) const {
+    return node_storage_.fan_in(node);
+  }
+
+  /* PTC get methods */
+  short node_ptc_num(RRNodeId id) const;
+  short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
+  short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+
   /* Edge Methods */
 
 
@@ -207,7 +218,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
           return RRNodeId(i); // legacy_node
         }
       }
-      return RRNodeId(-1); // nothing found
   }
 
 
@@ -302,23 +312,37 @@ class FoldedRRGraph : public RRGraphViewInterface{
       return vtr::StrongIdRange<RREdgeId>(first_edge(legacy_node), last_edge(legacy_node));
   }
 
+  /*
+    input:  RREdgeId (remapped)
+    output: RRNodeId (remapped)
+  */
 inline RRNodeId edge_src_node(RREdgeId folded_edge) const{
-  return edge_src_node_[folded_edge];
+  int remapped_node;
+  // iterate over every node id
+  for (size_t rr_node_id=0; rr_node_id<folded_node_first_edge_id_.size(); rr_node_id++){
+    // first check for sentinel value
+    if (folded_node_first_edge_id_[RRNodeId(rr_node_id)] && (size_t) folded_node_first_edge_id_[RRNodeId(rr_node_id)] <= (size_t) folded_edge){
+        remapped_node = rr_node_id; // find id which is the closest less than but not greater than
+    }
+    else if (folded_node_first_edge_id_[RRNodeId(rr_node_id)] && (size_t) folded_node_first_edge_id_[RRNodeId(rr_node_id)] > (size_t) folded_edge){
+        return RRNodeId(remapped_node);
+    }
+  }
+  return RRNodeId(remapped_node); // case for the very last edge
 }
 
-inline RRNodeId edge_sink_node(const RREdgeId& folded_edge) const {
-  RRNodeId legacy_src = edge_src_node_[folded_edge];
-  RRNodeId remapped_src = remapped_ids_[legacy_src];
+  inline RRNodeId edge_sink_node(const RREdgeId& folded_edge) const {
+  RRNodeId remapped_src = edge_src_node(folded_edge);
   int edge_offset = (size_t) folded_edge - (size_t) folded_node_first_edge_id_[remapped_src];
+  RRNodeId legacy_src = unmap_node(remapped_src);
 
   // index into the edge data
-  auto x_y = legacy_node_to_x_y_[legacy_src];
-  int x = x_y[0];
-  int y = x_y[1];
+  int x = legacy_node_to_x_y_[legacy_src][0];
+  int y = legacy_node_to_x_y_[legacy_src][1];
   auto tile = tile_patterns_[x][y];
-  
+  int edge_patterns_idx = tile.edge_patterns_idx_;
   size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
-  auto all_edges = edge_pattern_data_[edge_patterns_[tile.edge_patterns_idx_][node_offset]];
+  auto all_edges = edge_pattern_data_[edge_patterns_[edge_patterns_idx][node_offset]];
   auto edge_data = edge_data_[all_edges[edge_offset]];
   auto remapped_dest_node = RRNodeId((size_t) tile_patterns_[x+edge_data.dx][y+edge_data.dy].starting_node_id_+edge_data.offset);
   auto dest_node = unmap_node(remapped_dest_node);
@@ -326,17 +350,18 @@ inline RRNodeId edge_sink_node(const RREdgeId& folded_edge) const {
 }
 
 inline short edge_switch(const RREdgeId& folded_edge) const {
-  RRNodeId legacy_src = edge_src_node_[folded_edge];
-  RRNodeId remapped_src = remapped_ids_[legacy_src];
+  RRNodeId remapped_src = edge_src_node(folded_edge);
   int edge_offset = (size_t) folded_edge - (size_t) folded_node_first_edge_id_[remapped_src];
+  RRNodeId legacy_src = unmap_node(remapped_src);
+  auto check_edges = get_edges(legacy_src);
 
   // index into the edge data
-  auto x_y = legacy_node_to_x_y_[legacy_src];
-  int x = x_y[0];
-  int y = x_y[1];
+  int x = legacy_node_to_x_y_[legacy_src][0];
+  int y = legacy_node_to_x_y_[legacy_src][1];
   auto tile = tile_patterns_[x][y];
+  int edge_patterns_idx = tile.edge_patterns_idx_;
   size_t node_offset = (size_t) remapped_src - (size_t) tile.starting_node_id_;
-  auto all_edges = edge_pattern_data_[edge_patterns_[tile.edge_patterns_idx_][node_offset]];
+  auto all_edges = edge_pattern_data_[edge_patterns_[edge_patterns_idx][node_offset]];
   auto edge_data = edge_data_[all_edges[edge_offset]];
   return edge_data.switch_id;
 }
@@ -373,14 +398,23 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     return edge_switch(edge_id(legacy_node, iedge));
 }
 
-  
+  /* OTHER METHODS */
+
+  // This prefetechs hot RR node data required for optimization.
+  // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
+  inline void prefetch_node(RRNodeId id) const {
+    node_storage_.prefetch_node(id);
+  }
 
 
 
     /* -- Mutators -- */
   public:
-    void build_folded_rr_graph();
+    void build_graph();
 
+    void initialize_folded_rr_graph();
+
+    void add_empty_pattern();
 
     
 
@@ -544,7 +578,7 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     std::vector<std::vector<int16_t>> edge_patterns_; 
 
     /* Raw FoldedNodePattern data is stored here */
-    std::vector<FoldedNodePattern> node_data_;
+    std::vector<FoldedNodePattern> node_data_; // should probably be called node_data_ to match edge_data_
 
     /* Indexes into edge_data_ are stored here */
     std::vector<std::vector<int16_t>> edge_pattern_data_; // vector of vectors of indexes into edge_data_
@@ -555,11 +589,11 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     /* First edge id of given node (RRNodeId is a remapped node)*/
     vtr::vector<RRNodeId, RREdgeId> folded_node_first_edge_id_;
 
-    /* FoldedEdge's legacy_src_node*/
-    vtr::vector<RREdgeId, RRNodeId> edge_src_node_;
-
     /* remapped_ids_[legacy_node] = remapped_node */
     vtr::vector<RRNodeId, RRNodeId> remapped_ids_;
+
+    /* folded edge id -> legacy node */
+    vtr::vector<RREdgeId, RRNodeId> edge_src_node_;
 
     /* Map of RRNodeId to  x_low and y_low*/ 
     vtr::vector<RRNodeId, std::array<int16_t, 2>> legacy_node_to_x_y_;

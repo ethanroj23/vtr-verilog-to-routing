@@ -33,8 +33,6 @@
  *
  */
 
-//#define PRIMARY_RR_GRAPH_IS_PARTIAL_FOLDED_RR_GRAPH
-
 class RRGraphView : public RRGraphViewInterface {
     /* -- Constructors -- */
   public:
@@ -108,6 +106,11 @@ class RRGraphView : public RRGraphViewInterface {
 
     /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
     inline t_edge_size node_fan_in(RRNodeId node) const {
+        return primary_rr_graph_->node_fan_in(node);
+    }
+
+    /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_edge_size fan_in(RRNodeId node) const {
         return primary_rr_graph_->node_fan_in(node);
     }
 
@@ -208,6 +211,12 @@ class RRGraphView : public RRGraphViewInterface {
         return node_storage_.node_class_num(node);
     }
 
+    // This prefetechs hot RR node data required for optimization.
+    // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
+    inline void prefetch_node(RRNodeId node) const {
+        return primary_rr_graph_->prefetch_node(node);
+    }
+
     /* ************************************************************* */
     /*                       EDGE METHODS                            */
     /* ************************************************************* */
@@ -234,7 +243,6 @@ class RRGraphView : public RRGraphViewInterface {
      *
      * Only call these methods after partition_edges has been invoked. */
 
-    
     inline edge_idx_range edges(const RRNodeId& node) const {
         return primary_rr_graph_->edges(node);
     }

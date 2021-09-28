@@ -327,6 +327,11 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         return edge_dest_node_[edge];
     }
 
+    // Get the source node for the specified edge.
+    RRNodeId edge_src_node(const RREdgeId& edge) const {
+        return edge_src_node_[edge];
+    }
+
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
         for (size_t i = 0; i < edge_dest_node_.size(); i++) {
@@ -445,6 +450,14 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         //std::vector<int> v;
         //node_storage_.shrink_to_fit();
         //std::vector<int>().swap(node_storage_);
+    }
+    /* free the memory used by node_storage_. Only use this if you are accessing rr_node data elsewhere */
+    inline void clear_edges(){
+        vtr::ScopedStartFinishTimer timer("clear_edges()");
+        node_first_edge_.clear();
+        edge_src_node_.clear();
+        edge_dest_node_.clear();
+        edge_switch_.clear();
     }
 
     // Remove all nodes and edges from the RR graph.
@@ -834,6 +847,11 @@ class t_rr_graph_view {
     // Get the destination node for the specified edge.
     RRNodeId edge_sink_node(RREdgeId edge) const {
         return edge_dest_node_[edge];
+    }
+
+    // Get the destination node for the specified edge.
+    RRNodeId edge_src_node(RREdgeId edge) const {
+        return edge_src_node_[edge];
     }
 
     // Get the switch used for the specified edge.

@@ -83,7 +83,7 @@ t_edge_size FoldedRRGraph::num_configurable_edges(const RRNodeId& legacy_node) c
     return last_id - first_id;
 }
 
-void FoldedRRGraph::build_folded_rr_graph(){
+void FoldedRRGraph::build_graph(){
     // Begin timing 
     vtr::ScopedStartFinishTimer timer("Build FoldedRRGraph");
 
@@ -462,6 +462,21 @@ void FoldedRRGraph::verify_folded_rr_graph(){
         }
     }
 }
+
+short FoldedRRGraph::node_ptc_num(RRNodeId id) const {
+    return node_storage_.node_ptc_num(id);
+}
+short FoldedRRGraph::node_pin_num(RRNodeId id) const {
+    return node_storage_.node_pin_num(id);
+}
+
+short FoldedRRGraph::node_track_num(RRNodeId id) const {
+    return node_storage_.node_track_num(id);
+}
+short FoldedRRGraph::node_class_num(RRNodeId id) const {
+    return node_storage_.node_class_num(id);
+}
+
 
 #ifdef FOLDED_RR_GRAPH_USING_EDGES
 struct EdgePattern { // 9 Bytes
