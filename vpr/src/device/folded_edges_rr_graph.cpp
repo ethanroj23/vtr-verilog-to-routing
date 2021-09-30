@@ -204,6 +204,22 @@ void FoldedEdgesRRGraph::verify_folded_rr_graph(){
     }
 }
 
+t_edge_size FoldedEdgesRRGraph::num_configurable_edges(const RRNodeId& legacy_node) const {
+    VTR_ASSERT(!node_first_edge_id_.empty());
+
+    const auto& device_ctx = g_vpr_ctx.device();
+    auto first_id = size_t(node_first_edge_id_[legacy_node]);
+    auto last_id = size_t((&node_first_edge_id_[legacy_node])[1]);
+    for (size_t idx = first_id; idx < last_id; ++idx) {
+        auto switch_idx = edge_switch(RREdgeId(idx));
+        if (!device_ctx.rr_switch_inf[switch_idx].configurable()) {
+            return idx - first_id;
+        }
+    }
+
+    return last_id - first_id;
+}
+
 short FoldedEdgesRRGraph::node_ptc_num(RRNodeId id) const {
     return node_storage_.node_ptc_num(id);
 }

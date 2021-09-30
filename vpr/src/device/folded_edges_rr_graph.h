@@ -187,7 +187,7 @@ class FoldedEdgesRRGraph : public RRGraphViewInterface{
   }
 
   RREdgeId first_edge(const RRNodeId& legacy_node) const {
-      return node_storage_.first_edge(legacy_node);
+      return node_first_edge_id_[legacy_node];
   }
 
   RREdgeId last_edge(const RRNodeId& legacy_node) const {
@@ -196,22 +196,23 @@ class FoldedEdgesRRGraph : public RRGraphViewInterface{
 
   /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
   edge_idx_range configurable_edges(const RRNodeId& legacy_node) const {
-      return node_storage_.configurable_edges(legacy_node);
+      return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(legacy_node) - num_non_configurable_edges(legacy_node)));
     }
   edge_idx_range non_configurable_edges(const RRNodeId& legacy_node) const {
-      return node_storage_.non_configurable_edges(legacy_node);
+      return vtr::make_range(edge_idx_iterator(num_edges(legacy_node) - num_non_configurable_edges(legacy_node)), edge_idx_iterator(num_edges(legacy_node)));
   }
+
+
 
   t_edge_size num_edges(const RRNodeId& legacy_node) const {
-      return node_storage_.num_edges(legacy_node);
-  }
-  t_edge_size num_configurable_edges(const RRNodeId& legacy_node) const {
-      return node_storage_.num_configurable_edges(legacy_node);
+        return size_t(last_edge(legacy_node)) - size_t(first_edge(legacy_node));
   }
 
+  t_edge_size num_configurable_edges(const RRNodeId& id) const;
   t_edge_size num_non_configurable_edges(const RRNodeId& legacy_node) const {
-      return node_storage_.num_non_configurable_edges(legacy_node);
+      return num_edges(legacy_node) - num_configurable_edges(legacy_node);
   }
+
 
   // Returns a range of RREdgeId's belonging to RRNodeId id.
   //
@@ -247,7 +248,10 @@ inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> appl
 }
 
 inline RREdgeId edge_id(const RRNodeId& legacy_node, t_edge_size iedge) const {
-      return node_storage_.edge_id(legacy_node, iedge);
+    RREdgeId first_edge = this->first_edge(legacy_node); // this->first_edge(legacy_node);
+    RREdgeId ret(size_t(first_edge) + iedge);
+    VTR_ASSERT_SAFE(ret < last_edge(legacy_node));
+    return ret;
 }
 
 // Get the destination node for the iedge'th edge from specified RRNodeId.
@@ -274,8 +278,8 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
 
   // This prefetechs hot RR node data required for optimization.
   // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
-  inline void prefetch_node(RRNodeId id) const {
-    node_storage_.prefetch_node(id);
+  inline void prefetch_node(RRNodeId legacy_node) const {
+    node_storage_.prefetch_node(legacy_node);
   }
   
 
