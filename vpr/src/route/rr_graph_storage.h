@@ -39,7 +39,7 @@
  *             changes of rr base costs, and some memory storage savings for *
  *             fields that have only a few distinct values).                 *
  * rc_index: An integer index into a deduplicated table of R and C values.
- *           For example, two nodes that have identifical R/C values will
+ *           For example, two nodes that have identical R/C values will
  *           have the same rc_index.
  * capacity:   Capacity of this node (number of routes that can use it).     *
  *                                                                           *
@@ -774,6 +774,9 @@ class t_rr_graph_view {
     size_t size() const {
         return node_storage_.size();
     }
+    inline size_t edge_count() const {
+        return edge_dest_node_.size();
+    }
 
     inline const char* rr_graph_name() const{
         return "rr_graph_storage";
@@ -868,11 +871,11 @@ class t_rr_graph_view {
         return (&node_first_edge_[id])[1];
     }
 
-    vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage_;
-    vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc_;
-    vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;
-    vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in_;
-    vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node_;
+    vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage_; // ESR data for each node (type, xlow, xhigh, ylow, yhigh, rc_index...)
+    vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc_; // ESR ptc data for each node (pin_num, class_num, track_num)
+    vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;    // ESR first edge of each node
+    vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in_;     // ESR fan in for each node
+    vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node_;      // ESR 
     vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node_;
     vtr::array_view_id<RREdgeId, const short> edge_switch_;
 };

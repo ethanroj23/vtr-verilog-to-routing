@@ -10,6 +10,7 @@ import textwrap
 import socket
 from datetime import datetime
 from collections import OrderedDict
+import re
 
 # pylint: disable=wrong-import-position, import-error
 sys.path.insert(0, str(Path(__file__).resolve().parent / "python_libs"))
@@ -184,7 +185,7 @@ def vtr_command_argparser(prog=None):
 
     house_keeping.add_argument(
         "-track_memory_usage",
-        default=False,
+        default=True,
         action="store_true",
         dest="track_memory_usage",
         help="Track the memory usage for each stage."
@@ -323,11 +324,33 @@ def vtr_command_argparser(prog=None):
         help="Supplies Odin with a custom config file for optimizations.",
     )
     odin.add_argument(
+        "-elaborator",
+        nargs=None,
+        default="odin",
+        dest="elaborator",
+        help="Specify the elaborator of the synthesis flow for Odin-II",
+    )
+    odin.add_argument(
         "-include",
         nargs="*",
         default=None,
         dest="include_list_file",
         help="List of include files to a benchmark circuit(pass to Odin as a benchmark design set)",
+    )
+    odin.add_argument(
+        "-coarsen",
+        default=False,
+        action="store_true",
+        dest="coarsen",
+        help="Notify Odin if the input BLIF is coarse-grain",
+    )
+    odin.add_argument(
+        "-fflegalize",
+        default=False,
+        action="store_true",
+        dest="fflegalize",
+        help="Make flip-flops rising edge for coarse-grain input BLIFs in the techmap"
+        + "(Odin-II synthesis flow generates rising edge FFs by default)",
     )
     #
     # VPR arguments
@@ -389,16 +412,95 @@ def vtr_command_argparser(prog=None):
     return parser
 
 
+def format_human_readable_memory(num_kbytes):
+    """format the number of bytes given as a human readable value"""
+    if num_kbytes < 1024:
+        value = "%.2f KiB" % (num_kbytes)
+    elif num_kbytes < (1024 ** 2):
+        value = "%.2f MiB" % (num_kbytes / (1024 ** 1))
+    else:
+        value = "%.2f GiB" % (num_kbytes / (1024 ** 2))
+    return value
+
+
+def get_memory_usage(logfile):
+    """Extracts the memory usage from the *.out log files"""
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "Maximum resident set size" in line:
+                return format_human_readable_memory(int(line.split()[-1]))
+    return "--"
+
+def get_folded_info(logfile):
+    """Extracts the memory usage from the *.out log files"""
+    folded_info = '\n'
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "Folded/Flat" in line:
+                folded_info += '\t'+line
+    return folded_info
+
+def get_node_info(logfile):
+    """Extracts the node info from the *.out log files"""
+    node_info = '\n'
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "RR Graph Nodes, Edges" in line:
+                node_info += '\t'+line
+    return node_info
+def get_primary_rr_graph(logfile):
+    """Extracts the primary_rr_graph from the *.out log files"""
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "Folded/Flat" in line:
+                return "FoldedEdgesRRGraph"
+    return "node_storage"
+
+def get_routing_time(logfile):
+    """Extracts the routing time from the *.out log files"""
+    routing_time = ''
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "Routing took" in line:
+                routing_time += line.split(' ')[3]
+    return routing_time
+
+def get_folding_time(logfile):
+    """Extracts the folding time from the *.out log files"""
+    folding_times = []
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if "Build FoldedEdgesRRGraph took " in line:
+                folding_time = re.findall('[0-9\.]+ seconds', line)[0]
+                folding_time = float(folding_time.split()[0])
+                folding_times.append(folding_time)
+    return str(round(sum(folding_times), 4))
+    
+
+def get_command_line(logfile):
+    """Extracts the primary_rr_graph from the *.out log files"""
+    prev_line_found = False
+    with open(logfile, "r") as fpmem:
+        for line in fpmem.readlines():
+            if prev_line_found:
+                return 'cmd:'+line
+            if "VPR was run with the following command-line" in line:
+                prev_line_found = True
+    return "Command line not found..."
+
+
+
 # pylint: enable=too-many-statements
 
 
 def vtr_command_main(arg_list, prog=None):
     """
-    Running VTR with the specified arguemnts.
+    Running VTR with the specified arguments.
     """
     start = datetime.now()
     # Load the arguments
     args, unknown_args = vtr_command_argparser(prog).parse_known_args(arg_list)
+    print("ARGS", arg_list)
     error_status = "Error"
     if args.temp_dir is None:
         temp_dir = Path("./temp")
@@ -406,7 +508,7 @@ def vtr_command_main(arg_list, prog=None):
         temp_dir = Path(args.temp_dir)
     # Specify how command should be run
     command_runner = vtr.CommandRunner(
-        track_memory=True,
+        track_memory=args.track_memory_usage,
         max_memory_mb=args.limit_memory_usage,
         timeout_sec=args.timeout,
         verbose=args.verbose,
@@ -466,11 +568,34 @@ def vtr_command_main(arg_list, prog=None):
 
     finally:
         seconds = datetime.now() - start
-        print(
-            "{status} (took {time})".format(
-                status=error_status, time=vtr.format_elapsed_time(seconds)
+
+        verbose_folded = True
+        if verbose_folded:
+            print(
+                "{status} (took {time}, [{routing_time}s to route] vpr run consumed {max_mem} memory)\t[{primary_rr_graph}] Folding took{folding_time}s\n{cmd}\ndir:{directory}\nFolded Info(MiB):{folded_info} Node Info:{node_info}".format(
+                    status=error_status,
+                    time=vtr.format_elapsed_time(seconds),
+                    routing_time=get_routing_time(temp_dir / "vpr.out"),
+                    max_mem=get_memory_usage(temp_dir / "vpr.out"),
+                    primary_rr_graph=get_primary_rr_graph(temp_dir / "vpr.out"),
+                    folding_time=get_folding_time(temp_dir / "vpr.out"),
+                    directory=temp_dir,
+                    cmd=get_command_line(temp_dir / "vpr.out"),
+                    folded_info=get_folded_info(temp_dir / "vpr.out"),
+                    node_info=get_node_info(temp_dir / "vpr.out")
+                )
             )
-        )
+        else:
+            print(
+                "{status} (took {time}, [{routing_time}s to route] vpr run consumed {max_mem} memory)\t{primary_rr_graph} Folding took {folding_time}s".format(
+                    status=error_status,
+                    time=vtr.format_elapsed_time(seconds),
+                    routing_time=get_routing_time(temp_dir / "vpr.out"),
+                    max_mem=get_memory_usage(temp_dir / "vpr.out"), primary_rr_graph=get_primary_rr_graph(temp_dir / "vpr.out"),
+                    folding_time=get_folding_time(temp_dir / "vpr.out")
+                )
+            )
+
         temp_dir.mkdir(parents=True, exist_ok=True)
         out = temp_dir / "output.txt"
         out.touch()
@@ -567,6 +692,7 @@ def process_odin_args(args):
     """
     odin_args = OrderedDict()
     odin_args["adder_type"] = args.adder_type
+    odin_args["elaborator"] = args.elaborator
 
     if args.adder_cin_global:
         odin_args["adder_cin_global"] = True
@@ -576,6 +702,12 @@ def process_odin_args(args):
 
     if args.use_odin_simulation:
         odin_args["use_odin_simulation"] = True
+
+    if args.coarsen:
+        odin_args["coarsen"] = True
+
+    if args.fflegalize:
+        odin_args["fflegalize"] = True
 
     return odin_args
 

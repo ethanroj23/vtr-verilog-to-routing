@@ -320,10 +320,9 @@ void create_rr_graph(const t_graph_type graph_type,
                      const t_direct_inf* directs,
                      const int num_directs,
                      int* Warnings) {
+
     const auto& device_ctx = g_vpr_ctx.device();
     
-    
-
     if (!det_routing_arch->read_rr_graph_filename.empty()) {
         if (device_ctx.read_rr_graph_filename != det_routing_arch->read_rr_graph_filename) {
             free_rr_graph();
@@ -409,8 +408,7 @@ void print_rr_graph_stats() {
     }
 
     device_ctx.rr_graph.print_memory_used();
-    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.size());
-    VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
+    VTR_LOG("RR Graph Nodes, Edges, Chan Width: %zu, %zu, %d\n", device_ctx.rr_graph.size(), num_rr_edges, device_ctx.chan_width.max);
 }
 
 bool channel_widths_unchanged(const t_chan_width& current, const t_chan_width& proposed) {
@@ -610,7 +608,7 @@ static void build_rr_graph(const t_graph_type graph_type,
         device_ctx.rr_nodes.reserve(expected_node_count);
     }
     vtr::Timer d;
-    device_ctx.rr_nodes.resize(num_rr_nodes);
+    device_ctx.rr_nodes.resize(num_rr_nodes); // ESR nodes are initialized
     vtr::Timer e;
     /* These are data structures used by the the unidir opin mapping. They are used
      * to spread connections evenly for each segment type among the available
@@ -1244,7 +1242,7 @@ static std::function<void(t_chan_width*)> alloc_and_load_rr_graph(RRGraphBuilder
 
             //Create the actual SOURCE->OPIN, IPIN->SINK edges
             uniquify_edges(rr_edges_to_create);
-            alloc_and_load_edges(L_rr_node, rr_edges_to_create);
+            alloc_and_load_edges(L_rr_node, rr_edges_to_create); // ESR edges are built here
             rr_edges_to_create.clear();
         }
     }
@@ -3065,12 +3063,18 @@ static void create_edge_groups(EdgeGroups* groups) {
     auto& rr_nodes = device_ctx.rr_nodes;
     const auto& rr_graph = device_ctx.rr_graph;
 
-    rr_nodes.for_each_edge(
+    clock_t  t1,  t2;
+    t1 = clock();
+    rr_graph.for_each_edge(
         [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
             if (!device_ctx.rr_switch_inf[rr_graph.edge_switch(edge)].configurable()) {
                 groups->add_non_config_edge(size_t(src), size_t(sink));
             }
         });
+    t2 = clock();
+    double edge_time = ((double)(t2-t1))/CLOCKS_PER_SEC;
+    printf("Time to iterate over %d edges: %lf seconds (%fs per edge) [%s]\n",
+         rr_graph.edge_count(), edge_time, edge_time / rr_graph.edge_count(), rr_graph.rr_graph_name());
 
     groups->create_sets();
 }

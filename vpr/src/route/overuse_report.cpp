@@ -85,7 +85,7 @@ void report_overused_nodes() {
         os << "Overused RR node #" << inode << '\n';
         os << "Node id = " << size_t(node_id) << '\n';
         os << "Occupancy = " << route_ctx.rr_node_route_inf[size_t(node_id)].occ() << '\n';
-        os << "Capacity = " << device_ctx.rr_graph.node_capacity(node_id) << "\n\n";
+        os << "Capacity = " << rr_graph.node_capacity(node_id) << "\n\n";
 
         /* Report selective info based on the rr node type */
         auto node_type = rr_graph.node_type(node_id);
@@ -275,10 +275,10 @@ static void log_single_overused_node_status(int overuse_index, RRNodeId node_id)
     VTR_LOG(" %10d", route_ctx.rr_node_route_inf[size_t(node_id)].occ());
 
     //Capacity
-    VTR_LOG(" %9d", device_ctx.rr_graph.node_capacity(node_id));
+    VTR_LOG(" %9d", rr_graph.node_capacity(node_id));
 
     //RR node type
-    VTR_LOG(" %8s", device_ctx.rr_graph.node_type_string(node_id));
+    VTR_LOG(" %8s", rr_graph.node_type_string(node_id));
 
     //Direction
     if (node_type == e_rr_type::CHANX || node_type == e_rr_type::CHANY) {

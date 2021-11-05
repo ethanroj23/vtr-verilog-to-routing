@@ -588,6 +588,11 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return itr.advance(n);
     }
 
+    inline void set_primary_rr_graph(RRGraphViewInterface* folded_edges){
+        auto& rr_graph = (*rr_graph_);
+        rr_graph.set_primary_rr_graph(folded_edges);
+    }
+
     /** Generated for complex type "node_loc":
      * <xs:complexType name="node_loc">
      *   <xs:attribute name="xlow" type="xs:int" use="required" />
@@ -798,7 +803,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void finish_rr_nodes_node(int& /*inode*/) final {
     }
     inline size_t num_rr_nodes_node(void*& /*ctx*/) final {
-        return rr_nodes_->size();
+        //return rr_nodes_->size();
+        return (*rr_graph_).size();
     }
     inline const t_rr_node get_rr_nodes_node(int n, void*& /*ctx*/) final {
         return (*rr_nodes_)[n];
@@ -850,6 +856,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_nodes_->shrink_to_fit();
     }
 
+    inline void* init_rr_graph_rr_node_data(void*& /*ctx*/) {
+        return nullptr;
+    }
+
+    inline void* init_rr_graph_rr_rc_data(void*& /*ctx*/) {
+        return nullptr;
+    }
+
     /** Generated for complex type "rr_edges":
      * <xs:complexType name="rr_edges">
      *   <xs:choice maxOccurs="unbounded">
@@ -874,7 +888,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         }
     }
     inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
-        if (src_node >= rr_nodes_->size()) {
+        if (src_node >= rr_graph_->size()) {
             report_error(
                 "source_node %d is larger than rr_nodes.size() %d",
                 src_node, rr_nodes_->size());

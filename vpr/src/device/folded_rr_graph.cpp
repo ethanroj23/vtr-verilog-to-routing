@@ -401,7 +401,7 @@ void FoldedRRGraph::build_graph(){
 
     
     
-    //for (int i=0; i<node_patterns_.size(); i++){
+    //for (int i=0; i<node_patterns_.size(); i++){ 
     //    std::sort(node_patterns_[i].begin(), node_patterns_[i].end());
     //}
     built = true;
@@ -417,7 +417,7 @@ void FoldedRRGraph::build_graph(){
     /* Don't verify for now */
     //verify_folded_rr_graph();
 }
-
+/* Verify that folded_rr_graph contains the correct information from node_storage_ */
 void FoldedRRGraph::verify_folded_rr_graph(){
     vtr::ScopedStartFinishTimer timer("Verify FoldedRRGraph");
     for (size_t idx = 0; idx < node_storage_.size(); idx++) {   

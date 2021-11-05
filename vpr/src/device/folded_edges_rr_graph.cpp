@@ -178,14 +178,18 @@ void FoldedEdgesRRGraph::build_graph(){
     built = true;
     size_ = node_storage_.size();
 
-    std::cout << "Flat Representation: (including edges)" <<node_storage_memory_used()/1024/1024.0 << " MiB" << "\n";
-    std::cout << "This Folded Representation: (including edges)" <<memory_used()/1024/1024.0 << " MiB" << "\n";
-    std::cout << "Done\n";
+    float flat_mem = node_storage_memory_used()/1024/1024.0;
+    float folded_mem = memory_used()/1024/1024.0;
 
-    RRNodeId rand_node = edge_src_node(RREdgeId(124));
+    //std::cout << "Folded/Flat = " << folded_mem << "/" << flat_mem << " = " << folded_mem / flat_mem << "(MiB)" << "\n";
+
+    printf("Folded/Flat = %.2f/%.2f(MiB) = %.2f%%\n", folded_mem, flat_mem, 100.0 * folded_mem / flat_mem);
+
+
+    //RRNodeId rand_node = edge_src_node(RREdgeId(124));
 
     /* Don't verify for now */
-    verify_folded_rr_graph();
+    //verify_folded_rr_graph();
 }
 
 void FoldedEdgesRRGraph::verify_folded_rr_graph(){

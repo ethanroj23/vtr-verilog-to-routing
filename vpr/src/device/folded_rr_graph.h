@@ -48,6 +48,9 @@ class FoldedRRGraph : public RRGraphViewInterface{
   size_t size() const{
       return size_;
   }
+  inline size_t edge_count() const {
+        return node_storage_.edge_count();
+    }
 
   std::array<size_t, 2> find_tile_coords(RRNodeId id) const {
       RRNodeId remapped_id = remapped_ids_[id];

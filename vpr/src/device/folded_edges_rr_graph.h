@@ -49,6 +49,10 @@ class FoldedEdgesRRGraph : public RRGraphViewInterface{
       return size_;
   }
 
+  inline size_t edge_count() const {
+      return edges_size_;
+  }
+
   inline t_rr_type node_type(RRNodeId node) const{ 
       return node_storage_.node_type(node);
   }

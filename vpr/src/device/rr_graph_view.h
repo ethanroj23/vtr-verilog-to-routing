@@ -176,6 +176,10 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->size();
     }
 
+    inline size_t edge_count() const{
+        return primary_rr_graph_->edge_count();
+    }
+
     inline bool empty() const{
         return primary_rr_graph_->empty();
     }

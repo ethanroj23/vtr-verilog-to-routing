@@ -226,6 +226,7 @@ def vtr_command_main(arg_list, prog=None):
             task_names += load_list_file(list_file)
 
         config_files = [find_task_config_file(task_name) for task_name in task_names]
+        print('config files ({})'.format(len(config_files)))
         configs = []
         common_task_prefix = None  # common task prefix to shorten task names
         for config_file in config_files:
@@ -265,6 +266,7 @@ def run_tasks(
     """
     Runs the specified set of tasks (configs)
     """
+    print('Run tasks')
     start = datetime.now()
     num_failed = 0
 
@@ -275,7 +277,6 @@ def run_tasks(
         task_dir = find_task_dir(config)
         task_run_dir = get_next_run_dir(task_dir)
         run_dirs[config.task_name] = task_run_dir
-
     # We could potentially support other 'run' systems (e.g. a cluster),
     # rather than just the local machine
     if args.system == "local":
@@ -328,6 +329,7 @@ def run_parallel(args, queued_jobs, run_dirs):
     queued_jobs = list(reversed(queued_jobs))
     # Find the max taskname length for pretty printing
 
+    print('running parallel')
     queued_procs = []
     queue = Manager().Queue()
     for job in queued_jobs:
@@ -448,15 +450,19 @@ def run_vtr_flow_process(queue, run_dirs, job, script):
     This is the function that the multiprocessing calls.
     It runs the vtr flow and allerts the multiprocessor through a queue if the flow failed.
     """
+    print('run_vtr_flow_process')
     work_dir = job.work_dir(run_dirs[job.task_name()])
     Path(work_dir).mkdir(parents=True, exist_ok=True)
     out = None
     vtr_flow_out = str(PurePath(work_dir) / "vtr_flow.out")
     with open(vtr_flow_out, "w+") as out_file:
+        print('out file', out_file)
         with redirect_stdout(out_file):
             if script == "run_vtr_flow.py":
+                print('script == run_vtr_flow')
                 out = run_vtr_flow(job.run_command(), str(paths.run_vtr_flow_path))
             else:
+                print('else: script == run_vtr_flow')
                 out = subprocess.call(
                     [str(paths.scripts_path / script)] + job.run_command(),
                     cwd=str(paths.root_path),

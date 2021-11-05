@@ -66,6 +66,7 @@ class RRGraphViewInterface {
       /* Other Methods */
       virtual const char* rr_graph_name() const=0;
       virtual size_t size() const=0;
+      virtual size_t edge_count() const=0;
       virtual bool empty() const=0;
       virtual int memory_used() const=0;
 
