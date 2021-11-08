@@ -101,8 +101,11 @@ void FoldedEdgesRRGraph::build_graph(){
     /*--------------THIRD LOOP OVER TILES-------------*/
     /*------------------------------------------------*/
 
+    std::map<std::string, int> temp_edge_patterns {};
+    std::map<std::string, int> temp_edge_pattern_data {};
 
-
+    int edge_data_idx = 0;
+    int edge_pattern_data_idx = 0;
     // search for and set all starting_node_id_ values
     int edge_starting_idx = 0;
     for (size_t idx = 0; idx < node_storage_.size(); idx++) { 
@@ -110,6 +113,7 @@ void FoldedEdgesRRGraph::build_graph(){
             RRNodeId id = RRNodeId(idx);  
             node_first_edge_id_[id] = RREdgeId(edge_starting_idx); 
             std::vector<int16_t> edges_in_node;
+            std::string edges_in_node_string = "";
             bool first_edge = true;
             for (RREdgeId from_edge : node_storage_.edge_range(id)) { // --- start  each node ---
                 if (first_edge){
@@ -118,25 +122,41 @@ void FoldedEdgesRRGraph::build_graph(){
                 }
                 RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
                 int8_t switch_id = node_storage_.edge_switch(from_edge);
-                int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
-                int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
+                // int16_t edge_dx = node_storage_.node_xlow(sink_node) - node_storage_.node_xlow(id);
+                // int16_t edge_dy = node_storage_.node_ylow(sink_node) - node_storage_.node_ylow(id);
                 int16_t id_diff = (size_t) id - (size_t) sink_node;
                 FoldedEdgePattern edge_pattern = {
                     id_diff,
                     switch_id
                 };
 
-                // add FoldedEdgePattern to edge_data_ if it is not there. Then get the edge_data_idx
-                auto it = std::find(edge_data_.begin(), edge_data_.end(), edge_pattern);
-                int16_t edge_data_idx = -1;
-                if (it != edge_data_.end()){ // edge_pattern found
-                    edge_data_idx = std::distance(edge_data_.begin(), it);
-                }
-                else{ //edge_pattern not found
+                std::string edge_pattern_string = std::to_string(id_diff)+"_"+std::to_string(switch_id);
+
+                 // insert into map if not in map
+                if (!(temp_edge_patterns.count(edge_pattern_string)>0)){
+                    temp_edge_patterns[edge_pattern_string] = edge_data_idx;
+                    edge_data_idx++;
                     edge_data_.push_back(edge_pattern);
-                    edge_data_idx = edge_data_.size() - 1;
                 }
-                edges_in_node.push_back(edge_data_idx);
+
+                int16_t cur_pattern_idx = temp_edge_patterns[edge_pattern_string];
+
+
+                // add FoldedEdgePattern to edge_data_ if it is not there. Then get the edge_data_idx
+                // auto it = std::find(edge_data_.begin(), edge_data_.end(), edge_pattern);
+                // int16_t edge_data_idx = -1;
+
+                // if (it != edge_data_.end()){ // edge_pattern found
+                //     edge_data_idx = std::distance(edge_data_.begin(), it);
+                // }
+                // else{ //edge_pattern not found
+                //     edge_data_.push_back(edge_pattern);
+                //     edge_data_idx = edge_data_.size() - 1;
+                // }
+
+                // edges_in_node.push_back(edge_data_idx);
+                edges_in_node.push_back(cur_pattern_idx);
+                edges_in_node_string += std::to_string(cur_pattern_idx) + "_";
                 //node_edge_list_[id].push_back(edge_data_idx); // add edge data index to node edge list
 
                 edge_src_node_[from_edge] = id; // set edge legacy source node
@@ -145,26 +165,37 @@ void FoldedEdgesRRGraph::build_graph(){
             if (first_edge) node_first_edge_id_[id] = RREdgeId(edge_starting_idx); // only set first
 
 
-
-            // Search for edge_pattern in edge_pattern_data_ vector
-            bool edge_pattern_in_data = false;
-            for (size_t i = 0; i < edge_pattern_data_.size(); i++){
-                if (edge_pattern_data_[i] == edges_in_node){
-                    // found it
-                    edge_pattern_in_data = true;
-                }
-            }
-            if (!edge_pattern_in_data){ // Add edge pattern to edge_pattern_data_ since it was not found there yet
+            // insert into map if not in map
+            if (!(temp_edge_pattern_data.count(edges_in_node_string)>0)){
+                temp_edge_pattern_data[edges_in_node_string] = edge_pattern_data_idx;
+                edge_pattern_data_idx++;
                 edge_pattern_data_.push_back(edges_in_node);
             }
 
-            // Check if element was found in edge_pattern_data_
-            auto it = std::find(edge_pattern_data_.begin(), edge_pattern_data_.end(), edges_in_node);
-            VTR_ASSERT(it != edge_pattern_data_.end());
+            int16_t cur_edge_pattern_idx = temp_edge_pattern_data[edges_in_node_string];
 
-            int16_t edge_pattern_data_idx = std::distance(edge_pattern_data_.begin(), it);
-            edge_pattern_list.push_back(edge_pattern_data_idx); // Add edge pattern data index and edge index
-            node_edges_idx_[id] = edge_pattern_data_idx;
+            //temp_edge_pattern_data
+            // Search for edge_pattern in edge_pattern_data_ vector
+            // bool edge_pattern_in_data = false;
+            // for (size_t i = 0; i < edge_pattern_data_.size(); i++){
+            //     if (edge_pattern_data_[i] == edges_in_node){
+            //         // found it
+            //         edge_pattern_in_data = true;
+            //     }
+            // }
+            // if (!edge_pattern_in_data){ // Add edge pattern to edge_pattern_data_ since it was not found there yet
+            //     edge_pattern_data_.push_back(edges_in_node);
+            // }
+
+            // Check if element was found in edge_pattern_data_
+            // auto it = std::find(edge_pattern_data_.begin(), edge_pattern_data_.end(), edges_in_node);
+            // VTR_ASSERT(it != edge_pattern_data_.end());
+
+
+
+            // int16_t edge_pattern_data_idx = std::distance(edge_pattern_data_.begin(), it);
+            edge_pattern_list.push_back(cur_edge_pattern_idx); // Add edge pattern data index and edge index
+            node_edges_idx_[id] = cur_edge_pattern_idx;
         }
 
     edges_size_ = edge_src_node_.size(); // set total number of edges
@@ -189,7 +220,7 @@ void FoldedEdgesRRGraph::build_graph(){
     //RRNodeId rand_node = edge_src_node(RREdgeId(124));
 
     /* Don't verify for now */
-    //verify_folded_rr_graph();
+    verify_folded_rr_graph();
 }
 
 void FoldedEdgesRRGraph::verify_folded_rr_graph(){

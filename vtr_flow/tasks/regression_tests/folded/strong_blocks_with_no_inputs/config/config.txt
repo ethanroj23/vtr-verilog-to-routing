@@ -28,4 +28,4 @@ qor_parse_file=qor_standard.txt
 pass_requirements_file=pass_requirements.txt
 
 # Script parameters
-script_params_common = -track_memory_usage --primary_rr_graph FoldedEdgesRRGraph
+script_params_common = -track_memory_usage --primary_rr_graph FoldedNodesRRGraph

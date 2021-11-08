@@ -25,4 +25,4 @@ qor_parse_file=qor_standard.txt
 pass_requirements_file=pass_requirements.txt
 
 #Script parameters
-script_params=-starting_stage vpr -lut_size 1 -track_memory_usage --gen_post_synthesis_netlist on --primary_rr_graph FoldedEdgesRRGraph
+script_params=-starting_stage vpr -lut_size 1 -track_memory_usage --gen_post_synthesis_netlist on --primary_rr_graph FoldedNodesRRGraph

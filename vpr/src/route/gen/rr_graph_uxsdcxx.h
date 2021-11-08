@@ -116,7 +116,7 @@ inline void load_edge_required_attributes(const pugi::xml_node& root, unsigned i
 template<class T, typename Context>
 inline void load_rr_edges(const pugi::xml_node& root, T& out, Context& context, const std::function<void(const char*)>* report_error, ptrdiff_t* offset_debug);
 template<class T, typename Context>
-inline void load_rr_graph(const pugi::xml_node& root, T& out, Context& context, const std::function<void(const char*)>* report_error, ptrdiff_t* offset_debug, RRGraphViewInterface* folded_rr_graph);
+inline void load_rr_graph(const pugi::xml_node& root, T& out, Context& context, const std::function<void(const char*)>* report_error, ptrdiff_t* offset_debug);
 
 /* Declarations for internal write functions for the complex types. */
 template<class T>
@@ -157,7 +157,7 @@ inline void write_rr_graph(T& in, std::ostream& os, const void* data, void* iter
 
 /* Load function for the root element. */
 template<class T, typename Context>
-inline void load_rr_graph_xml(T& out, Context& context, const char* filename, std::istream& is, RRGraphViewInterface* folded_rr_graph) {
+inline void load_rr_graph_xml(T& out, Context& context, const char* filename, std::istream& is) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load(is);
     if (!result) {
@@ -183,7 +183,7 @@ inline void load_rr_graph_xml(T& out, Context& context, const char* filename, st
         if (std::strcmp(node.name(), "rr_graph") == 0) {
             /* If errno is set up to this point, it messes with strtol errno checking. */
             errno = 0;
-            load_rr_graph(node, out, context, &report_error, &offset_debug, folded_rr_graph);
+            load_rr_graph(node, out, context, &report_error, &offset_debug);
         } else {
             offset_debug = node.offset_debug();
             report_error(("Invalid root-level element " + std::string(node.name())).c_str());
@@ -4322,7 +4322,7 @@ inline void load_rr_edges(const pugi::xml_node& root, T& out, Context& context, 
 }
 
 template<class T, typename Context>
-inline void load_rr_graph(const pugi::xml_node& root, T& out, Context& context, const std::function<void(const char*)>* report_error, ptrdiff_t* offset_debug, RRGraphViewInterface* folded_rr_graph) {
+inline void load_rr_graph(const pugi::xml_node& root, T& out, Context& context, const std::function<void(const char*)>* report_error, ptrdiff_t* offset_debug) {
     (void)root;
     (void)out;
     (void)context;
@@ -4347,7 +4347,7 @@ inline void load_rr_graph(const pugi::xml_node& root, T& out, Context& context, 
                 //rr_graph_->set_primary_rr_graph
                 //g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
                 //out.rr_graph_->set_primary_rr_graph
-                out.set_primary_rr_graph(folded_rr_graph);
+                //out.set_primary_rr_graph(folded_rr_graph);
                 using_folded_graph = true;
                 break;
             default:

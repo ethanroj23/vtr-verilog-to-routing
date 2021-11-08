@@ -76,7 +76,7 @@ void load_rr_file(const t_graph_type graph_type,
         try {
             std::ifstream file(read_rr_graph_name);
             void* context;
-            uxsd::load_rr_graph_xml(reader, context, read_rr_graph_name, file, &g_vpr_ctx.mutable_device().folded_edges_rr_graph);
+            uxsd::load_rr_graph_xml(reader, context, read_rr_graph_name, file);
         } catch (pugiutil::XmlError& e) {
             vpr_throw(VPR_ERROR_ROUTE, read_rr_graph_name, e.line(), "%s", e.what());
         }

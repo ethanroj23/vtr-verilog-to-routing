@@ -450,19 +450,19 @@ def run_vtr_flow_process(queue, run_dirs, job, script):
     This is the function that the multiprocessing calls.
     It runs the vtr flow and allerts the multiprocessor through a queue if the flow failed.
     """
-    print('run_vtr_flow_process')
+    # print('run_vtr_flow_process')
     work_dir = job.work_dir(run_dirs[job.task_name()])
     Path(work_dir).mkdir(parents=True, exist_ok=True)
     out = None
     vtr_flow_out = str(PurePath(work_dir) / "vtr_flow.out")
     with open(vtr_flow_out, "w+") as out_file:
-        print('out file', out_file)
+        # print('out file', out_file)
         with redirect_stdout(out_file):
             if script == "run_vtr_flow.py":
-                print('script == run_vtr_flow')
+                #print('script == run_vtr_flow')
                 out = run_vtr_flow(job.run_command(), str(paths.run_vtr_flow_path))
             else:
-                print('else: script == run_vtr_flow')
+                #print('else: script == run_vtr_flow')
                 out = subprocess.call(
                     [str(paths.scripts_path / script)] + job.run_command(),
                     cwd=str(paths.root_path),

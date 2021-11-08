@@ -24,5 +24,5 @@ qor_parse_file=qor_standard.txt
 # Pass requirements
 pass_requirements_file=pass_requirements.txt
 
-script_params_common =-starting_stage vpr --absorb_buffer_luts on --primary_rr_graph FoldedEdgesRRGraph
+script_params_common =-starting_stage vpr --absorb_buffer_luts on --primary_rr_graph FoldedNodesRRGraph
 script_params_list_add = -sdc_file sdc/samples/clock_aliases/set_delay.sdc

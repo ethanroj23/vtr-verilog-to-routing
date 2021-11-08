@@ -31,4 +31,4 @@ qor_parse_file=qor_standard.txt
 pass_requirements_file=pass_requirements_clock_modeling.txt
 
 # Script parameters
-script_params_list_add= --clock_modeling dedicated_network --primary_rr_graph FoldedEdgesRRGraph
+script_params_list_add= --clock_modeling dedicated_network --primary_rr_graph FoldedNodesRRGraph

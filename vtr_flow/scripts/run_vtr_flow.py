@@ -500,7 +500,7 @@ def vtr_command_main(arg_list, prog=None):
     start = datetime.now()
     # Load the arguments
     args, unknown_args = vtr_command_argparser(prog).parse_known_args(arg_list)
-    print("ARGS", arg_list)
+    #print("ARGS", arg_list)
     error_status = "Error"
     if args.temp_dir is None:
         temp_dir = Path("./temp")
@@ -569,7 +569,7 @@ def vtr_command_main(arg_list, prog=None):
     finally:
         seconds = datetime.now() - start
 
-        verbose_folded = True
+        verbose_folded = False
         if verbose_folded:
             print(
                 "{status} (took {time}, [{routing_time}s to route] vpr run consumed {max_mem} memory)\t[{primary_rr_graph}] Folding took{folding_time}s\n{cmd}\ndir:{directory}\nFolded Info(MiB):{folded_info} Node Info:{node_info}".format(

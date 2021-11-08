@@ -25,7 +25,7 @@ qor_parse_file=qor_standard.txt
 pass_requirements_file=pass_requirements.txt
 
 #Script parameters
-script_params=-starting_stage vpr -track_memory_usage --pack --primary_rr_graph FoldedEdgesRRGraph
+script_params=-starting_stage vpr -track_memory_usage --pack --primary_rr_graph FoldedNodesRRGraph
 
 script_params_list_add=--absorb_buffer_luts on
 script_params_list_add=--absorb_buffer_luts off

@@ -1413,7 +1413,7 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
         .show_in(argparse::ShowIn::HELP_ONLY);
     
     file_grp.add_argument(args.primary_rr_graph, "--primary_rr_graph")
-        .help("Main rr_graph type to use (ie FoldedRRGraph, FoldedNodesRRGraph, FoldedEdgesRRGraph)")
+        .help("Main rr_graph type to use (ie FoldedRRGraph, FoldedNodesRRGraph, FoldedEdgesRRGraph, FoldedNodesRRGraph)")
         .metavar("RR_GRAPH_FILE")
         .show_in(argparse::ShowIn::HELP_ONLY);
 

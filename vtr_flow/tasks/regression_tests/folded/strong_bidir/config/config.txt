@@ -27,5 +27,5 @@ qor_parse_file=qor_standard.txt
 # Pass requirements
 pass_requirements_file=pass_requirements.txt
 
-script_params=-starting_stage vpr -track_memory_usage --primary_rr_graph FoldedEdgesRRGraph
+script_params=-starting_stage vpr -track_memory_usage --primary_rr_graph FoldedNodesRRGraph
 

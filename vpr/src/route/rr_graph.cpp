@@ -808,6 +808,17 @@ static void build_rr_graph(const t_graph_type graph_type,
             g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
             // Edges should also be deleted here
         }
+
+        if (det_routing_arch->primary_rr_graph == "FoldedNodesRRGraph"){
+            // build the folded representation
+            g_vpr_ctx.mutable_device().folded_nodes_rr_graph.build_graph();
+            // Set primary rr_graph to the FoldedRRGraph
+            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
+            /// delete rr_nodes.node_storage_ as it will no longer be used
+            g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+            //g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
+            // Edges should also be deleted here
+        }
     
 
     }

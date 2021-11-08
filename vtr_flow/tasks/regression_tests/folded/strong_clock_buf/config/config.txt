@@ -28,5 +28,5 @@ pass_requirements_file=pass_requirements_multiclock.txt
 # 1. Disable buffer LUT absorbtion to allow testing of .names clock buffers
 # 2. For reasons that are unclear, the test architecture won't pack unless the pin feasibility filter is turned off...
 #
-script_params=-starting_stage vpr --absorb_buffer_luts off --clustering_pin_feasibility_filter off --primary_rr_graph FoldedEdgesRRGraph
+script_params=-starting_stage vpr --absorb_buffer_luts off --clustering_pin_feasibility_filter off --primary_rr_graph FoldedNodesRRGraph
 

@@ -24,4 +24,4 @@ qor_parse_file=qor_fixed_chan_width.txt
 pass_requirements_file=pass_requirements_fixed_chan_width.txt
 
 # Script parameters
-script_params = --route_chan_width 100 --router_algorithm breadth_first --primary_rr_graph FoldedEdgesRRGraph
+script_params = --route_chan_width 100 --router_algorithm breadth_first --primary_rr_graph FoldedNodesRRGraph

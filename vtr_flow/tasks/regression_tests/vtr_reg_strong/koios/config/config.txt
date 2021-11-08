@@ -36,5 +36,5 @@ pass_requirements_file=pass_requirements.txt
 
 #Script parameters
 script_params=-track_memory_usage 
-#script_params_list_add = --primary_rr_graph FoldedEdgesRRGraph
+#script_params_list_add = --primary_rr_graph FoldedNodesRRGraph
 

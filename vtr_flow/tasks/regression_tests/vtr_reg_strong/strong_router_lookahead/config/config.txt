@@ -29,4 +29,4 @@ script_params_list_add = --router_lookahead classic
 script_params_list_add = --router_lookahead map
 script_params_list_add = --router_lookahead extended_map
 script_params_list_add = --router_lookahead extended_map --reorder_rr_graph_nodes_algorithm random_shuffle
-script_params_list_add = --primary_rr_graph FoldedEdgesRRGraph
+script_params_list_add = --primary_rr_graph FoldedNodesRRGraph

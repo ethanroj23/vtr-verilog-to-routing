@@ -24,7 +24,7 @@ qor_parse_file=qor_standard.txt
 pass_requirements_file=pass_requirements.txt
 
 # Script parameters
-script_params_common = -starting_stage vpr --primary_rr_graph FoldedEdgesRRGraph
+script_params_common = -starting_stage vpr --primary_rr_graph FoldedNodesRRGraph
 script_params_list_add = --check_route full
 script_params_list_add = --check_route quick
 script_params_list_add = --check_route off

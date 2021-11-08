@@ -25,4 +25,4 @@ pass_requirements_file=pass_requirements.txt
 
 # Script parameters
 #script_params=""
-script_params = -track_memory_usage --enable_analytic_placer true --primary_rr_graph FoldedEdgesRRGraph
+script_params = -track_memory_usage --enable_analytic_placer true --primary_rr_graph FoldedNodesRRGraph
