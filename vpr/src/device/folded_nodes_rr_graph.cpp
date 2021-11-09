@@ -106,10 +106,7 @@ void FoldedNodesRRGraph::build_graph(){
     built = true;
     size_ = node_storage_.size();
 
-    std::cout << "Flat Representation: (including edges)" <<node_storage_memory_used()/1024/1024.0 << " MiB" << "\n";
-    std::cout << "This Folded Representation: (including edges)" <<memory_used()/1024/1024.0 << " MiB" << "\n";
-    std::cout << "Done\n";
-
+    print_memory_stats();
 
     /* Don't verify for now */
     verify_folded_rr_graph();

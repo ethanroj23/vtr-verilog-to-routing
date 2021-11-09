@@ -311,7 +311,7 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
       }; 
 
     struct FoldedEdgePattern { // 7 Bytes
-        int16_t id_diff; // 2 Bytes
+        int32_t id_diff; // 4 Bytes
         int8_t switch_id; // 1 Byte
       }; 
 
@@ -418,10 +418,10 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     */
 
     /* Every Tile Type has a set of FoldedEdgePatterns */
-    std::vector<std::vector<int16_t>> edge_patterns_; 
+    // std::vector<std::vector<int16_t>> edge_patterns_; 
 
     /* Indexes into edge_data_ are stored here */
-    std::vector<std::vector<int16_t>> edge_pattern_data_; // vector of vectors of indexes into edge_data_
+    std::vector<std::vector<int32_t>> edge_pattern_data_; // vector of vectors of indexes into edge_data_
 
     /* Raw FoldedEdgePattern data is stored here */
     std::vector<FoldedEdgePattern> edge_data_; // this is where actual edge data is stored
@@ -429,7 +429,7 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     /* First edge id of given node (RRNodeId is a remapped node)*/
     vtr::vector<RRNodeId, RREdgeId> node_first_edge_id_; // every node
 
-    vtr::vector<RRNodeId, int16_t> node_edges_idx_; // every node
+    vtr::vector<RRNodeId, int32_t> node_edges_idx_; // every node
 
     /* FoldedEdge's legacy_src_node*/
     vtr::vector<RREdgeId, RRNodeId> edge_src_node_; // every edge

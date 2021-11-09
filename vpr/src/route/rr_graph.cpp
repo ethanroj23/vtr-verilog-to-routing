@@ -3071,7 +3071,6 @@ static RRNodeId pick_best_direct_connect_target_rr_node(RRNodeId from_rr,
 //Collects the sets of connected non-configurable edges in the RR graph
 static void create_edge_groups(EdgeGroups* groups) {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_nodes = device_ctx.rr_nodes;
     const auto& rr_graph = device_ctx.rr_graph;
 
     clock_t  t1,  t2;

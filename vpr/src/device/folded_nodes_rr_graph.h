@@ -48,6 +48,28 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
   size_t size() const{
       return size_;
   }
+
+  /* Return the number of bytes used to represent the nodes */
+  int node_bytes() const{
+      return nodes_.size() * 6 + node_patterns_.size() * 12;
+  }
+
+  /* Return the number of bytes used to represent the edges */
+  size_t edge_bytes() const{
+      return edge_count()*10;
+  }
+
+  void print_memory_stats() const{
+    double current_bytes = node_bytes() + edge_bytes();
+    std::cout << "Flat Representation: (including edges)" <<node_storage_bytes()/1024/1024.0 << " MiB" << "\n";
+    std::cout << "This Folded Representation: (including edges)" << current_bytes/1024/1024.0 << " MiB" << "\n";
+    printf("Flat Nodes: %lu, ", node_storage_.size() * 16);
+    printf("Folded Nodes: %d, ", node_bytes() );
+    printf("Node Reduction: %.2f, ", (double)(node_storage_.size() * 16) / (double)node_bytes() );
+    printf("Edge Reduction: %.2f, ", (double)(edge_count() * 10) / (double)edge_bytes() );
+    printf("Total Reduction: %.2f\n\n", node_storage_bytes() / current_bytes );
+  }
+
   inline size_t edge_count() const {
         return node_storage_.edge_count();
     }
@@ -172,8 +194,8 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
     }
 
   /* must be called before the node_storage_ is deleted */
-  inline int node_storage_memory_used() const{
-      return nodes_.size() * 6 + node_patterns_.size() * 12;
+  inline int node_storage_bytes() const{
+      return nodes_.size() * 16 + edge_count() * 10;
   }
 
   /* Compare folded rr_graph vs node_storage_ */
@@ -293,7 +315,7 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     
 
   
-    struct alignas(8) t_folded_node_data {
+    struct t_folded_node_data {
       int16_t node_data_index_ = -1;
       int16_t xlow_ = -1;
       int16_t ylow_ = -1;
@@ -353,7 +375,8 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
 
     /* Raw FoldedNodePattern data is stored here */
     std::vector<FoldedNodePattern> node_patterns_; // should probably be called node_data_ to match edge_data_
-    vtr::vector<RRNodeId, t_folded_node_data, vtr::aligned_allocator<t_folded_node_data>> nodes_;
+    //vtr::vector<RRNodeId, t_folded_node_data, vtr::aligned_allocator<t_folded_node_data>> nodes_;
+    vtr::vector<RRNodeId, t_folded_node_data> nodes_;
 
     size_t size_;
 
