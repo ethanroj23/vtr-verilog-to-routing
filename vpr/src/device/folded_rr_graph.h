@@ -117,7 +117,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
   /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_xhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
-      //std::array<size_t, 2> x_y = find_tile_coords(node);
       auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
@@ -132,7 +131,6 @@ class FoldedRRGraph : public RRGraphViewInterface{
   /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_yhigh(RRNodeId node) const {  
       RRNodeId remapped_id = remapped_ids_[node];
-      //std::array<size_t, 2> x_y = find_tile_coords(node);
       auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
       int node_patterns_idx = tile.node_patterns_idx_;
       size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;

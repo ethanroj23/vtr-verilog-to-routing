@@ -4,9 +4,9 @@
 #include <memory>
 #include <vector>
 
-//#include "folded_rr_graph.h"
 #include "folded_edges_rr_graph.h"
 #include "folded_nodes_rr_graph.h"
+#include "folded_rr_graph.h"
 #include "vpr_types.h"
 #include "vtr_ndmatrix.h"
 #include "vtr_vector.h"
@@ -178,7 +178,7 @@ struct DeviceContext : public Context {
     /*  Completely folded routing resource graph. 
         Every possible way to fold the rr_graph was taken advantage of here
     */
-    //FoldedRRGraph folded_rr_graph{rr_nodes};
+    FoldedRRGraph folded_rr_graph{rr_nodes};
 
     /* Folded Nodes routing resource graph. 
         Only the nodes were folded in this instance */

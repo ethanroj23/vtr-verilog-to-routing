@@ -12,42 +12,6 @@
 
 
 FoldedRRGraph::FoldedRRGraph(const t_rr_graph_storage& node_storage) : node_storage_(node_storage){
-#ifdef BUILD_FROM_FILE
-std::string current_line;
-/* load in all_patterns_ from file */
-std::ifstream read_file_1("/home/ethan/rr_graphs/all_node_patterns.txt");
-while (getline (read_file_1, current_line)) {
-    std::istringstream ss_1(current_line);
-    std::string token_1;
-    std::array<std::string, 9> current_array_1;
-    int idx_1 = 0;
-    while(std::getline(ss_1, token_1, ' ')) {
-        current_array_1[idx_1] = token_1;
-        idx_1++;
-    }
-    all_node_patterns_.push_back(current_array_1);
-}
-read_file_1.close();
-
-/* load in rr_node_id_to_x_y_idx_ from file */
-
-std::ifstream read_file_2("/home/ethan/rr_graphs/legacy_node_to_x_y_pattern.txt");
-while (getline (read_file_2, current_line)) {
-    std::istringstream ss(current_line);
-    std::string token;
-    std::array<int, 3> current_array;
-    int idx = 0;
-    while(std::getline(ss, token, ' ')) {
-        current_array[idx] = std::stoi(token);
-        idx++;
-    }
-    rr_node_id_to_x_y_idx_.push_back(current_array);
-}
-read_file_2.close();
-#endif
-
-
-
 }
 
 

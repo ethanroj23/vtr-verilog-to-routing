@@ -789,7 +789,7 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* USE FOLDED RR GRAPH */
     // build folded rr_graph from rr_graph_storage version if not writing rr_graph (because that code still uses flat representation)
     if (det_routing_arch->write_rr_graph_filename.empty()){
-        /*if (det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
+        if (det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
             // build the folded representation
             g_vpr_ctx.mutable_device().folded_rr_graph.build_graph();
             // Set primary rr_graph to the FoldedRRGraph
@@ -797,7 +797,7 @@ static void build_rr_graph(const t_graph_type graph_type,
             /// delete rr_nodes.node_storage_ as it will no longer be used
             g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
             // Edges should also be deleted here
-        }*/
+        }
 
         if (det_routing_arch->primary_rr_graph == "FoldedEdgesRRGraph"){
             // build the folded representation

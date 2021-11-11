@@ -57,7 +57,7 @@ void FoldedNodesRRGraph::build_graph(){
                                             node_storage_.node_rc_index(id),
                                             dx,
                                             dy,
-                                            current_type,//edge_patterns,
+                                            // current_type,//edge_patterns,
                                             (uint16_t) node_storage_.node_capacity(id),
                                             {Direction::NUM_DIRECTIONS}
 
@@ -66,7 +66,7 @@ void FoldedNodesRRGraph::build_graph(){
                                           std::to_string(node_storage_.node_rc_index(id)) + "_" +
                                           std::to_string(dx) + "_" +
                                           std::to_string(dy) + "_" +
-                                          std::to_string(current_type) + "_" +  
+                                        //   std::to_string(current_type) + "_" +  
                                           std::to_string(node_storage_.node_capacity(id)) + "_"; 
                                           
         // set direction if using CHANX or CHANY
@@ -96,7 +96,8 @@ void FoldedNodesRRGraph::build_graph(){
         t_folded_node_data cur_node = {
             cur_pattern_idx,
             x,
-            y
+            y,
+            current_type
         };
 
         nodes_.push_back(cur_node);

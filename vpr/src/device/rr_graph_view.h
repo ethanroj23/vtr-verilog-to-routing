@@ -190,6 +190,7 @@ class RRGraphView : public RRGraphViewInterface {
 
     inline void print_memory_used() const {
         VTR_LOG("RRGraph[%s] is using %f MiB of memory'\n", rr_graph_name(), memory_used() / 1024 / 1024.0 );
+        VTR_LOG("RRGraph[rr_graph_storage] would use %f MiB of memory'\n", (size()*16+edge_count()*10) / 1024 / 1024.0 );
     }
     /* ***************************************************************** */
     /* THE FOLLOWING FUNCTIONS HAVE NOT BEEN REPLACED THROUGHOUT VTR YET */

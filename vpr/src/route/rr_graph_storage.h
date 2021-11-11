@@ -439,7 +439,7 @@ class t_rr_graph_storage : public RRGraphViewInterface {
 
     // Bytes used by the node_storage_ object
     inline int memory_used() const {
-        return node_storage_.size()*t_rr_node_data_byte_count;
+        return node_storage_.size()*t_rr_node_data_byte_count + edge_count()*10;
     }
 
     /* free the memory used by node_storage_. Only use this if you are accessing rr_node data elsewhere */
