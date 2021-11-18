@@ -239,6 +239,12 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         return node_fan_in_[id];
     }
 
+    t_rr_node_data get_remove_last_node() {
+        t_rr_node_data node = node_storage_.back();
+        node_storage_.pop_back();
+        return node;
+    }
+
     // This prefetechs hot RR node data required for optimization.
     //
     // Note: This is optional, but may lower time spent on memory stalls in
@@ -459,6 +465,14 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         edge_dest_node_.clear();
         edge_switch_.clear();
     }
+
+    inline void clear_edge_src_nodes(){
+        vtr::ScopedStartFinishTimer timer("clear_edge_src_nodes()");
+        edge_src_node_.clear();
+        edge_dest_node_.clear();
+        edge_switch_.clear();
+    }
+
 
     // Remove all nodes and edges from the RR graph.
     //

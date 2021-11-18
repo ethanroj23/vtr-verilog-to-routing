@@ -15,133 +15,44 @@ class FoldedEdgesRRGraph : public RRGraphViewInterface{
   public:
     /* Explicitly define the only way to create an object */
     explicit FoldedEdgesRRGraph(const t_rr_graph_storage& node_storage);
-
-    /* Disable copy constructors and copy assignment operator
-     * This is to avoid accidental copy because it could be an expensive operation considering that the 
-     * memory footprint of the data structure could ~ Gb
-     * Using the following syntax, we prohibit accidental 'pass-by-value' which can be immediately caught 
-     * by compiler
-     */
     FoldedEdgesRRGraph(const FoldedEdgesRRGraph&) = delete;
     void operator=(const FoldedEdgesRRGraph&) = delete;
 
     /* -- Accessors -- */
   public:
-  // every function takes in an RRNodeId that has not been remapped yet
-  /* The general method for accessing data from the FoldedEdgesRRGraph is as follows:
-   * 1. Obtain the remapped_id from remapped_ids data member.v 
-   * 2. Find the x and y coordinates of the tile that contains the input RRNode
-   * 3. Obtain the node_patterns_idx from the tile
-   * 4. Calculate the relative offset for the given RRNodeId
-   * 5. Access the desired data with something like 
-   *      node_data_[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
-   */
-
-  /*Return an RRNode's type.*/
-
-  /* Print the current rr_graph type */
   inline const char* rr_graph_name() const{
     return "FoldedEdgesRRGraph";
   }
 
   /* Return the number of RRNodes */
-  size_t size() const{
-      return size_;
-  }
-
-  inline size_t edge_count() const {
-      return edges_size_;
-  }
-
-  inline t_rr_type node_type(RRNodeId node) const{ 
-      return node_storage_.node_type(node);
-  }
-
-  inline short node_capacity(RRNodeId node) const{ 
-      return node_storage_.node_capacity(node);
-  }
+  size_t size() const{return size_;}
+  inline size_t edge_count() const {return edges_size_;}
   
-  /* Get the type string of a routing resource node. This function is inlined for runtime optimization. */
-  inline const char* node_type_string(RRNodeId node) const {
-      return node_storage_.node_type_string(node);
-  }
+  inline t_rr_type node_type(RRNodeId node) const {return node_storage_.node_type(node);}
+  inline const char* node_type_string(RRNodeId node) const {return node_storage_.node_type_string(node);}
+  inline short node_capacity(RRNodeId node) const {return node_storage_.node_capacity(node);}
+  inline Direction node_direction(RRNodeId node) const {return node_storage_.node_direction(node);}
+  inline const std::string& node_direction_string(RRNodeId node) const {return node_storage_.node_direction_string(node);}
 
-  /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
-    * Direction::INC: wire driver is positioned at the low-coordinate end of the wire.
-    * Direction::DEC: wire_driver is positioned at the high-coordinate end of the wire.
-    * Direction::BIDIR: wire has multiple drivers, so signals can travel either way along the wire
-    * Direction::NONE: node does not have a direction, such as IPIN/OPIN
-    */
-  inline Direction node_direction(RRNodeId node) const {
-      return node_storage_.node_direction(node);
-  }
-
-  /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
-  inline const std::string& node_direction_string(RRNodeId node) const {
-      return node_storage_.node_direction_string(node);
-  }
-
-  /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
   float node_C(RRNodeId node) const;
-
-  /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
   float node_R(RRNodeId node) const;
+  inline int16_t node_rc_index(RRNodeId node) const {return node_storage_.node_rc_index(node);}
+  
+  inline short node_xlow(RRNodeId node) const {return node_storage_.node_xlow(node);}
+  inline short node_xhigh(RRNodeId node) const {  return node_storage_.node_xhigh(node);}
+  inline short node_ylow(RRNodeId node) const {return node_storage_.node_ylow(node);}
+  inline short node_yhigh(RRNodeId node) const {  return node_storage_.node_yhigh(node);}
 
-  /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
-  inline int16_t node_rc_index(RRNodeId node) const {
-      return node_storage_.node_rc_index(node);
-  }
+  inline short node_cost_index(RRNodeId node) const {return node_storage_.node_cost_index(node);}
+  inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{return node_storage_.is_node_on_specific_side(node, side);}
+  inline const char* node_side_string(RRNodeId node) const {return node_storage_.node_side_string(node);}
+  inline t_edge_size node_fan_in(RRNodeId node) const {return node_storage_.fan_in(node);}
+  inline t_edge_size fan_in(RRNodeId node) const {return node_storage_.fan_in(node);}
 
-  /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_xlow(RRNodeId node) const {
-      return node_storage_.node_xlow(node);
-  }
-
-  /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_xhigh(RRNodeId node) const {  
-      return node_storage_.node_xhigh(node);
-  }
-
-  /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_ylow(RRNodeId node) const {
-      return node_storage_.node_ylow(node);
-  }
-
-  /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_yhigh(RRNodeId node) const {  
-      return node_storage_.node_yhigh(node);
-  }
-
-  /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_cost_index(RRNodeId node) const {
-      return node_storage_.node_cost_index(node);
-  }
-
-  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{
-      return node_storage_.is_node_on_specific_side(node, side);
-  }
-
-  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline const char* node_side_string(RRNodeId node) const {// ⬛️
-      return node_storage_.node_side_string(node);
-  }
-
-  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
-  inline t_edge_size node_fan_in(RRNodeId node) const {
-    return node_storage_.fan_in(node);
-  }
-
-  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
-  inline t_edge_size fan_in(RRNodeId node) const {
-    return node_storage_.fan_in(node);
-  }
-
-    /* PTC get methods */
-    short node_ptc_num(RRNodeId id) const;
-    short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
-    short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
-    short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_ptc_num(RRNodeId id) const;
+  short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
+  short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
 
   /* ------------ */
   /* Edge Methods */

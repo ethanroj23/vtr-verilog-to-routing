@@ -1,6 +1,15 @@
 #ifndef FOLDED_EDGES_1_RR_GRAPH_H
 #define FOLDED_EDGES_1_RR_GRAPH_H
 
+/*
+  Folded Edges RRGraph 1 folds the edges like so:
+    Node:
+      first_edge_id // access this using a binary search
+    Edge:
+      sink_node
+      switch
+*/
+
 #include "vpr_types.h"
 #include <iostream>
 #include "rr_graph_storage.h"
@@ -15,142 +24,44 @@ class FoldedEdges1RRGraph : public RRGraphViewInterface{
   public:
     /* Explicitly define the only way to create an object */
     explicit FoldedEdges1RRGraph(const t_rr_graph_storage& node_storage);
-
-    /* Disable copy constructors and copy assignment operator
-     * This is to avoid accidental copy because it could be an expensive operation considering that the 
-     * memory footprint of the data structure could ~ Gb
-     * Using the following syntax, we prohibit accidental 'pass-by-value' which can be immediately caught 
-     * by compiler
-     */
     FoldedEdges1RRGraph(const FoldedEdges1RRGraph&) = delete;
     void operator=(const FoldedEdges1RRGraph&) = delete;
 
     /* -- Accessors -- */
   public:
-  // every function takes in an RRNodeId that has not been remapped yet
-  /* The general method for accessing data from the FoldedEdges1RRGraph is as follows:
-   * 1. Obtain the remapped_id from remapped_ids data member.v 
-   * 2. Find the x and y coordinates of the tile that contains the input RRNode
-   * 3. Obtain the node_patterns_idx from the tile
-   * 4. Calculate the relative offset for the given RRNodeId
-   * 5. Access the desired data with something like 
-   *      node_data_[node_patterns[node_patterns_idx][offset]].type_; //replace "type_" with the data you are wanting
-   */
-
-  /*Return an RRNode's type.*/
-
-  /* Print the current rr_graph type */
   inline const char* rr_graph_name() const{
     return "FoldedEdges1RRGraph";
   }
 
   /* Return the number of RRNodes */
-  size_t size() const{
-      return size_;
-  }
-
-  inline size_t edge_count() const {
-      return edges_size_;
-  }
-
-  inline t_rr_type node_type(RRNodeId node) const{ 
-      return node_storage_.node_type(node);
-  }
-
-  inline short node_capacity(RRNodeId node) const{ 
-      return node_storage_.node_capacity(node);
-  }
+  size_t size() const{return size_;}
+  inline size_t edge_count() const {return edges_size_;}
   
-  /* Get the type string of a routing resource node. This function is inlined for runtime optimization. */
-  inline const char* node_type_string(RRNodeId node) const {
-      return node_storage_.node_type_string(node);
-  }
+  inline t_rr_type node_type(RRNodeId node) const {return node_storage_.node_type(node);}
+  inline const char* node_type_string(RRNodeId node) const {return node_storage_.node_type_string(node);}
+  inline short node_capacity(RRNodeId node) const {return node_storage_.node_capacity(node);}
+  inline Direction node_direction(RRNodeId node) const {return node_storage_.node_direction(node);}
+  inline const std::string& node_direction_string(RRNodeId node) const {return node_storage_.node_direction_string(node);}
 
-  /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
-    * Direction::INC: wire driver is positioned at the low-coordinate end of the wire.
-    * Direction::DEC: wire_driver is positioned at the high-coordinate end of the wire.
-    * Direction::BIDIR: wire has multiple drivers, so signals can travel either way along the wire
-    * Direction::NONE: node does not have a direction, such as IPIN/OPIN
-    */
-  inline Direction node_direction(RRNodeId node) const {
-      return node_storage_.node_direction(node);
-  }
-
-  /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
-  inline const std::string& node_direction_string(RRNodeId node) const {
-      return node_storage_.node_direction_string(node);
-  }
-
-  /* Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
   float node_C(RRNodeId node) const;
-
-  /* Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
   float node_R(RRNodeId node) const;
+  inline int16_t node_rc_index(RRNodeId node) const {return node_storage_.node_rc_index(node);}
+  
+  inline short node_xlow(RRNodeId node) const {return node_storage_.node_xlow(node);}
+  inline short node_xhigh(RRNodeId node) const {  return node_storage_.node_xhigh(node);}
+  inline short node_ylow(RRNodeId node) const {return node_storage_.node_ylow(node);}
+  inline short node_yhigh(RRNodeId node) const {  return node_storage_.node_yhigh(node);}
 
-  /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
-  inline int16_t node_rc_index(RRNodeId node) const {
-      return node_storage_.node_rc_index(node);
-  }
+  inline short node_cost_index(RRNodeId node) const {return node_storage_.node_cost_index(node);}
+  inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{return node_storage_.is_node_on_specific_side(node, side);}
+  inline const char* node_side_string(RRNodeId node) const {return node_storage_.node_side_string(node);}
+  inline t_edge_size node_fan_in(RRNodeId node) const {return node_storage_.fan_in(node);}
+  inline t_edge_size fan_in(RRNodeId node) const {return node_storage_.fan_in(node);}
 
-  /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_xlow(RRNodeId node) const {
-      return node_storage_.node_xlow(node);
-  }
-
-  /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_xhigh(RRNodeId node) const {  
-      return node_storage_.node_xhigh(node);
-  }
-
-  /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_ylow(RRNodeId node) const {
-      return node_storage_.node_ylow(node);
-  }
-
-  /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_yhigh(RRNodeId node) const {  
-      return node_storage_.node_yhigh(node);
-  }
-
-  /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
-  inline short node_cost_index(RRNodeId node) const {
-      return node_storage_.node_cost_index(node);
-  }
-
-  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{
-      return node_storage_.is_node_on_specific_side(node, side);
-  }
-
-  /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
-  inline const char* node_side_string(RRNodeId node) const {// ⬛️
-      return node_storage_.node_side_string(node);
-  }
-
-  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
-  inline t_edge_size node_fan_in(RRNodeId node) const {
-    return node_storage_.fan_in(node);
-  }
-
-  /* Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
-  inline t_edge_size fan_in(RRNodeId node) const {
-    return node_storage_.fan_in(node);
-  }
-
-    /* PTC get methods */
-  short node_ptc_num(RRNodeId id) const {
-      return node_storage_.node_ptc_num(id);
-  }
-  short node_pin_num(RRNodeId id) const {
-      return node_storage_.node_pin_num(id);
-  }
-
-  short node_track_num(RRNodeId id) const {
-      return node_storage_.node_track_num(id);
-  }
-  short node_class_num(RRNodeId id) const {
-      return node_storage_.node_class_num(id);
-  }
+  short node_ptc_num(RRNodeId id) const;
+  short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
+  short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
 
   /* ------------ */
   /* Edge Methods */
@@ -167,18 +78,13 @@ class FoldedEdges1RRGraph : public RRGraphViewInterface{
 
   // Is the RR graph currently empty?
   inline bool empty() const {
-        return node_storage_.empty();
+        return node_first_edge_.empty();
     }
 
   // Estimate of memory taken by FoldedEdges1RRGraph
-  inline int memory_used() const {
-        /* Nodes */
-
-
-        int nodes_memory = size() * 16;
-
-        return nodes_memory;
-    }
+  inline int memory_used() const {return node_bytes() + edge_bytes();}
+  inline int node_bytes() const {return size() * 16;}
+  inline int edge_bytes() const {return edge_dest_node_.size() * 6;}
 
   /* must be called before the node_storage_ is deleted */
   inline int node_storage_memory_used() const{
@@ -200,11 +106,11 @@ class FoldedEdges1RRGraph : public RRGraphViewInterface{
   }
 
   RREdgeId first_edge(const RRNodeId& legacy_node) const {
-      return node_first_edge_id_[legacy_node];
+      return node_first_edge_[legacy_node];
   }
 
   RREdgeId last_edge(const RRNodeId& legacy_node) const {
-      return (&node_first_edge_id_[legacy_node])[1];
+      return (&node_first_edge_[legacy_node])[1];
   }
 
   /* Edges are configurable if they have a switch that is configurable vtr/libs/libarchfpga/src/physical_types.cpp:83 */
@@ -235,20 +141,85 @@ class FoldedEdges1RRGraph : public RRGraphViewInterface{
   }
 
 inline RRNodeId edge_src_node(RREdgeId edge) const{
-      return edge_src_node_[edge];
+
+  int lower_bound = 0;
+  int upper_bound = size();
+  int count = 0;
+  int midpoint;
+  int prev_midpoint;
+  while (true){
+    count++;
+    midpoint = lower_bound + (upper_bound - lower_bound) / 2;
+    if (prev_midpoint == midpoint){
+      return RRNodeId(midpoint-1);
+    }
+    prev_midpoint = midpoint;
+    int rel = size_t(node_first_edge_[RRNodeId(midpoint)]) - size_t(edge);
+    if (rel < 0){ // a < x
+      lower_bound = midpoint + 1;
+    }
+    else if (rel > 0){ // a > x
+      upper_bound = midpoint - 1;
+    }
+    else{
+      while(first_edge(RRNodeId(midpoint)) == last_edge(RRNodeId(midpoint))){
+        midpoint++;
+      }
+      return RRNodeId(midpoint);
+    }
+
+  }
 }
 
+// while (True):
+//     count += 1
+//     midpoint = int(lower_bound + (upper_bound - lower_bound) / 2)
+//     print('midpoint val: ', a[midpoint])
+//     if a[midpoint] < x:
+//         lower_bound = midpoint + 1
+//     elif a[midpoint] > x:
+//         upper_bound = midpoint - 1
+//     else:
+//         print(str(x) + ' was found at idx ' + str(midpoint) + ' after ' + str(count) + ' loops\n')
+//         exit()
+
+  // int node_mid_point_ = size() / 2;
+  // size_t cur_idx = node_mid_point_;
+  // size_t mid_point = node_mid_point_;
+  // size_t range = size() / 2;
+  // int rel_location;
+  // while (true) {
+  //   rel_location = size_t(edge) - size_t(node_first_edge_[RRNodeId(cur_idx)]);
+  //   range = (range + 1) / 2;
+
+  //   if (range==0){
+  //     while (node_first_edge_[RRNodeId(cur_idx)]==node_first_edge_[RRNodeId(cur_idx+1)])
+  //       cur_idx++;
+    //   return RRNodeId(cur_idx);
+    // }
+    // if (rel_location < 0){
+    //   cur_idx = cur_idx - range;
+    // }
+    // else if (rel_location > 0) {
+    //   cur_idx = cur_idx + range;
+    // }
+    // else {
+    //   while (node_first_edge_[RRNodeId(cur_idx)]==node_first_edge_[RRNodeId(cur_idx+1)])
+  //       cur_idx++;
+  //     return RRNodeId(cur_idx);
+  //   }
+  // }
+// }
+
+
 inline RRNodeId edge_sink_node(const RREdgeId& edge) const {
-  RRNodeId src_node = edge_src_node_[edge];
-  int offset = (size_t) edge - (size_t) node_first_edge_id_[src_node];
-  return RRNodeId((size_t)src_node - (size_t)edge_data_[edge_pattern_data_[node_edges_idx_[src_node]][offset]].id_diff);
+  return edge_dest_node_[edge];
 }
 
 
 inline short edge_switch(const RREdgeId& edge) const {
-  RRNodeId src_node = edge_src_node_[edge];
-  int offset = (size_t) edge - (size_t) node_first_edge_id_[src_node];
-  return edge_data_[edge_pattern_data_[node_edges_idx_[src_node]][offset]].switch_id;
+  return edge_switch_[edge];
+
 }
 
 
@@ -272,8 +243,8 @@ inline RREdgeId edge_id(const RRNodeId& legacy_node, t_edge_size iedge) const {
 // This method should generally not be used, and instead first_edge and
 // last_edge should be used.
 RRNodeId edge_sink_node(const RRNodeId& legacy_node, t_edge_size iedge) const {
-  return RRNodeId((size_t)legacy_node - (size_t)edge_data_[edge_pattern_data_[node_edges_idx_[legacy_node]][iedge]].id_diff);
-}
+        return edge_sink_node(edge_id(legacy_node, iedge));
+  }
 
 
 
@@ -282,7 +253,7 @@ RRNodeId edge_sink_node(const RRNodeId& legacy_node, t_edge_size iedge) const {
 // This method should generally not be used, and instead first_edge and
 // last_edge should be used.
 short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
-  return edge_data_[edge_pattern_data_[node_edges_idx_[legacy_node]][iedge]].switch_id;
+        return edge_switch(edge_id(legacy_node, iedge));
 }
 
 /* END EDGE METHODS */
@@ -348,26 +319,6 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
 
 
 
-
-
-
-
-
-
-/*
-    inline void set_node_edges(RRNodeId node, std::vector<FoldedEdgePattern> edges) {
-      RRNodeId remapped_id = remapped_ids_[node];
-      //std::array<size_t, 2> x_y = find_tile_coords(node);
-      auto tile = tile_patterns_[legacy_node_to_x_y_[node][0]][legacy_node_to_x_y_[node][1]];
-      int node_patterns_idx = tile.node_patterns_idx_;
-      size_t offset = (size_t) remapped_id - (size_t) tile.starting_node_id_;
-      //node_data_[node_patterns_[node_patterns_idx][offset]].edges_ = edges;
-    } 
-    */
-
-
-
-
     friend bool operator==(const FoldedNodePattern& lhs, const FoldedNodePattern& rhs)
           {
             return lhs.cost_index_ == rhs.cost_index_ &&
@@ -391,57 +342,19 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
         }
 
 
-    /*        GENERAL NODE DATA FLOW
 
-    tile X-----------.
-    tile Y--------.  |
-                  V  V
-    tile_patterns_[x][y].node_patterns_idx----.
-                                             |
-    relative_id_offset-----------------------|-----.
-                                             V     V             
-                              node_patterns[idx][offset]-----.
-                                                             V
-                                          node_data_[idx]
-
-
-    // to find X and Y
-    tile_patterns_[x][y].starting_node_id_ < RRNodeId < tile_patterns_[any_other_x][any_other_y].starting_node_id_
-
-    // to find relative_id_offset
-    RRNodeId - tile_patterns_[x][y].starting_node_id_
-
-              GENERAL EDGE DATA FLOW
-
-    tile X-----------.
-    tile Y--------.  |
-                  V  V
-    tile_patterns_[x][y].node_patterns_idx----.
-                                             |
-    relative_id_offset-----------------------|-----.
-                                             V     V             
-                              node_patterns[idx][offset]-----.
-                                                             V
-                                          node_data_[idx]
-
-    */
-
-    /* Every Tile Type has a set of FoldedEdgePatterns */
-    // std::vector<std::vector<int16_t>> edge_patterns_; 
-
-    /* Indexes into edge_data_ are stored here */
-    std::vector<std::vector<int32_t>> edge_pattern_data_; // vector of vectors of indexes into edge_data_
 
     /* Raw FoldedEdgePattern data is stored here */
     std::vector<FoldedEdgePattern> edge_data_; // this is where actual edge data is stored
 
-    /* First edge id of given node (RRNodeId is a remapped node)*/
-    vtr::vector<RRNodeId, RREdgeId> node_first_edge_id_; // every node
+    // vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;
+    vtr::vector<RRNodeId, RREdgeId> node_first_edge_; // every node
+    vtr::vector<RREdgeId, RRNodeId> edge_dest_node_; // every node
+    vtr::vector<RREdgeId, short> edge_switch_; // every node
 
-    vtr::vector<RRNodeId, int32_t> node_edges_idx_; // every node
 
-    /* FoldedEdge's legacy_src_node*/
-    vtr::vector<RREdgeId, RRNodeId> edge_src_node_; // every edge
+    // vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node_;
+    // vtr::array_view_id<RREdgeId, const short> edge_switch_;
 
     size_t size_;
 

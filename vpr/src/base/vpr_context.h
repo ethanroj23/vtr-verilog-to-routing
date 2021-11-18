@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "folded_edges_rr_graph.h"
+#include "folded_edges_1_rr_graph.h"
 #include "folded_nodes_rr_graph.h"
 #include "folded_rr_graph.h"
 #include "vpr_types.h"
@@ -187,6 +188,7 @@ struct DeviceContext : public Context {
     /* Folded Edges routing resource graph. 
         Only the edges were folded in this instance */
     FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
+    FoldedEdges1RRGraph folded_edges_1_rr_graph{rr_nodes};
     FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;

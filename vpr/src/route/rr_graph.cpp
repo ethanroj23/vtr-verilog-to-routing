@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cmath>
 #include <ctime>
+#include <chrono>
 #include <algorithm>
 #include <vector>
 #include "vtr_assert.h"
@@ -786,9 +787,12 @@ static void build_rr_graph(const t_graph_type graph_type,
     }
 
 
+
+
     /* USE FOLDED RR GRAPH */
     // build folded rr_graph from rr_graph_storage version if not writing rr_graph (because that code still uses flat representation)
     if (det_routing_arch->write_rr_graph_filename.empty()){
+        VTR_LOG("Folding RRGraph...\n");
         if (det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
             // build the folded representation
             g_vpr_ctx.mutable_device().folded_rr_graph.build_graph();
@@ -808,6 +812,15 @@ static void build_rr_graph(const t_graph_type graph_type,
             g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
             // Edges should also be deleted here
         }
+        if (det_routing_arch->primary_rr_graph == "FoldedEdges1RRGraph"){
+            // build the folded representation
+            g_vpr_ctx.mutable_device().folded_edges_1_rr_graph.build_graph();
+            // Set primary rr_graph to the FoldedRRGraph
+            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_edges_1_rr_graph);
+            /// delete rr_nodes.node_storage_ as it will no longer be used
+            g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_nodes();
+            // Edges should also be deleted here
+        }
 
         if (det_routing_arch->primary_rr_graph == "FoldedNodesRRGraph"){
             // build the folded representation
@@ -819,10 +832,38 @@ static void build_rr_graph(const t_graph_type graph_type,
             //g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
             // Edges should also be deleted here
         }
-    
-
     }
+    // check how long it takes to access 10,000,000 nodes
+    srand(23);
+    int num_nodes = rr_graph.size();
+    int num_random = 1000000;
+    RRNodeId a[1000000];
 
+    /* Build random id array */
+   for(int i = 0; i < num_random; i++ ) {
+      a[i] = RRNodeId(rand() % num_nodes);
+   }
+
+ 
+
+    auto start = std::chrono::system_clock::now();    
+
+    /* Access nodes */
+   for (int i=0; i < num_random; i++){
+        rr_graph.node_xlow(a[i]);       
+   }
+   for (int i=0; i < num_random; i++){
+        rr_graph.node_type(a[i]);       
+   }
+   for (int i=0; i < num_random; i++){
+        rr_graph.node_yhigh(a[i]);       
+   }
+   for (int i=0; i < num_random; i++){
+        rr_graph.node_capacity(a[i]);       
+   }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 }
 
 /* Allocates and loads the global rr_switch_inf array based on the global

@@ -173,6 +173,7 @@ void SetupVPR(const t_options* Options,
     RoutingArch->write_rr_graph_filename = Options->write_rr_graph_file;
     RoutingArch->read_rr_graph_filename = Options->read_rr_graph_file;
     RoutingArch->primary_rr_graph = Options->primary_rr_graph;
+    std::cout << "primary_rr_graph=" << Options->primary_rr_graph << "\n";
 
     //Setup the default flow, if no specific stages specified
     //do all

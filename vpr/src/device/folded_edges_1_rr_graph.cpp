@@ -36,86 +36,54 @@ void FoldedEdges1RRGraph::build_graph(){
     vtr::ScopedStartFinishTimer timer("Build FoldedEdges1RRGraph");
 
     // Clear all data structures of any previous data
-    node_first_edge_id_.clear();
-    node_edges_idx_.clear();
-    edge_src_node_.clear();
+    node_first_edge_.clear();
+    edge_dest_node_.clear();
+    edge_switch_.clear();
 
-    // Resize node_first_edge_id_ so that it fits every node plus one for the dummy node
-    if (node_first_edge_id_.size() < node_storage_.size()){
-            node_first_edge_id_.resize((size_t) node_storage_.size()+1);
-    }
-    // Resize node_edges_idx_ so that it fits every node
-    if (node_edges_idx_.size() < node_storage_.size()){
-            node_edges_idx_.resize((size_t) node_storage_.size());
-    }
-    // Resize edge_src_node_ so that it fits every edge
-    if (edge_src_node_.size() < node_storage_.edge_count()){
-            edge_src_node_.resize((size_t) node_storage_.edge_count());
+    // Resize node_first_edge_ so that it fits every node plus one for the dummy node
+    if (node_first_edge_.size() < node_storage_.size()){
+            node_first_edge_.resize((size_t) node_storage_.size()+1);
     }
 
+    // Resize node_first_edge_ so that it fits every node plus one for the dummy node
+    if (edge_dest_node_.size() < node_storage_.edge_count()){
+            edge_dest_node_.resize((size_t) node_storage_.edge_count());
+    }
 
-    std::map<std::string, int> temp_edge_patterns {};
-    std::map<std::string, int> temp_edge_pattern_data {};
+    // Resize node_first_edge_ so that it fits every node plus one for the dummy node
+    if (edge_switch_.size() < node_storage_.edge_count()){
+            edge_switch_.resize((size_t) node_storage_.edge_count());
+    }
+
 
     int edge_data_idx = 0;
     int edge_pattern_data_idx = 0;
     int edge_starting_idx = 0;
-    for (size_t idx = 0; idx < node_storage_.size(); idx++) { 
+    for (size_t idx = 0; idx < node_storage_.size(); idx++) { /* for every node */
             std::vector<int16_t> edge_pattern_list;
             RRNodeId id = RRNodeId(idx);  
-            node_first_edge_id_[id] = RREdgeId(edge_starting_idx); 
-            std::vector<int32_t> edges_in_node;
-            std::string edges_in_node_string = "";
+            node_first_edge_[id] = RREdgeId(edge_starting_idx); 
             bool first_edge = true;
             for (RREdgeId from_edge : node_storage_.edge_range(id)) { // --- start  each node ---
                 if (first_edge){
-                    node_first_edge_id_[id] = from_edge; // only set first
+                    node_first_edge_[id] = from_edge; // only set first
                     first_edge = false;
                 }
-                RRNodeId sink_node = node_storage_.edge_sink_node(from_edge);
-                int8_t switch_id = node_storage_.edge_switch(from_edge);
-                int32_t id_diff = (size_t) id - (size_t) sink_node;
-                FoldedEdgePattern edge_pattern = {
-                    id_diff,
-                    switch_id
-                };
-
-                std::string edge_pattern_string = std::to_string(id_diff)+"_"+std::to_string(switch_id);
-
-                 // insert into map if not in map
-                if (!(temp_edge_patterns.count(edge_pattern_string)>0)){
-                    temp_edge_patterns[edge_pattern_string] = edge_data_idx;
-                    edge_data_idx++;
-                    edge_data_.push_back(edge_pattern);
-                }
-
-                auto cur_pattern_idx = temp_edge_patterns[edge_pattern_string];
-
-                edges_in_node.push_back(cur_pattern_idx);
-                edges_in_node_string += std::to_string(cur_pattern_idx) + "_";
-
-                edge_src_node_[from_edge] = id; // set edge legacy source node
                 edge_starting_idx++;
             } // --- end each node ---
-            if (first_edge) node_first_edge_id_[id] = RREdgeId(edge_starting_idx); // only set first
-
-
-            // insert into map if not in map
-            if (!(temp_edge_pattern_data.count(edges_in_node_string)>0)){
-                temp_edge_pattern_data[edges_in_node_string] = edge_pattern_data_idx;
-                edge_pattern_data_idx++;
-                edge_pattern_data_.push_back(edges_in_node);
-            }
-
-            int cur_edge_pattern_idx = temp_edge_pattern_data[edges_in_node_string];
-
-            edge_pattern_list.push_back(cur_edge_pattern_idx); // Add edge pattern data index and edge index
-            node_edges_idx_[id] = cur_edge_pattern_idx;
+            if (first_edge) node_first_edge_[id] = RREdgeId(edge_starting_idx); // only set first
         }
 
-    edges_size_ = edge_src_node_.size(); // set total number of edges
+
+    for (size_t idx = 0; idx < node_storage_.edge_count(); idx++){ /* for every edge */
+        RREdgeId id = RREdgeId(idx);
+        edge_dest_node_[id] = node_storage_.edge_sink_node(id);
+        edge_switch_[id] = node_storage_.edge_switch(id);
+    }
+
+    edges_size_ = node_storage_.edge_count(); // set total number of edges
     RRNodeId dummy_node = RRNodeId(node_storage_.size());
-    node_first_edge_id_[dummy_node] = RREdgeId(edge_starting_idx); // only set first
+    node_first_edge_[dummy_node] = RREdgeId(edge_starting_idx); // only set first
     
     built = true;
     size_ = node_storage_.size();
@@ -134,6 +102,11 @@ void FoldedEdges1RRGraph::build_graph(){
     verify_folded_rr_graph();
 }
 
+short FoldedEdges1RRGraph::node_ptc_num(RRNodeId id) const {return node_storage_.node_ptc_num(id);}
+short FoldedEdges1RRGraph::node_pin_num(RRNodeId id) const {return node_storage_.node_pin_num(id);}
+short FoldedEdges1RRGraph::node_track_num(RRNodeId id) const {return node_storage_.node_track_num(id);}
+short FoldedEdges1RRGraph::node_class_num(RRNodeId id) const {return node_storage_.node_class_num(id);}
+
 void FoldedEdges1RRGraph::verify_folded_rr_graph(){
     vtr::ScopedStartFinishTimer timer("Verify FoldedEdges1RRGraph");
     for (size_t idx = 0; idx < edges_size_; idx++) {   
@@ -151,11 +124,11 @@ void FoldedEdges1RRGraph::verify_folded_rr_graph(){
 }
 
 t_edge_size FoldedEdges1RRGraph::num_configurable_edges(const RRNodeId& legacy_node) const {
-    VTR_ASSERT(!node_first_edge_id_.empty());
+    VTR_ASSERT(!node_first_edge_.empty());
 
     const auto& device_ctx = g_vpr_ctx.device();
-    auto first_id = size_t(node_first_edge_id_[legacy_node]);
-    auto last_id = size_t((&node_first_edge_id_[legacy_node])[1]);
+    auto first_id = size_t(node_first_edge_[legacy_node]);
+    auto last_id = size_t((&node_first_edge_[legacy_node])[1]);
     for (size_t idx = first_id; idx < last_id; ++idx) {
         auto switch_idx = edge_switch(RREdgeId(idx));
         if (!device_ctx.rr_switch_inf[switch_idx].configurable()) {

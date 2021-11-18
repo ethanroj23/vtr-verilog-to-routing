@@ -14,7 +14,7 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
     /* -- Constructors -- */
   public:
     /* Explicitly define the only way to create an object */
-    explicit FoldedNodesRRGraph(const t_rr_graph_storage& node_storage);
+    explicit FoldedNodesRRGraph(t_rr_graph_storage& node_storage);
 
     /* Disable copy constructors and copy assignment operator
      * This is to avoid accidental copy because it could be an expensive operation considering that the 
@@ -190,7 +190,7 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
 
   // Estimate of memory taken by FoldedNodesRRGraph
   inline int memory_used() const {
-      return nodes_.size() * 6 + node_patterns_.size() * 12;
+      return node_bytes() + edge_bytes();
     }
 
   /* must be called before the node_storage_ is deleted */
@@ -290,7 +290,7 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
   // This prefetechs hot RR node data required for optimization.
   // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
   inline void prefetch_node(RRNodeId id) const {
-    node_storage_.prefetch_node(id);
+    VTR_PREFETCH(&nodes_[id], 0, 0);
   }
 
 
@@ -358,27 +358,72 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
     
     friend bool operator<(const FoldedNodePattern& lhs, const FoldedNodePattern& rhs)
           {
-            return lhs.cost_index_ < rhs.cost_index_ ||
-                   lhs.rc_index_ < rhs.rc_index_ ||
-                   lhs.dx_ < rhs.dx_ ||
-                   lhs.dy_ < rhs.dy_ ||
-                   lhs.dir_side_.direction_ < rhs.dir_side_.direction_ ||
-                   lhs.dir_side_.sides_ < rhs.dir_side_.sides_ ||
-                   lhs.capacity_ < rhs.capacity_;
+            if (lhs.cost_index_ < rhs.cost_index_) return true;
+            else if (lhs.cost_index_==rhs.cost_index_){
+              if (lhs.rc_index_ < rhs.rc_index_) return true;
+              else if (lhs.rc_index_==rhs.rc_index_ ){
+                if (lhs.dx_ < rhs.dx_) return true;
+                else if (lhs.dx_==rhs.dx_ ){
+                  if (lhs.dy_ < rhs.dy_) return true;
+                  else if (lhs.dy_==rhs.dy_ ){
+                    if (lhs.dir_side_.direction_ < rhs.dir_side_.direction_) return true;
+                    else if (lhs.dir_side_.direction_==rhs.dir_side_.direction_ ){
+                      if (lhs.dir_side_.sides_ < rhs.dir_side_.sides_) return true;
+                      else if (lhs.dir_side_.sides_==rhs.dir_side_.sides_ ){
+                        if (lhs.capacity_ < rhs.capacity_) return true;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            return false;
+
+            // return lhs.cost_index_ < rhs.cost_index_ ||
+            //        lhs.rc_index_ < rhs.rc_index_ ||
+            //        lhs.dx_ < rhs.dx_ ||
+            //        lhs.dy_ < rhs.dy_ ||
+            //        lhs.dir_side_.direction_ < rhs.dir_side_.direction_ ||
+            //        lhs.dir_side_.sides_ < rhs.dir_side_.sides_ ||
+            //        lhs.capacity_ < rhs.capacity_;
           }
 
+/*
+  You want to have a hierarchy of comparisons.
+  if (a.1 < b.1) return 1
+  else if (a.1 == b.1 && a.2 < b.2) return 1
+  else if
+  compare(a, b){
+    if a.main < b.main{
+      return a
+    }
+    else
+  }
+int compare_x_y(const void * a, const void * b){
+    const point * a_point = (point*) a;
+    const point * b_point = (point*) b;
+    if (a_point->x > b_point->x) return 1;
+    else if (a_point->x == b_point->x){
+        if (a_point->y > b_point->y) return 1;
+        else return -1;
+    }
+    else return -1;
+}
 
+*/
 
 
     /* Raw FoldedNodePattern data is stored here */
     std::vector<FoldedNodePattern> node_patterns_; // should probably be called node_data_ to match edge_data_
     //vtr::vector<RRNodeId, t_folded_node_data, vtr::aligned_allocator<t_folded_node_data>> nodes_;
     vtr::vector<RRNodeId, t_folded_node_data> nodes_;
+    // vtr::array_view_id<RRNodeId, t_folded_node_data> nodes_;
+
 
     size_t size_;
 
     /* node-level storage including edge storages */
-    const t_rr_graph_storage& node_storage_;
+    t_rr_graph_storage& node_storage_;
 
     bool built = false; // flag for determining if the FoldedNodesRRGraph has been built yet
 
