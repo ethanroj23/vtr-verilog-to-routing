@@ -176,19 +176,8 @@ struct DeviceContext : public Context {
      */
     RRSpatialLookup rr_spatial_lookup{rr_node_indices};
 
-    /*  Completely folded routing resource graph. 
-        Every possible way to fold the rr_graph was taken advantage of here
-    */
-    FoldedRRGraph folded_rr_graph{rr_nodes};
-
-    /* Folded Nodes routing resource graph. 
-        Only the nodes were folded in this instance */
-    //FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
-
     /* Folded Edges routing resource graph. 
         Only the edges were folded in this instance */
-    FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
-    FoldedEdges1RRGraph folded_edges_1_rr_graph{rr_nodes};
     FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;
