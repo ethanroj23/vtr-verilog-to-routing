@@ -219,6 +219,7 @@ class FoldedRRGraph : public RRGraphViewInterface{
           return RRNodeId(i); // legacy_node
         }
       }
+      return RRNodeId(0); // shouldn't get here
   }
 
 
@@ -373,6 +374,14 @@ inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> appl
     for (size_t i = 0; i < edges_size_; i++) {
         RREdgeId folded_edge(i);
         apply(folded_edge, edge_src_node(folded_edge), edge_sink_node(folded_edge));
+    }
+}
+
+// Call the `apply` function with the edge id, source, and sink nodes of every edge.
+inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
+    for (size_t i = 0; i < edges_size_; i++) {
+        RREdgeId folded_edge(i);
+        apply(folded_edge, edge_sink_node(folded_edge));
     }
 }
 

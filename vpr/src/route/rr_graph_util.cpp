@@ -182,16 +182,21 @@ void reorder_rr_graph_nodes(const t_router_opts& router_opts) {
 }
 
 vtr::vector<RRNodeId, std::vector<RREdgeId>> get_fan_in_list() {
-    auto& rr_nodes = g_vpr_ctx.device().rr_nodes;
+    auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
     vtr::vector<RRNodeId, std::vector<RREdgeId>> node_fan_in_list;
 
-    node_fan_in_list.resize(rr_nodes.size(), std::vector<RREdgeId>(0));
+    node_fan_in_list.resize(rr_graph.size(), std::vector<RREdgeId>(0));
     node_fan_in_list.shrink_to_fit();
 
     //Walk the graph and increment fanin on all dwnstream nodes
-    rr_nodes.for_each_edge(
-        [&](RREdgeId edge, __attribute__((unused)) RRNodeId src, RRNodeId sink) {
+    // rr_graph.for_each_edge(
+    //     [&](RREdgeId edge, __attribute__((unused)) RRNodeId src, RRNodeId sink) {
+    //         node_fan_in_list[sink].push_back(edge);
+    //     });
+    
+    rr_graph.for_each_edge_no_src(
+        [&](RREdgeId edge, RRNodeId sink) {
             node_fan_in_list[sink].push_back(edge);
         });
 

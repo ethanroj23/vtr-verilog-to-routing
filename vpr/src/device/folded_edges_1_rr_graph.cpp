@@ -56,8 +56,6 @@ void FoldedEdges1RRGraph::build_graph(){
     }
 
 
-    int edge_data_idx = 0;
-    int edge_pattern_data_idx = 0;
     int edge_starting_idx = 0;
     for (size_t idx = 0; idx < node_storage_.size(); idx++) { /* for every node */
             std::vector<int16_t> edge_pattern_list;

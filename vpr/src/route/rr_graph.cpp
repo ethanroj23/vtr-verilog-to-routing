@@ -341,7 +341,7 @@ void create_rr_graph(const t_graph_type graph_type,
         }
     } else {
         // Set primary rr_graph to be the rr_graph_storage version
-        if (device_ctx.rr_graph.empty()){
+        if (device_ctx.rr_graph.empty() || device_ctx.rr_node_indices[0].size() == 0){
             g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
         }
         //if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
@@ -827,17 +827,15 @@ static void build_rr_graph(const t_graph_type graph_type,
             g_vpr_ctx.mutable_device().folded_nodes_rr_graph.build_graph();
             // Set primary rr_graph to the FoldedRRGraph
             g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
-            /// delete rr_nodes.node_storage_ as it will no longer be used
-            g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
-            //g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
-            // Edges should also be deleted here
         }
     }
-    // check how long it takes to access 10,000,000 nodes
+    // check how long it takes to access 100,000,000 nodes
     srand(23);
     int num_nodes = rr_graph.size();
-    int num_random = 1000000;
-    RRNodeId a[1000000];
+    int num_random = 10000000;
+    // RRNodeId a[10000000];
+    RRNodeId* a = new RRNodeId[10000000];    // may throw std::bad_alloc
+
 
     /* Build random id array */
    for(int i = 0; i < num_random; i++ ) {
@@ -864,6 +862,7 @@ static void build_rr_graph(const t_graph_type graph_type,
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    delete [] a;
 }
 
 /* Allocates and loads the global rr_switch_inf array based on the global
@@ -2557,46 +2556,46 @@ std::string describe_rr_node(int inode) {
 
     std::string msg = vtr::string_fmt("RR node: %d", inode);
 
-    auto rr_node = device_ctx.rr_nodes[inode];
+    RRNodeId rr_node = RRNodeId(inode);
 
-    msg += vtr::string_fmt(" type: %s", rr_graph.node_type_string(rr_node.id()));
+    msg += vtr::string_fmt(" type: %s", rr_graph.node_type_string(rr_node));
 
-    msg += vtr::string_fmt(" location: (%d,%d)", rr_graph.node_xlow(rr_node.id()), rr_graph.node_ylow(rr_node.id()));
-    if (rr_graph.node_xlow(rr_node.id()) != rr_graph.node_xhigh(rr_node.id()) || rr_graph.node_ylow(rr_node.id()) != rr_graph.node_yhigh(rr_node.id())) {
-        msg += vtr::string_fmt(" <-> (%d,%d)", rr_graph.node_xhigh(rr_node.id()), rr_graph.node_yhigh(rr_node.id()));
+    msg += vtr::string_fmt(" location: (%d,%d)", rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node));
+    if (rr_graph.node_xlow(rr_node) != rr_graph.node_xhigh(rr_node) || rr_graph.node_ylow(rr_node) != rr_graph.node_yhigh(rr_node)) {
+        msg += vtr::string_fmt(" <-> (%d,%d)", rr_graph.node_xhigh(rr_node), rr_graph.node_yhigh(rr_node));
     }
 
     if (rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_graph.node_type(RRNodeId(inode)) == CHANY) {
-        int cost_index = rr_graph.node_cost_index(rr_node.id());
+        int cost_index = rr_graph.node_cost_index(rr_node);
 
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
         std::string rr_node_direction_string = rr_graph.node_direction_string(RRNodeId(inode));
 
         if (seg_index < (int)device_ctx.rr_segments.size()) {
             msg += vtr::string_fmt(" track: %d len: %d longline: %d seg_type: %s dir: %s",
-                                   rr_node.track_num(),
-                                   rr_node.length(),
+                                   rr_graph.node_track_num(RRNodeId(inode)),
+                                   rr_graph.node_length(rr_node),
                                    device_ctx.rr_segments[seg_index].longline,
                                    device_ctx.rr_segments[seg_index].name.c_str(),
                                    rr_node_direction_string.c_str());
         } else {
             msg += vtr::string_fmt(" track: %d len: %d seg_type: ILLEGAL_SEG_INDEX %d dir: %s",
-                                   rr_node.track_num(),
-                                   rr_node.length(),
+                                   rr_graph.node_track_num(RRNodeId(inode)),
+                                   rr_graph.node_length(rr_node),
                                    seg_index,
                                    rr_node_direction_string.c_str());
         }
     } else if (rr_graph.node_type(RRNodeId(inode)) == IPIN || rr_graph.node_type(RRNodeId(inode)) == OPIN) {
-        auto type = device_ctx.grid[rr_graph.node_xlow(rr_node.id())][rr_graph.node_ylow(rr_node.id())].type;
-        std::string pin_name = block_type_pin_index_to_name(type, rr_node.pin_num());
+        auto type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+        std::string pin_name = block_type_pin_index_to_name(type, rr_graph.node_pin_num(RRNodeId(inode)));
 
         msg += vtr::string_fmt(" pin: %d pin_name: %s",
-                               rr_node.pin_num(),
+                               rr_graph.node_pin_num(RRNodeId(inode)),
                                pin_name.c_str());
     } else {
         VTR_ASSERT(rr_graph.node_type(RRNodeId(inode)) == SOURCE || rr_graph.node_type(RRNodeId(inode)) == SINK);
 
-        msg += vtr::string_fmt(" class: %d", rr_node.class_num());
+        msg += vtr::string_fmt(" class: %d", rr_graph.node_class_num(RRNodeId(inode)));
     }
 
     msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(RRNodeId(inode)));

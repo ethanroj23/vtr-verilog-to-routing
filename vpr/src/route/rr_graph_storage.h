@@ -230,6 +230,21 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
     short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
 
+    short node_pin_num(RRNodeId id, bool check_type) const {
+        if (check_type) return node_pin_num(id);
+        return node_ptc_[id].ptc_.pin_num;
+    }
+
+    short node_track_num(RRNodeId id, bool check_type) const {
+        if (check_type) return node_track_num(id);
+        return node_ptc_[id].ptc_.track_num;
+    }
+
+    short node_class_num(RRNodeId id, bool check_type) const {
+        if (check_type) return node_class_num(id);
+        return node_ptc_[id].ptc_.class_num;
+    }
+
     /* Retrieve fan_in for RRNodeId, init_fan_in must have been called first. */
     t_edge_size fan_in(RRNodeId id) const {
         return node_fan_in_[id];
@@ -243,6 +258,10 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         t_rr_node_data node = node_storage_.back();
         node_storage_.pop_back();
         return node;
+    }
+
+    t_rr_node_data get_node(RRNodeId id){
+        return node_storage_[id];
     }
 
     // This prefetechs hot RR node data required for optimization.
@@ -343,6 +362,14 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         for (size_t i = 0; i < edge_dest_node_.size(); i++) {
             RREdgeId edge(i);
             apply(edge, edge_src_node_[edge], edge_dest_node_[edge]);
+        }
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
+        for (size_t i = 0; i < edge_dest_node_.size(); i++) {
+            RREdgeId edge(i);
+            apply(edge, edge_dest_node_[edge]);
         }
     }
 
@@ -470,7 +497,6 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         vtr::ScopedStartFinishTimer timer("clear_edge_src_nodes()");
         edge_src_node_.clear();
         edge_dest_node_.clear();
-        edge_switch_.clear();
     }
 
 

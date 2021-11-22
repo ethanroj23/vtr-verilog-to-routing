@@ -258,11 +258,26 @@ inline short edge_switch(const RREdgeId& legacy_node) const {
     return node_storage_.edge_switch(legacy_node);
 }
 
+    // for (RREdgeId edge : rr_graph.edge_range(prev_node)) {//ESR_EDGE iterate over edges
+
 
 // Call the `apply` function with the edge id, source, and sink nodes of every edge.
-inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
-    return node_storage_.for_each_edge(apply);
+// inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
+//     return node_storage_.for_each_edge(apply);
+// }
 
+// Call the `apply` function with the edge id, source, and sink nodes of every edge.
+void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
+    for (size_t node = 0; node < size_; node++){
+      for (RREdgeId edge : edge_range(RRNodeId(node))) {//ESR_EDGE iterate over edges
+        apply(edge, RRNodeId(node), edge_dest_node_[edge]);
+      }
+    }
+}
+
+// Call the `apply` function with the edge id, source, and sink nodes of every edge.
+inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
+    return node_storage_.for_each_edge_no_src(apply);
 }
 
 inline RREdgeId edge_id(const RRNodeId& legacy_node, t_edge_size iedge) const {
@@ -320,6 +335,11 @@ short edge_switch(const RRNodeId& legacy_node, t_edge_size iedge) const {
       int16_t xlow_ = -1;
       int16_t ylow_ = -1;
       t_rr_type type_ = NUM_RR_TYPES;
+    };
+
+    struct t_folded_edge_data {
+      size_t diff = -1;
+      int16_t switch_id = -1;
     };
 
   /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
@@ -417,6 +437,10 @@ int compare_x_y(const void * a, const void * b){
     std::vector<FoldedNodePattern> node_patterns_; // should probably be called node_data_ to match edge_data_
     //vtr::vector<RRNodeId, t_folded_node_data, vtr::aligned_allocator<t_folded_node_data>> nodes_;
     vtr::vector<RRNodeId, t_folded_node_data> nodes_;
+    vtr::vector<RREdgeId, size_t> edge_data_idx_;
+    vtr::vector<RRNodeId, t_folded_edge_data> edge_data_;
+    vtr::vector<RREdgeId, RRNodeId> edge_dest_node_;
+
     // vtr::array_view_id<RRNodeId, t_folded_node_data> nodes_;
 
 

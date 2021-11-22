@@ -237,7 +237,7 @@ void check_rr_graph(const t_graph_type graph_type,
                     if (rr_graph.node_type(RRNodeId(inode)) == IPIN || rr_graph.node_type(RRNodeId(inode)) == OPIN) {
                         if (has_adjacent_channel(node, device_ctx.grid)) {
                             auto block_type = device_ctx.grid[rr_graph.node_xlow(node.id())][rr_graph.node_ylow(node.id())].type;
-                            std::string pin_name = block_type_pin_index_to_name(block_type, node.pin_num());
+                            std::string pin_name = block_type_pin_index_to_name(block_type, rr_graph.node_pin_num(node.id()));
                             /* Print error messages for all the sides that a node may appear */
                             for (const e_side& node_side : SIDES) {
                                 if (!rr_graph.is_node_on_specific_side(node.id(), node_side)) {
@@ -282,7 +282,7 @@ static bool rr_node_is_global_clb_ipin(int inode) {
     if (rr_graph.node_type(RRNodeId(inode)) != IPIN)
         return (false);
 
-    ipin = device_ctx.rr_nodes[inode].ptc_num();
+    ipin = rr_graph.node_ptc_num(RRNodeId(inode));
 
     return type->is_ignored_pin[ipin];
 }
@@ -304,7 +304,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     xhigh = rr_graph.node_xhigh(RRNodeId(inode));
     ylow = rr_graph.node_ylow(RRNodeId(inode));
     yhigh = rr_graph.node_yhigh(RRNodeId(inode));
-    ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    ptc_num = rr_graph.node_ptc_num(RRNodeId(inode));
     capacity = rr_graph.node_capacity(RRNodeId(inode));
     cost_index = rr_graph.node_cost_index(RRNodeId(inode));
     type = nullptr;

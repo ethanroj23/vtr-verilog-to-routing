@@ -348,7 +348,7 @@ int binary_search_place_and_route(const t_placer_opts& placer_opts_ref,
      * * the best channel widths for final drawing and statistics output.  */
     t_chan_width chan_width = init_chan(final, arch->Chans, graph_directionality);
 
-    free_rr_graph();
+    free_rr_graph(); // ESR this is where the rr_node_indices are getting deleted
 
     create_rr_graph(graph_type,
                     device_ctx.physical_tile_types,

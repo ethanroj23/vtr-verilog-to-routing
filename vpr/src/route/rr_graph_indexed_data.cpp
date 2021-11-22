@@ -315,7 +315,6 @@ static float get_delay_normalization_fac() {
 static void load_rr_indexed_data_T_values() {
     auto& device_ctx = g_vpr_ctx.mutable_device();
     const auto& rr_graph = device_ctx.rr_graph;
-    auto& rr_nodes = device_ctx.rr_nodes;
     auto& rr_indexed_data = device_ctx.rr_indexed_data;
 
     auto fan_in_list = get_fan_in_list();
@@ -343,7 +342,7 @@ static void load_rr_indexed_data_T_values() {
      * The median of R and C values for each cost index is assigned to the indexed
      * data.
      */
-    for (size_t inode = 0; inode < rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < rr_graph.size(); inode++) {
         t_rr_type rr_type = rr_graph.node_type(RRNodeId(inode));
 
         if (rr_type != CHANX && rr_type != CHANY) {

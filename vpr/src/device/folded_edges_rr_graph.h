@@ -75,10 +75,7 @@ class FoldedEdgesRRGraph : public RRGraphViewInterface{
   // Estimate of memory taken by FoldedEdgesRRGraph
   inline int memory_used() const {
         /* Nodes */
-
-
         int nodes_memory = size() * 16;
-
         return nodes_memory;
     }
 
@@ -161,6 +158,15 @@ inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> appl
         apply(edge, edge_src_node(edge), edge_sink_node(edge));
     }
 }
+
+inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
+    for (size_t i = 0; i < edges_size_; i++) {
+        RREdgeId edge(i);
+        apply(edge, edge_sink_node(edge));
+    }
+}
+
+
 
 inline RREdgeId edge_id(const RRNodeId& legacy_node, t_edge_size iedge) const {
     RREdgeId first_edge = this->first_edge(legacy_node); // this->first_edge(legacy_node);

@@ -319,7 +319,7 @@ void VprTimingGraphResolver::get_detailed_interconnect_components_helper(std::ve
                 int cost_index = rr_graph.node_cost_index(RRNodeId(node->inode));
                 int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
                 net_component.type_name += device_ctx.rr_segments[seg_index].name;                                 //Write the segment name
-                net_component.type_name += " length:" + std::to_string(device_ctx.rr_nodes[node->inode].length()); //add the length of the segment
+                net_component.type_name += " length:" + std::to_string(rr_graph.node_length(RRNodeId(node->inode))); //add the length of the segment
                 //Figure out the starting and ending coordinate of the segment depending on the direction
 
                 arrow = "->"; //we will point the coordinates from start to finish, left to right

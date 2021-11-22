@@ -261,12 +261,11 @@ void expand_dijkstra_neighbours(const t_rr_graph_storage& rr_nodes,
                                                     std::greater<Entry>>* pq) {
     RRNodeId parent = parent_entry.rr_node;
 
-    auto& parent_node = rr_nodes[size_t(parent)];
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
     for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) {
-        int child_node_ind = (size_t) rr_graph.edge_sink_node(parent_node.id(), iedge);
-        int switch_ind = rr_graph.edge_switch(parent_node.id(), iedge);
+        int child_node_ind = (size_t) rr_graph.edge_sink_node(parent, iedge);
+        int switch_ind = rr_graph.edge_switch(parent, iedge);
 
         /* skip this child if it has already been expanded from */
         if ((*node_expanded)[child_node_ind]) {

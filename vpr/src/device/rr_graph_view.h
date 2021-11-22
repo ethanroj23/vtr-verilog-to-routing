@@ -198,22 +198,22 @@ class RRGraphView : public RRGraphViewInterface {
 
     /* get PTC num. This function is inlined for runtime optimization. */
     inline short node_ptc_num(RRNodeId node) const {
-        return node_storage_.node_ptc_num(node);
+        return primary_rr_graph_->node_ptc_num(node);
     }
 
     /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
     inline short node_pin_num(RRNodeId node) const {
-        return node_storage_.node_pin_num(node);
+        return primary_rr_graph_->node_pin_num(node);
     }
 
     /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
     inline short node_track_num(RRNodeId node) const {
-        return node_storage_.node_track_num(node);
+        return primary_rr_graph_->node_track_num(node);
     }
 
     /* Same as ptc_num() but checks that type() is consistent. This function is inlined for runtime optimization. */
     inline short node_class_num(RRNodeId node) const {
-        return node_storage_.node_class_num(node);
+        return primary_rr_graph_->node_class_num(node);
     }
 
     // This prefetechs hot RR node data required for optimization.
@@ -313,6 +313,11 @@ class RRGraphView : public RRGraphViewInterface {
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
         primary_rr_graph_->for_each_edge(apply);
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
+        primary_rr_graph_->for_each_edge_no_src(apply);
     }
 
     // Get the destination node for the iedge'th edge from specified RRNodeId.

@@ -193,7 +193,7 @@ void get_serial_num() {
             serial_num += (size_t(net_id) + 1)
                           * (rr_graph.node_xlow(RRNodeId(inode)) * (device_ctx.grid.width()) - rr_graph.node_yhigh(RRNodeId(inode)));
 
-            serial_num -= device_ctx.rr_nodes[inode].ptc_num() * (size_t(net_id) + 1) * 10;
+            serial_num -= rr_graph.node_ptc_num(RRNodeId(inode)) * (size_t(net_id) + 1) * 10;
 
             serial_num -= rr_graph.node_type(RRNodeId(inode)) * (size_t(net_id) + 1) * 100;
             serial_num %= 2000000000; /* Prevent overflow */
@@ -1144,30 +1144,30 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor) {
     bb_factor = std::min(bb_factor, max_dim);
 
     int driver_rr = route_ctx.net_rr_terminals[net_id][0];
-    const t_rr_node& source_node = device_ctx.rr_nodes[driver_rr];
+    RRNodeId source_node = RRNodeId(driver_rr);
     VTR_ASSERT(rr_graph.node_type(RRNodeId(driver_rr)) == SOURCE);
 
-    VTR_ASSERT(rr_graph.node_xlow(source_node.id()) <= rr_graph.node_xhigh(source_node.id()));
-    VTR_ASSERT(rr_graph.node_ylow(source_node.id()) <= rr_graph.node_yhigh(source_node.id()));
+    VTR_ASSERT(rr_graph.node_xlow(source_node) <= rr_graph.node_xhigh(source_node));
+    VTR_ASSERT(rr_graph.node_ylow(source_node) <= rr_graph.node_yhigh(source_node));
 
-    int xmin = rr_graph.node_xlow(source_node.id());
-    int ymin = rr_graph.node_ylow(source_node.id());
-    int xmax = rr_graph.node_xhigh(source_node.id());
-    int ymax = rr_graph.node_yhigh(source_node.id());
+    int xmin = rr_graph.node_xlow(source_node);
+    int ymin = rr_graph.node_ylow(source_node);
+    int xmax = rr_graph.node_xhigh(source_node);
+    int ymax = rr_graph.node_yhigh(source_node);
 
     auto net_sinks = cluster_ctx.clb_nlist.net_sinks(net_id);
     for (size_t ipin = 1; ipin < net_sinks.size() + 1; ++ipin) { //Start at 1 since looping through sinks
         int sink_rr = route_ctx.net_rr_terminals[net_id][ipin];
-        const t_rr_node& sink_node = device_ctx.rr_nodes[sink_rr];
+        RRNodeId sink_node = RRNodeId(sink_rr);
         VTR_ASSERT(rr_graph.node_type(RRNodeId(sink_rr)) == SINK);
 
-        VTR_ASSERT(rr_graph.node_xlow(sink_node.id()) <= rr_graph.node_xhigh(sink_node.id()));
-        VTR_ASSERT(rr_graph.node_ylow(sink_node.id()) <= rr_graph.node_yhigh(sink_node.id()));
+        VTR_ASSERT(rr_graph.node_xlow(sink_node) <= rr_graph.node_xhigh(sink_node));
+        VTR_ASSERT(rr_graph.node_ylow(sink_node) <= rr_graph.node_yhigh(sink_node));
 
-        xmin = std::min<int>(xmin, rr_graph.node_xlow(sink_node.id()));
-        xmax = std::max<int>(xmax, rr_graph.node_xhigh(sink_node.id()));
-        ymin = std::min<int>(ymin, rr_graph.node_ylow(sink_node.id()));
-        ymax = std::max<int>(ymax, rr_graph.node_yhigh(sink_node.id()));
+        xmin = std::min<int>(xmin, rr_graph.node_xlow(sink_node));
+        xmax = std::max<int>(xmax, rr_graph.node_xhigh(sink_node));
+        ymin = std::min<int>(ymin, rr_graph.node_ylow(sink_node));
+        ymax = std::max<int>(ymax, rr_graph.node_yhigh(sink_node));
     }
 
     /* Want the channels on all 4 sides to be usuable, even if bb_factor = 0. */
@@ -1280,11 +1280,11 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             break;
                     }
 
-                    fprintf(fp, "%d  ", device_ctx.rr_nodes[inode].ptc_num());
+                    fprintf(fp, "%d  ", rr_graph.node_ptc_num(RRNodeId(inode)));
 
                     auto physical_tile = device_ctx.grid[ilow][jlow].type;
                     if (!is_io_type(physical_tile) && (rr_type == IPIN || rr_type == OPIN)) {
-                        int pin_num = device_ctx.rr_nodes[inode].ptc_num();
+                        int pin_num = rr_graph.node_ptc_num(RRNodeId(inode));
                         int xoffset = device_ctx.grid[ilow][jlow].width_offset;
                         int yoffset = device_ctx.grid[ilow][jlow].height_offset;
                         int sub_tile_offset = physical_tile->get_sub_tile_loc_from_pin(pin_num);
@@ -1660,7 +1660,7 @@ void print_rr_node_route_inf_dot() {
     VTR_LOG("\tnode[shape=record]\n");
     for (size_t inode = 0; inode < route_ctx.rr_node_route_inf.size(); ++inode) {
         if (!std::isinf(route_ctx.rr_node_route_inf[inode].path_cost)) {
-            VTR_LOG("\tnode%zu[label=\"{%zu (%s)", inode, inode, device_ctx.rr_nodes[inode].type_string());
+            VTR_LOG("\tnode%zu[label=\"{%zu (%s)", inode, inode, rr_graph.node_type_string(RRNodeId(inode)));
             if (route_ctx.rr_node_route_inf[inode].occ() > rr_graph.node_capacity(RRNodeId(inode))) {
                 VTR_LOG(" x");
             }

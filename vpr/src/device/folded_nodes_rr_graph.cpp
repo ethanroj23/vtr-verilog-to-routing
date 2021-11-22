@@ -43,9 +43,10 @@ void FoldedNodesRRGraph::build_graph(){
     std::map<FoldedNodePattern, int> temp_node_patterns {};
     size_ = node_storage_.size();
     // Iterate over every legacy node and find node_patterns
-    for (size_t idx = 0; idx < size_; idx++) {   
+    for (int idx = size_-1; idx >= 0; idx--) {   
         RRNodeId id = RRNodeId(idx);
         auto node = node_storage_.get_remove_last_node();
+        // auto node = node_storage_.get_node(id);
         int16_t x = node.xlow_;
         int16_t y = node.ylow_;
         int16_t dx = node.xhigh_ - x;
@@ -62,42 +63,21 @@ void FoldedNodesRRGraph::build_graph(){
                                             {Direction::NUM_DIRECTIONS}
 
         };
-        // std::string node_pattern_string = std::to_string(node.cost_index_) + "_" +
-        //                                   std::to_string(node.rc_index_) + "_" +
-        //                                   std::to_string(dx) + "_" +
-        //                                   std::to_string(dy) + "_" +
-        //                                 //   std::to_string(current_type) + "_" +  
-        //                                   std::to_string(node.capacity_) + "_"; 
+
                                           
         // set direction if using CHANX or CHANY
         if (current_type== CHANX || current_type == CHANY){
-                    node_pattern.dir_side_.direction_ = node.dir_side_.direction;
-                    // std::string dir_string = (node.dir_side_.direction == Direction::INC) ? "I" :
-                    //                             (node.dir_side_.direction == Direction::DEC) ? "D" :
-                    //                             (node.dir_side_.direction == Direction::BIDIR) ? "B" :
-                    //                             "N";
-                    // node_pattern_string += "_" + dir_string;
-                    
+                    node_pattern.dir_side_.direction_ = node.dir_side_.direction;                    
         }
         // set sides if using IPIN or OPIN
         if (current_type== IPIN || current_type == OPIN){
-                // for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
-                //     if (strcmp(SIDE_STRING[side], node_storage_.node_side_string(id))==0){
-                //         node_pattern.dir_side_.sides_ = side;
-                //     }
-                // }
-                node_pattern.dir_side_.sides_ = node.dir_side_.sides;
-                // node_pattern_string += "_" + node.dir_side_.sides;
+            for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
+                if (strcmp(SIDE_STRING[side], node_storage_.node_side_string(id))==0){
+                    node_pattern.dir_side_.sides_ = side;
+                }
+            }
         }
 
-        // insert into map if not in map
-        // if (!(temp_node_patterns.count(node_pattern_string)>0)){
-        //     temp_node_patterns[node_pattern_string] = node_pattern_idx;
-        //     node_pattern_idx++;
-        //     node_patterns_.push_back(node_pattern);
-        // }
-
-        // int16_t cur_pattern_idx = temp_node_patterns[node_pattern_string];
 
         if (!(temp_node_patterns.count(node_pattern)>0)){
             temp_node_patterns[node_pattern] = node_pattern_idx;
@@ -117,12 +97,24 @@ void FoldedNodesRRGraph::build_graph(){
         nodes_.push_back(cur_node);
     }
 
-    /* reverse because they were added in reverse order */
+    /* Fold edges */
+    // for (size_t node = 0; node < size_; node++){
+    //   for (RREdgeId edge : edge_range(RRNodeId(node))) {//ESR_EDGE iterate over edges
+    //     apply(edge, RRNodeId(node), edge_sink_node(edge));
+    //   }
+    // }
+
+
+    /* reverse nodes because they were added in reverse order */
     std::reverse(nodes_.begin(), nodes_.end());
     built = true;
+    for (size_t edge = 0; edge < node_storage_.edge_count(); edge++){
+        edge_dest_node_.push_back(node_storage_.edge_sink_node(RREdgeId(edge)));
+    }
     
 
     print_memory_stats();
+    node_storage_.clear_edge_src_nodes();
 
     /* Don't verify for now */
     verify_folded_rr_graph();
@@ -159,12 +151,24 @@ short FoldedNodesRRGraph::node_ptc_num(RRNodeId id) const {
     return node_storage_.node_ptc_num(id);
 }
 short FoldedNodesRRGraph::node_pin_num(RRNodeId id) const {
-    return node_storage_.node_pin_num(id);
+    auto cur_type = node_type(id);
+    if (cur_type != IPIN && cur_type != OPIN) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[cur_type]);
+    }
+    return node_storage_.node_pin_num(id, false);
 }
 
 short FoldedNodesRRGraph::node_track_num(RRNodeId id) const {
-    return node_storage_.node_track_num(id);
+    auto cur_type = node_type(id);
+    if (cur_type != CHANX && cur_type != CHANY) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[cur_type]);
+    }
+    return node_storage_.node_track_num(id, false);
 }
 short FoldedNodesRRGraph::node_class_num(RRNodeId id) const {
-    return node_storage_.node_class_num(id);
+    auto cur_type = node_type(id);
+    if (cur_type != SOURCE && cur_type != SINK) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[cur_type]);
+    }
+    return node_storage_.node_class_num(id, false);
 }

@@ -43,6 +43,7 @@ class RRGraphViewInterface {
       /* Edge Methods */
       virtual edge_idx_range edges(const RRNodeId& node) const=0;
       virtual void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const=0;
+      virtual void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const=0;
 
       virtual edge_idx_range configurable_edges(const RRNodeId& node) const=0;
       virtual edge_idx_range non_configurable_edges(const RRNodeId& node) const=0;
