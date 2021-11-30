@@ -4,6 +4,8 @@
 #include "rr_graph_builder.h"
 #include "rr_node.h"
 #include "physical_types.h"
+#include "rr_graph_view_interface.h"
+
 /* An read-only routing resource graph
  * which is an unified object including pointors to
  * - node storage
@@ -31,14 +33,15 @@
  *                          in particular geometry information (type, x, y etc).
  *
  */
-class RRGraphView {
+class RRGraphView : public RRGraphViewInterface {
     /* -- Constructors -- */
   public:
     /* See detailed comments about the data structures in the internal data storage section of this file */
     RRGraphView(const t_rr_graph_storage& node_storage,
                 const RRSpatialLookup& node_lookup,
                 const vtr::vector<RRIndexedDataId, t_rr_indexed_data>& rr_indexed_data,
-                const std::vector<t_segment_inf>& rr_segments);
+                const std::vector<t_segment_inf>& rr_segments, 
+                RRGraphViewInterface* primary_rr_graph);
 
     /* Disable copy constructors and copy assignment operator
      * This is to avoid accidental copy because it could be an expensive operation considering that the 
@@ -56,17 +59,17 @@ class RRGraphView {
   public:
     /** @brief Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type(RRNodeId node) const {
-        return node_storage_.node_type(node);
+        return primary_rr_graph_->node_type(node);
     }
 
     /** @brief Get the type string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
-        return node_storage_.node_type_string(node);
+        return primary_rr_graph_->node_type_string(node);
     }
 
     /** @brief Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
-        return node_storage_.node_capacity(node);
+        return primary_rr_graph_->node_capacity(node);
     }
 
     /** @brief Get the direction of a routing resource node. This function is inlined for runtime optimization.
@@ -76,52 +79,57 @@ class RRGraphView {
      * Direction::NONE: node does not have a direction, such as IPIN/OPIN
      */
     inline Direction node_direction(RRNodeId node) const {
-        return node_storage_.node_direction(node);
+        return primary_rr_graph_->node_direction(node);
     }
 
     /** @brief Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
     inline const std::string& node_direction_string(RRNodeId node) const {
-        return node_storage_.node_direction_string(node);
+        return primary_rr_graph_->node_direction_string(node);
     }
 
     /** @brief Get the capacitance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_C(RRNodeId node) const {
-        return node_storage_.node_C(node);
+        return primary_rr_graph_->node_C(node);
     }
 
     /** @brief Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_R(RRNodeId node) const {
-        return node_storage_.node_R(node);
+        return primary_rr_graph_->node_R(node);
     }
 
     /** @brief Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
     inline int16_t node_rc_index(RRNodeId node) const {
-        return node_storage_.node_rc_index(node);
+        return primary_rr_graph_->node_rc_index(node);
     }
 
     /** @brief Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
     inline t_edge_size node_fan_in(RRNodeId node) const {
-        return node_storage_.fan_in(node);
+        return primary_rr_graph_->fan_in(node);
+    }
+
+    /** @brief Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_edge_size fan_in(RRNodeId node) const {
+        return primary_rr_graph_->fan_in(node);
     }
 
     /** @brief Get the minimum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xlow(RRNodeId node) const {
-        return node_storage_.node_xlow(node);
+        return primary_rr_graph_->node_xlow(node);
     }
 
     /** @brief Get the maximum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xhigh(RRNodeId node) const {
-        return node_storage_.node_xhigh(node);
+        return primary_rr_graph_->node_xhigh(node);
     }
 
     /** @brief Get the minimum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_ylow(RRNodeId node) const {
-        return node_storage_.node_ylow(node);
+        return primary_rr_graph_->node_ylow(node);
     }
 
     /** @brief Get the maximum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_yhigh(RRNodeId node) const {
-        return node_storage_.node_yhigh(node);
+        return primary_rr_graph_->node_yhigh(node);
     }
 
     /** @brief Get the length (number of grid tile units spanned by the wire, including the endpoints) of a routing resource node.
@@ -241,12 +249,12 @@ class RRGraphView {
 
     /** @brief Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
     inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
-        return node_storage_.is_node_on_specific_side(node, side);
+        return primary_rr_graph_->is_node_on_specific_side(node, side);
     }
 
     /** @brief Get the side string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_side_string(RRNodeId node) const {
-        return node_storage_.node_side_string(node);
+        return primary_rr_graph_->node_side_string(node);
     }
 
     /** @brief The ptc_num carries different meanings for different node types 
@@ -260,30 +268,30 @@ class RRGraphView {
      * `node_track_num()`and `node_class_num()`, for different types of nodes should be used.*/
 
     inline short node_ptc_num(RRNodeId node) const {
-        return node_storage_.node_ptc_num(node);
+        return primary_rr_graph_->node_ptc_num(node);
     }
 
     /** @brief Get the pin num of a routing resource node. This is designed for logic blocks, 
      * which are IPIN and OPIN nodes. This function is inlined for runtime optimization. */
     inline short node_pin_num(RRNodeId node) const {
-        return node_storage_.node_pin_num(node);
+        return primary_rr_graph_->node_pin_num(node);
     }
 
     /** @brief Get the track num of a routing resource node. This is designed for routing tracks, 
      * which are CHANX and CHANY nodes. This function is inlined for runtime optimization. */
     inline short node_track_num(RRNodeId node) const {
-        return node_storage_.node_track_num(node);
+        return primary_rr_graph_->node_track_num(node);
     }
 
     /** @brief Get the class num of a routing resource node. This is designed for routing source and sinks,
      *  which are SOURCE and SINK nodes. This function is inlined for runtime optimization. */
     inline short node_class_num(RRNodeId node) const {
-        return node_storage_.node_class_num(node);
+        return primary_rr_graph_->node_class_num(node);
     }
 
     /** @brief Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
     RRIndexedDataId node_cost_index(RRNodeId node) const {
-        return node_storage_.node_cost_index(node);
+        return primary_rr_graph_->node_cost_index(node);
     }
 
     /** @brief Return the fast look-up data structure for queries from client functions */
@@ -304,6 +312,8 @@ class RRGraphView {
 
     /* Segment info for rr nodes */
     const std::vector<t_segment_inf>& rr_segments_;
+
+    RRGraphViewInterface* primary_rr_graph_;
 };
 
 #endif
