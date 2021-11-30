@@ -4,9 +4,9 @@
  * https://github.com/duck2/uxsdcxx
  * Modify only if your build process doesn't involve regenerating this file.
  *
- * Cmdline: uxsdcxx/uxsdcxx.py /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
- * Input file: /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
- * md5sum of input file: cd57d47fc9dfa62c7030397ca759217e
+ * Cmdline: uxsdcxx/uxsdcxx.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+ * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+ * md5sum of input file: 9af9e93fbfec437324eb4f9fd34d84a8
  */
 
 #include <functional>
@@ -45,23 +45,6 @@ enum class enum_node_direction { UXSD_INVALID = 0,
                                  DEC_DIR,
                                  BI_DIR };
 
-enum class enum_loc_side { UXSD_INVALID = 0,
-                           LEFT,
-                           RIGHT,
-                           TOP,
-                           BOTTOM,
-                           RIGHT_LEFT,
-                           RIGHT_BOTTOM,
-                           RIGHT_BOTTOM_LEFT,
-                           TOP_RIGHT,
-                           TOP_BOTTOM,
-                           TOP_LEFT,
-                           TOP_RIGHT_BOTTOM,
-                           TOP_RIGHT_LEFT,
-                           TOP_BOTTOM_LEFT,
-                           TOP_RIGHT_BOTTOM_LEFT,
-                           BOTTOM_LEFT };
-
 /* Base class for the schema. */
 struct DefaultRrGraphContextTypes {
     using ChannelReadContext = void*;
@@ -81,13 +64,15 @@ struct DefaultRrGraphContextTypes {
     using BlockTypesReadContext = void*;
     using GridLocReadContext = void*;
     using GridLocsReadContext = void*;
-    using NodeLocReadContext = void*;
-    using NodeTimingReadContext = void*;
     using NodeSegmentReadContext = void*;
-    using MetaReadContext = void*;
-    using MetadataReadContext = void*;
     using NodeReadContext = void*;
     using RrNodesReadContext = void*;
+    using NodeDataReadContext = void*;
+    using RrNodeDataReadContext = void*;
+    using RcDataReadContext = void*;
+    using RrRcDataReadContext = void*;
+    using MetaReadContext = void*;
+    using MetadataReadContext = void*;
     using EdgeReadContext = void*;
     using RrEdgesReadContext = void*;
     using RrGraphReadContext = void*;
@@ -108,13 +93,15 @@ struct DefaultRrGraphContextTypes {
     using BlockTypesWriteContext = void*;
     using GridLocWriteContext = void*;
     using GridLocsWriteContext = void*;
-    using NodeLocWriteContext = void*;
-    using NodeTimingWriteContext = void*;
     using NodeSegmentWriteContext = void*;
-    using MetaWriteContext = void*;
-    using MetadataWriteContext = void*;
     using NodeWriteContext = void*;
     using RrNodesWriteContext = void*;
+    using NodeDataWriteContext = void*;
+    using RrNodeDataWriteContext = void*;
+    using RcDataWriteContext = void*;
+    using RrRcDataWriteContext = void*;
+    using MetaWriteContext = void*;
+    using MetadataWriteContext = void*;
     using EdgeWriteContext = void*;
     using RrEdgesWriteContext = void*;
     using RrGraphWriteContext = void*;
@@ -146,7 +133,7 @@ class RrGraphBase {
 
     /** Generated for complex type "x_list":
      * <xs:complexType name="x_list">
-     *
+     *   
      *   <xs:attribute name="index" type="xs:unsignedInt" use="required" />
      *   <xs:attribute name="info" type="xs:int" use="required" />
      * </xs:complexType>
@@ -188,7 +175,7 @@ class RrGraphBase {
 
     /** Generated for complex type "timing":
      * <xs:complexType name="timing">
-     *
+     *   
      *   <xs:attribute name="R" type="xs:float" />
      *   <xs:attribute name="Cin" type="xs:float" />
      *   <xs:attribute name="Cinternal" type="xs:float" />
@@ -223,9 +210,9 @@ class RrGraphBase {
      *     <xs:element name="sizing" type="sizing" />
      *   </xs:all>
      *   <xs:attribute name="id" type="xs:int" use="required" />
-     *
+     *   
      *   <xs:attribute name="name" type="xs:string" use="required" />
-     *
+     *   
      *   <xs:attribute name="type" type="switch_type" />
      * </xs:complexType>
      */
@@ -387,39 +374,102 @@ class RrGraphBase {
     virtual inline size_t num_grid_locs_grid_loc(typename ContextTypes::GridLocsReadContext& ctx) = 0;
     virtual inline typename ContextTypes::GridLocReadContext get_grid_locs_grid_loc(int n, typename ContextTypes::GridLocsReadContext& ctx) = 0;
 
-    /** Generated for complex type "node_loc":
-     * <xs:complexType name="node_loc">
-     *   <xs:attribute name="xlow" type="xs:int" use="required" />
-     *   <xs:attribute name="ylow" type="xs:int" use="required" />
-     *   <xs:attribute name="xhigh" type="xs:int" use="required" />
-     *   <xs:attribute name="yhigh" type="xs:int" use="required" />
-     *   <xs:attribute name="side" type="loc_side" />
-     *   <xs:attribute name="ptc" type="xs:int" use="required" />
-     * </xs:complexType>
-     */
-    virtual inline int get_node_loc_ptc(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-    virtual inline enum_loc_side get_node_loc_side(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-    virtual inline void set_node_loc_side(enum_loc_side side, typename ContextTypes::NodeLocWriteContext& ctx) = 0;
-    virtual inline int get_node_loc_xhigh(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-    virtual inline int get_node_loc_xlow(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-    virtual inline int get_node_loc_yhigh(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-    virtual inline int get_node_loc_ylow(typename ContextTypes::NodeLocReadContext& ctx) = 0;
-
-    /** Generated for complex type "node_timing":
-     * <xs:complexType name="node_timing">
-     *   <xs:attribute name="R" type="xs:float" use="required" />
-     *   <xs:attribute name="C" type="xs:float" use="required" />
-     * </xs:complexType>
-     */
-    virtual inline float get_node_timing_C(typename ContextTypes::NodeTimingReadContext& ctx) = 0;
-    virtual inline float get_node_timing_R(typename ContextTypes::NodeTimingReadContext& ctx) = 0;
-
     /** Generated for complex type "node_segment":
      * <xs:complexType name="node_segment">
      *   <xs:attribute name="segment_id" type="xs:int" use="required" />
      * </xs:complexType>
      */
     virtual inline int get_node_segment_segment_id(typename ContextTypes::NodeSegmentReadContext& ctx) = 0;
+
+    /** Generated for complex type "node":
+     * <xs:complexType name="node">
+     *   <xs:all>
+     *     <xs:element minOccurs="0" name="segment" type="node_segment" />
+     *   </xs:all>
+     *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+     *   <xs:attribute name="type" type="node_type" use="required" />
+     *   <xs:attribute name="xlow" type="xs:int" use="required" />
+     *   <xs:attribute name="ylow" type="xs:int" use="required" />
+     *   <xs:attribute name="data_idx" type="xs:int" use="required" />
+     * </xs:complexType>
+     */
+    virtual inline int get_node_data_idx(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline unsigned int get_node_id(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline enum_node_type get_node_type(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline int get_node_xlow(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline int get_node_ylow(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::NodeSegmentWriteContext init_node_segment(typename ContextTypes::NodeWriteContext& ctx, int segment_id) = 0;
+    virtual inline void finish_node_segment(typename ContextTypes::NodeSegmentWriteContext& ctx) = 0;
+    virtual inline typename ContextTypes::NodeSegmentReadContext get_node_segment(typename ContextTypes::NodeReadContext& ctx) = 0;
+    virtual inline bool has_node_segment(typename ContextTypes::NodeReadContext& ctx) = 0;
+
+    /** Generated for complex type "rr_nodes":
+     * <xs:complexType name="rr_nodes">
+     *   <xs:choice maxOccurs="unbounded">
+     *     <xs:element name="node" type="node" />
+     *   </xs:choice>
+     * </xs:complexType>
+     */
+    virtual inline void preallocate_rr_nodes_node(typename ContextTypes::RrNodesWriteContext& ctx, size_t size) = 0;
+    virtual inline typename ContextTypes::NodeWriteContext add_rr_nodes_node(typename ContextTypes::RrNodesWriteContext& ctx, int data_idx, unsigned int id, enum_node_type type, int xlow, int ylow) = 0;
+    virtual inline void finish_rr_nodes_node(typename ContextTypes::NodeWriteContext& ctx) = 0;
+    virtual inline size_t num_rr_nodes_node(typename ContextTypes::RrNodesReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::NodeReadContext get_rr_nodes_node(int n, typename ContextTypes::RrNodesReadContext& ctx) = 0;
+
+    /** Generated for complex type "node_data":
+     * <xs:complexType name="node_data">
+     *   <xs:attribute name="dx" type="xs:int" use="required" />
+     *   <xs:attribute name="dy" type="xs:int" use="required" />
+     *   <xs:attribute name="cost_index" type="xs:int" use="required" />
+     *   <xs:attribute name="rc_index" type="xs:int" use="required" />
+     *   <xs:attribute name="direction" type="node_direction" />
+     *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
+     * </xs:complexType>
+     */
+    virtual inline unsigned int get_node_data_capacity(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+    virtual inline int get_node_data_cost_index(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+    virtual inline enum_node_direction get_node_data_direction(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+    virtual inline void set_node_data_direction(enum_node_direction direction, typename ContextTypes::NodeDataWriteContext& ctx) = 0;
+    virtual inline int get_node_data_dx(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+    virtual inline int get_node_data_dy(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+    virtual inline int get_node_data_rc_index(typename ContextTypes::NodeDataReadContext& ctx) = 0;
+
+    /** Generated for complex type "rr_node_data":
+     * <xs:complexType name="rr_node_data">
+     *   <xs:choice maxOccurs="unbounded">
+     *     <xs:element name="node_data" type="node_data" />
+     *   </xs:choice>
+     * </xs:complexType>
+     */
+    virtual inline void preallocate_rr_node_data_node_data(typename ContextTypes::RrNodeDataWriteContext& ctx, size_t size) = 0;
+    virtual inline typename ContextTypes::NodeDataWriteContext add_rr_node_data_node_data(typename ContextTypes::RrNodeDataWriteContext& ctx, unsigned int capacity, int cost_index, int dx, int dy, int rc_index) = 0;
+    virtual inline void finish_rr_node_data_node_data(typename ContextTypes::NodeDataWriteContext& ctx) = 0;
+    virtual inline size_t num_rr_node_data_node_data(typename ContextTypes::RrNodeDataReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::NodeDataReadContext get_rr_node_data_node_data(int n, typename ContextTypes::RrNodeDataReadContext& ctx) = 0;
+
+    /** Generated for complex type "rc_data":
+     * <xs:complexType name="rc_data">
+     *   <xs:attribute name="R" type="xs:float" />
+     *   <xs:attribute name="C" type="xs:float" />
+     * </xs:complexType>
+     */
+    virtual inline float get_rc_data_C(typename ContextTypes::RcDataReadContext& ctx) = 0;
+    virtual inline void set_rc_data_C(float C, typename ContextTypes::RcDataWriteContext& ctx) = 0;
+    virtual inline float get_rc_data_R(typename ContextTypes::RcDataReadContext& ctx) = 0;
+    virtual inline void set_rc_data_R(float R, typename ContextTypes::RcDataWriteContext& ctx) = 0;
+
+    /** Generated for complex type "rr_rc_data":
+     * <xs:complexType name="rr_rc_data">
+     *   <xs:choice maxOccurs="unbounded">
+     *     <xs:element name="rc_data" type="rc_data" />
+     *   </xs:choice>
+     * </xs:complexType>
+     */
+    virtual inline void preallocate_rr_rc_data_rc_data(typename ContextTypes::RrRcDataWriteContext& ctx, size_t size) = 0;
+    virtual inline typename ContextTypes::RcDataWriteContext add_rr_rc_data_rc_data(typename ContextTypes::RrRcDataWriteContext& ctx) = 0;
+    virtual inline void finish_rr_rc_data_rc_data(typename ContextTypes::RcDataWriteContext& ctx) = 0;
+    virtual inline size_t num_rr_rc_data_rc_data(typename ContextTypes::RrRcDataReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::RcDataReadContext get_rr_rc_data_rc_data(int n, typename ContextTypes::RrRcDataReadContext& ctx) = 0;
 
     /** Generated for complex type "meta":
      * <xs:complexType name="meta">
@@ -447,54 +497,6 @@ class RrGraphBase {
     virtual inline void finish_metadata_meta(typename ContextTypes::MetaWriteContext& ctx) = 0;
     virtual inline size_t num_metadata_meta(typename ContextTypes::MetadataReadContext& ctx) = 0;
     virtual inline typename ContextTypes::MetaReadContext get_metadata_meta(int n, typename ContextTypes::MetadataReadContext& ctx) = 0;
-
-    /** Generated for complex type "node":
-     * <xs:complexType name="node">
-     *   <xs:all>
-     *     <xs:element name="loc" type="node_loc" />
-     *     <xs:element minOccurs="0" name="timing" type="node_timing" />
-     *     <xs:element minOccurs="0" name="segment" type="node_segment" />
-     *     <xs:element minOccurs="0" name="metadata" type="metadata" />
-     *   </xs:all>
-     *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
-     *   <xs:attribute name="type" type="node_type" use="required" />
-     *   <xs:attribute name="direction" type="node_direction" />
-     *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
-     * </xs:complexType>
-     */
-    virtual inline unsigned int get_node_capacity(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline enum_node_direction get_node_direction(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline void set_node_direction(enum_node_direction direction, typename ContextTypes::NodeWriteContext& ctx) = 0;
-    virtual inline unsigned int get_node_id(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline enum_node_type get_node_type(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeLocWriteContext init_node_loc(typename ContextTypes::NodeWriteContext& ctx, int ptc, int xhigh, int xlow, int yhigh, int ylow) = 0;
-    virtual inline void finish_node_loc(typename ContextTypes::NodeLocWriteContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeLocReadContext get_node_loc(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeTimingWriteContext init_node_timing(typename ContextTypes::NodeWriteContext& ctx, float C, float R) = 0;
-    virtual inline void finish_node_timing(typename ContextTypes::NodeTimingWriteContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeTimingReadContext get_node_timing(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline bool has_node_timing(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeSegmentWriteContext init_node_segment(typename ContextTypes::NodeWriteContext& ctx, int segment_id) = 0;
-    virtual inline void finish_node_segment(typename ContextTypes::NodeSegmentWriteContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeSegmentReadContext get_node_segment(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline bool has_node_segment(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline typename ContextTypes::MetadataWriteContext init_node_metadata(typename ContextTypes::NodeWriteContext& ctx) = 0;
-    virtual inline void finish_node_metadata(typename ContextTypes::MetadataWriteContext& ctx) = 0;
-    virtual inline typename ContextTypes::MetadataReadContext get_node_metadata(typename ContextTypes::NodeReadContext& ctx) = 0;
-    virtual inline bool has_node_metadata(typename ContextTypes::NodeReadContext& ctx) = 0;
-
-    /** Generated for complex type "rr_nodes":
-     * <xs:complexType name="rr_nodes">
-     *   <xs:choice maxOccurs="unbounded">
-     *     <xs:element name="node" type="node" />
-     *   </xs:choice>
-     * </xs:complexType>
-     */
-    virtual inline void preallocate_rr_nodes_node(typename ContextTypes::RrNodesWriteContext& ctx, size_t size) = 0;
-    virtual inline typename ContextTypes::NodeWriteContext add_rr_nodes_node(typename ContextTypes::RrNodesWriteContext& ctx, unsigned int capacity, unsigned int id, enum_node_type type) = 0;
-    virtual inline void finish_rr_nodes_node(typename ContextTypes::NodeWriteContext& ctx) = 0;
-    virtual inline size_t num_rr_nodes_node(typename ContextTypes::RrNodesReadContext& ctx) = 0;
-    virtual inline typename ContextTypes::NodeReadContext get_rr_nodes_node(int n, typename ContextTypes::RrNodesReadContext& ctx) = 0;
 
     /** Generated for complex type "edge":
      * <xs:complexType name="edge">
@@ -536,6 +538,8 @@ class RrGraphBase {
      *       <xs:element name="block_types" type="block_types" />
      *       <xs:element name="grid" type="grid_locs" />
      *       <xs:element name="rr_nodes" type="rr_nodes" />
+     *       <xs:element name="rr_node_data" type="rr_node_data" />
+     *       <xs:element name="rr_rc_data" type="rr_rc_data" />
      *       <xs:element name="rr_edges" type="rr_edges" />
      *     </xs:all>
      *     <xs:attribute name="tool_name" type="xs:string" />
@@ -567,6 +571,12 @@ class RrGraphBase {
     virtual inline typename ContextTypes::RrNodesWriteContext init_rr_graph_rr_nodes(typename ContextTypes::RrGraphWriteContext& ctx) = 0;
     virtual inline void finish_rr_graph_rr_nodes(typename ContextTypes::RrNodesWriteContext& ctx) = 0;
     virtual inline typename ContextTypes::RrNodesReadContext get_rr_graph_rr_nodes(typename ContextTypes::RrGraphReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::RrNodeDataWriteContext init_rr_graph_rr_node_data(typename ContextTypes::RrGraphWriteContext& ctx) = 0;
+    virtual inline void finish_rr_graph_rr_node_data(typename ContextTypes::RrNodeDataWriteContext& ctx) = 0;
+    virtual inline typename ContextTypes::RrNodeDataReadContext get_rr_graph_rr_node_data(typename ContextTypes::RrGraphReadContext& ctx) = 0;
+    virtual inline typename ContextTypes::RrRcDataWriteContext init_rr_graph_rr_rc_data(typename ContextTypes::RrGraphWriteContext& ctx) = 0;
+    virtual inline void finish_rr_graph_rr_rc_data(typename ContextTypes::RrRcDataWriteContext& ctx) = 0;
+    virtual inline typename ContextTypes::RrRcDataReadContext get_rr_graph_rr_rc_data(typename ContextTypes::RrGraphReadContext& ctx) = 0;
     virtual inline typename ContextTypes::RrEdgesWriteContext init_rr_graph_rr_edges(typename ContextTypes::RrGraphWriteContext& ctx) = 0;
     virtual inline void finish_rr_graph_rr_edges(typename ContextTypes::RrEdgesWriteContext& ctx) = 0;
     virtual inline typename ContextTypes::RrEdgesReadContext get_rr_graph_rr_edges(typename ContextTypes::RrGraphReadContext& ctx) = 0;

@@ -275,7 +275,8 @@
     <xs:attribute name="segment_id" type="xs:int" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="node">
+
+  <!-- <xs:complexType name="node">
     <xs:all>
       <xs:element name="loc" type="node_loc"/>
       <xs:element name="timing" type="node_timing" minOccurs="0"/>
@@ -286,7 +287,45 @@
     <xs:attribute name="type" type="node_type" use="required"/>
     <xs:attribute name="direction" type="node_direction"/>
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
+  </xs:complexType> -->
+
+
+  <xs:complexType name="node">
+    <xs:all>
+      <xs:element name="segment" type="node_segment" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="type" type="node_type" use="required"/>
+    <xs:attribute name="xlow" type="xs:int" use="required"/>
+    <xs:attribute name="ylow" type="xs:int" use="required"/>
+    <xs:attribute name="data_idx" type="xs:int" use="required"/>
   </xs:complexType>
+
+   <xs:complexType name="node_data">
+    <xs:attribute name="dx" type="xs:int" use="required"/>
+    <xs:attribute name="dy" type="xs:int" use="required"/>
+    <xs:attribute name="cost_index" type="xs:int" use="required"/>
+    <xs:attribute name="rc_index" type="xs:int" use="required"/>
+    <xs:attribute name="direction" type="node_direction"/>
+    <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="rc_data">
+    <xs:attribute name="R" type="xs:float"/>
+    <xs:attribute name="C" type="xs:float"/>
+  </xs:complexType>
+
+<!-- 
+  New Folding Template
+<rr_nodes>
+  <node id="12891" xlow="9" ylow="9" type="CHANY" data_idx="76"/>
+</rr_nodes>
+<rr_node_data>
+  <node_data dx="3" dy="0" cost_index="4" rc_index="1" direction="INC_DIR" capacity="1"/>
+</rr_node_data>
+<rr_rc_data>
+<rc_data C="1.14720028e-13" R="404"/>
+</rr_rc_data>-->
 
   <xs:complexType name="edge">
     <xs:all>
@@ -327,6 +366,18 @@
     </xs:choice>
   </xs:complexType>
 
+   <xs:complexType name="rr_node_data">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="node_data" type="node_data"/>
+    </xs:choice>
+  </xs:complexType>
+
+   <xs:complexType name="rr_rc_data">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="rc_data" type="rc_data"/>
+    </xs:choice>
+  </xs:complexType>
+
   <xs:complexType name="rr_edges">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="edge" type="edge"/>
@@ -346,6 +397,8 @@
         <xs:element name="block_types" type="block_types"/>
         <xs:element name="grid" type="grid_locs"/>
         <xs:element name="rr_nodes" type="rr_nodes"/>
+        <xs:element name="rr_node_data" type="rr_node_data"/>
+        <xs:element name="rr_rc_data" type="rr_rc_data"/>
         <xs:element name="rr_edges" type="rr_edges"/>
       </xs:all>
 

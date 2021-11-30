@@ -4,9 +4,9 @@
  * https://github.com/duck2/uxsdcxx
  * Modify only if your build process doesn't involve regenerating this file.
  *
- * Cmdline: uxsdcxx/uxsdcap.py /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
- * Input file: /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
- * md5sum of input file: cd57d47fc9dfa62c7030397ca759217e
+ * Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+ * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+ * md5sum of input file: 9af9e93fbfec437324eb4f9fd34d84a8
  */
 
 #include <functional>
@@ -58,19 +58,23 @@ void load_grid_loc_capnp_type(const ucap::GridLoc::Reader& root, T& out, Context
 template<class T, typename Context>
 void load_grid_locs_capnp_type(const ucap::GridLocs::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
 template<class T, typename Context>
-void load_node_loc_capnp_type(const ucap::NodeLoc::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
-template<class T, typename Context>
-void load_node_timing_capnp_type(const ucap::NodeTiming::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
-template<class T, typename Context>
 void load_node_segment_capnp_type(const ucap::NodeSegment::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
-template<class T, typename Context>
-void load_meta_capnp_type(const ucap::Meta::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
-template<class T, typename Context>
-void load_metadata_capnp_type(const ucap::Metadata::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
 template<class T, typename Context>
 void load_node_capnp_type(const ucap::Node::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
 template<class T, typename Context>
 void load_rr_nodes_capnp_type(const ucap::RrNodes::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_node_data_capnp_type(const ucap::NodeData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_rr_node_data_capnp_type(const ucap::RrNodeData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_rc_data_capnp_type(const ucap::RcData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_rr_rc_data_capnp_type(const ucap::RrRcData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_meta_capnp_type(const ucap::Meta::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
+template<class T, typename Context>
+void load_metadata_capnp_type(const ucap::Metadata::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
 template<class T, typename Context>
 void load_edge_capnp_type(const ucap::Edge::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack);
 template<class T, typename Context>
@@ -100,13 +104,17 @@ inline void write_block_types_capnp_type(T& in, ucap::BlockTypes::Builder& root,
 template<class T, typename Context>
 inline void write_grid_locs_capnp_type(T& in, ucap::GridLocs::Builder& root, Context& context);
 template<class T, typename Context>
-inline void write_meta_capnp_type(T& in, ucap::Meta::Builder& root, Context& context);
-template<class T, typename Context>
-inline void write_metadata_capnp_type(T& in, ucap::Metadata::Builder& root, Context& context);
-template<class T, typename Context>
 inline void write_node_capnp_type(T& in, ucap::Node::Builder& root, Context& context);
 template<class T, typename Context>
 inline void write_rr_nodes_capnp_type(T& in, ucap::RrNodes::Builder& root, Context& context);
+template<class T, typename Context>
+inline void write_rr_node_data_capnp_type(T& in, ucap::RrNodeData::Builder& root, Context& context);
+template<class T, typename Context>
+inline void write_rr_rc_data_capnp_type(T& in, ucap::RrRcData::Builder& root, Context& context);
+template<class T, typename Context>
+inline void write_meta_capnp_type(T& in, ucap::Meta::Builder& root, Context& context);
+template<class T, typename Context>
+inline void write_metadata_capnp_type(T& in, ucap::Metadata::Builder& root, Context& context);
 template<class T, typename Context>
 inline void write_edge_capnp_type(T& in, ucap::Edge::Builder& root, Context& context);
 template<class T, typename Context>
@@ -256,85 +264,6 @@ inline ucap::NodeDirection conv_to_enum_node_direction(enum_node_direction e) {
             return ucap::NodeDirection::BI_DIR;
         default:
             throw std::runtime_error("Unknown enum_node_direction");
-    }
-}
-
-inline enum_loc_side conv_enum_loc_side(ucap::LocSide e, const std::function<void(const char*)>* report_error) {
-    switch (e) {
-        case ucap::LocSide::UXSD_INVALID:
-            return enum_loc_side::UXSD_INVALID;
-        case ucap::LocSide::LEFT:
-            return enum_loc_side::LEFT;
-        case ucap::LocSide::RIGHT:
-            return enum_loc_side::RIGHT;
-        case ucap::LocSide::TOP:
-            return enum_loc_side::TOP;
-        case ucap::LocSide::BOTTOM:
-            return enum_loc_side::BOTTOM;
-        case ucap::LocSide::RIGHT_LEFT:
-            return enum_loc_side::RIGHT_LEFT;
-        case ucap::LocSide::RIGHT_BOTTOM:
-            return enum_loc_side::RIGHT_BOTTOM;
-        case ucap::LocSide::RIGHT_BOTTOM_LEFT:
-            return enum_loc_side::RIGHT_BOTTOM_LEFT;
-        case ucap::LocSide::TOP_RIGHT:
-            return enum_loc_side::TOP_RIGHT;
-        case ucap::LocSide::TOP_BOTTOM:
-            return enum_loc_side::TOP_BOTTOM;
-        case ucap::LocSide::TOP_LEFT:
-            return enum_loc_side::TOP_LEFT;
-        case ucap::LocSide::TOP_RIGHT_BOTTOM:
-            return enum_loc_side::TOP_RIGHT_BOTTOM;
-        case ucap::LocSide::TOP_RIGHT_LEFT:
-            return enum_loc_side::TOP_RIGHT_LEFT;
-        case ucap::LocSide::TOP_BOTTOM_LEFT:
-            return enum_loc_side::TOP_BOTTOM_LEFT;
-        case ucap::LocSide::TOP_RIGHT_BOTTOM_LEFT:
-            return enum_loc_side::TOP_RIGHT_BOTTOM_LEFT;
-        case ucap::LocSide::BOTTOM_LEFT:
-            return enum_loc_side::BOTTOM_LEFT;
-        default:
-            (*report_error)("Unknown enum_loc_side");
-            throw std::runtime_error("Unreachable!");
-    }
-}
-
-inline ucap::LocSide conv_to_enum_loc_side(enum_loc_side e) {
-    switch (e) {
-        case enum_loc_side::UXSD_INVALID:
-            return ucap::LocSide::UXSD_INVALID;
-        case enum_loc_side::LEFT:
-            return ucap::LocSide::LEFT;
-        case enum_loc_side::RIGHT:
-            return ucap::LocSide::RIGHT;
-        case enum_loc_side::TOP:
-            return ucap::LocSide::TOP;
-        case enum_loc_side::BOTTOM:
-            return ucap::LocSide::BOTTOM;
-        case enum_loc_side::RIGHT_LEFT:
-            return ucap::LocSide::RIGHT_LEFT;
-        case enum_loc_side::RIGHT_BOTTOM:
-            return ucap::LocSide::RIGHT_BOTTOM;
-        case enum_loc_side::RIGHT_BOTTOM_LEFT:
-            return ucap::LocSide::RIGHT_BOTTOM_LEFT;
-        case enum_loc_side::TOP_RIGHT:
-            return ucap::LocSide::TOP_RIGHT;
-        case enum_loc_side::TOP_BOTTOM:
-            return ucap::LocSide::TOP_BOTTOM;
-        case enum_loc_side::TOP_LEFT:
-            return ucap::LocSide::TOP_LEFT;
-        case enum_loc_side::TOP_RIGHT_BOTTOM:
-            return ucap::LocSide::TOP_RIGHT_BOTTOM;
-        case enum_loc_side::TOP_RIGHT_LEFT:
-            return ucap::LocSide::TOP_RIGHT_LEFT;
-        case enum_loc_side::TOP_BOTTOM_LEFT:
-            return ucap::LocSide::TOP_BOTTOM_LEFT;
-        case enum_loc_side::TOP_RIGHT_BOTTOM_LEFT:
-            return ucap::LocSide::TOP_RIGHT_BOTTOM_LEFT;
-        case enum_loc_side::BOTTOM_LEFT:
-            return ucap::LocSide::BOTTOM_LEFT;
-        default:
-            throw std::runtime_error("Unknown enum_loc_side");
     }
 }
 
@@ -690,32 +619,119 @@ inline void load_grid_locs_capnp_type(const ucap::GridLocs::Reader& root, T& out
 }
 
 template<class T, typename Context>
-inline void load_node_loc_capnp_type(const ucap::NodeLoc::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
-    (void)root;
-    (void)out;
-    (void)context;
-    (void)report_error;
-    (void)stack;
-
-    out.set_node_loc_side(conv_enum_loc_side(root.getSide(), report_error), context);
-}
-
-template<class T, typename Context>
-inline void load_node_timing_capnp_type(const ucap::NodeTiming::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
-    (void)root;
-    (void)out;
-    (void)context;
-    (void)report_error;
-    (void)stack;
-}
-
-template<class T, typename Context>
 inline void load_node_segment_capnp_type(const ucap::NodeSegment::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
     (void)root;
     (void)out;
     (void)context;
     (void)report_error;
     (void)stack;
+}
+
+template<class T, typename Context>
+inline void load_node_capnp_type(const ucap::Node::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    stack->push_back(std::make_pair("getSegment", 0));
+    if (root.hasSegment()) {
+        auto child_el = root.getSegment();
+        auto child_context = out.init_node_segment(context, child_el.getSegmentId());
+        load_node_segment_capnp_type(child_el, out, child_context, report_error, stack);
+        out.finish_node_segment(child_context);
+    }
+    stack->pop_back();
+}
+
+template<class T, typename Context>
+inline void load_rr_nodes_capnp_type(const ucap::RrNodes::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    stack->push_back(std::make_pair("getNode", 0));
+    {
+        auto data = root.getNodes();
+        out.preallocate_rr_nodes_node(context, data.size());
+        for (const auto& el : data) {
+            auto child_context = out.add_rr_nodes_node(context, el.getDataIdx(), el.getId(), conv_enum_node_type(el.getType(), report_error), el.getXlow(), el.getYlow());
+            load_node_capnp_type(el, out, child_context, report_error, stack);
+            out.finish_rr_nodes_node(child_context);
+            stack->back().second += 1;
+        }
+    }
+    stack->pop_back();
+}
+
+template<class T, typename Context>
+inline void load_node_data_capnp_type(const ucap::NodeData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    out.set_node_data_direction(conv_enum_node_direction(root.getDirection(), report_error), context);
+}
+
+template<class T, typename Context>
+inline void load_rr_node_data_capnp_type(const ucap::RrNodeData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    stack->push_back(std::make_pair("getNodeData", 0));
+    {
+        auto data = root.getNodeDatas();
+        out.preallocate_rr_node_data_node_data(context, data.size());
+        for (const auto& el : data) {
+            auto child_context = out.add_rr_node_data_node_data(context, el.getCapacity(), el.getCostIndex(), el.getDx(), el.getDy(), el.getRcIndex());
+            load_node_data_capnp_type(el, out, child_context, report_error, stack);
+            out.finish_rr_node_data_node_data(child_context);
+            stack->back().second += 1;
+        }
+    }
+    stack->pop_back();
+}
+
+template<class T, typename Context>
+inline void load_rc_data_capnp_type(const ucap::RcData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    out.set_rc_data_C(root.getC(), context);
+    out.set_rc_data_R(root.getR(), context);
+}
+
+template<class T, typename Context>
+inline void load_rr_rc_data_capnp_type(const ucap::RrRcData::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
+    (void)root;
+    (void)out;
+    (void)context;
+    (void)report_error;
+    (void)stack;
+
+    stack->push_back(std::make_pair("getRcData", 0));
+    {
+        auto data = root.getRcDatas();
+        out.preallocate_rr_rc_data_rc_data(context, data.size());
+        for (const auto& el : data) {
+            auto child_context = out.add_rr_rc_data_rc_data(context);
+            load_rc_data_capnp_type(el, out, child_context, report_error, stack);
+            out.finish_rr_rc_data_rc_data(child_context);
+            stack->back().second += 1;
+        }
+    }
+    stack->pop_back();
 }
 
 template<class T, typename Context>
@@ -748,71 +764,6 @@ inline void load_metadata_capnp_type(const ucap::Metadata::Reader& root, T& out,
             auto child_context = out.add_metadata_meta(context);
             load_meta_capnp_type(el, out, child_context, report_error, stack);
             out.finish_metadata_meta(child_context);
-            stack->back().second += 1;
-        }
-    }
-    stack->pop_back();
-}
-
-template<class T, typename Context>
-inline void load_node_capnp_type(const ucap::Node::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
-    (void)root;
-    (void)out;
-    (void)context;
-    (void)report_error;
-    (void)stack;
-
-    out.set_node_direction(conv_enum_node_direction(root.getDirection(), report_error), context);
-    stack->push_back(std::make_pair("getLoc", 0));
-    if (root.hasLoc()) {
-        auto child_el = root.getLoc();
-        auto child_context = out.init_node_loc(context, child_el.getPtc(), child_el.getXhigh(), child_el.getXlow(), child_el.getYhigh(), child_el.getYlow());
-        load_node_loc_capnp_type(child_el, out, child_context, report_error, stack);
-        out.finish_node_loc(child_context);
-    }
-    stack->pop_back();
-    stack->push_back(std::make_pair("getTiming", 0));
-    if (root.hasTiming()) {
-        auto child_el = root.getTiming();
-        auto child_context = out.init_node_timing(context, child_el.getC(), child_el.getR());
-        load_node_timing_capnp_type(child_el, out, child_context, report_error, stack);
-        out.finish_node_timing(child_context);
-    }
-    stack->pop_back();
-    stack->push_back(std::make_pair("getSegment", 0));
-    if (root.hasSegment()) {
-        auto child_el = root.getSegment();
-        auto child_context = out.init_node_segment(context, child_el.getSegmentId());
-        load_node_segment_capnp_type(child_el, out, child_context, report_error, stack);
-        out.finish_node_segment(child_context);
-    }
-    stack->pop_back();
-    stack->push_back(std::make_pair("getMetadata", 0));
-    if (root.hasMetadata()) {
-        auto child_el = root.getMetadata();
-        auto child_context = out.init_node_metadata(context);
-        load_metadata_capnp_type(child_el, out, child_context, report_error, stack);
-        out.finish_node_metadata(child_context);
-    }
-    stack->pop_back();
-}
-
-template<class T, typename Context>
-inline void load_rr_nodes_capnp_type(const ucap::RrNodes::Reader& root, T& out, Context& context, const std::function<void(const char*)>* report_error, std::vector<std::pair<const char*, size_t>>* stack) {
-    (void)root;
-    (void)out;
-    (void)context;
-    (void)report_error;
-    (void)stack;
-
-    stack->push_back(std::make_pair("getNode", 0));
-    {
-        auto data = root.getNodes();
-        out.preallocate_rr_nodes_node(context, data.size());
-        for (const auto& el : data) {
-            auto child_context = out.add_rr_nodes_node(context, el.getCapacity(), el.getId(), conv_enum_node_type(el.getType(), report_error));
-            load_node_capnp_type(el, out, child_context, report_error, stack);
-            out.finish_rr_nodes_node(child_context);
             stack->back().second += 1;
         }
     }
@@ -916,6 +867,22 @@ inline void load_rr_graph_capnp_type(const ucap::RrGraph::Reader& root, T& out, 
         auto child_context = out.init_rr_graph_rr_nodes(context);
         load_rr_nodes_capnp_type(child_el, out, child_context, report_error, stack);
         out.finish_rr_graph_rr_nodes(child_context);
+    }
+    stack->pop_back();
+    stack->push_back(std::make_pair("getRrNodeData", 0));
+    if (root.hasRrNodeData()) {
+        auto child_el = root.getRrNodeData();
+        auto child_context = out.init_rr_graph_rr_node_data(context);
+        load_rr_node_data_capnp_type(child_el, out, child_context, report_error, stack);
+        out.finish_rr_graph_rr_node_data(child_context);
+    }
+    stack->pop_back();
+    stack->push_back(std::make_pair("getRrRcData", 0));
+    if (root.hasRrRcData()) {
+        auto child_el = root.getRrRcData();
+        auto child_context = out.init_rr_graph_rr_rc_data(context);
+        load_rr_rc_data_capnp_type(child_el, out, child_context, report_error, stack);
+        out.finish_rr_graph_rr_rc_data(child_context);
     }
     stack->pop_back();
     stack->push_back(std::make_pair("getRrEdges", 0));
@@ -1114,6 +1081,74 @@ inline void write_grid_locs_capnp_type(T& in, ucap::GridLocs::Builder& root, Con
 }
 
 template<class T, typename Context>
+inline void write_node_capnp_type(T& in, ucap::Node::Builder& root, Context& context) {
+    (void)in;
+    (void)root;
+
+    if (in.has_node_segment(context)) {
+        auto node_segment = root.initSegment();
+        auto child_context = in.get_node_segment(context);
+        node_segment.setSegmentId(in.get_node_segment_segment_id(child_context));
+    }
+}
+
+template<class T, typename Context>
+inline void write_rr_nodes_capnp_type(T& in, ucap::RrNodes::Builder& root, Context& context) {
+    (void)in;
+    (void)root;
+
+    size_t num_rr_nodes_nodes = in.num_rr_nodes_node(context);
+    auto rr_nodes_nodes = root.initNodes(num_rr_nodes_nodes);
+    for (size_t i = 0; i < num_rr_nodes_nodes; i++) {
+        auto rr_nodes_node = rr_nodes_nodes[i];
+        auto child_context = in.get_rr_nodes_node(i, context);
+        rr_nodes_node.setDataIdx(in.get_node_data_idx(child_context));
+        rr_nodes_node.setId(in.get_node_id(child_context));
+        rr_nodes_node.setType(conv_to_enum_node_type(in.get_node_type(child_context)));
+        rr_nodes_node.setXlow(in.get_node_xlow(child_context));
+        rr_nodes_node.setYlow(in.get_node_ylow(child_context));
+        write_node_capnp_type(in, rr_nodes_node, child_context);
+    }
+}
+
+template<class T, typename Context>
+inline void write_rr_node_data_capnp_type(T& in, ucap::RrNodeData::Builder& root, Context& context) {
+    (void)in;
+    (void)root;
+
+    size_t num_rr_node_data_node_datas = in.num_rr_node_data_node_data(context);
+    auto rr_node_data_node_datas = root.initNodeDatas(num_rr_node_data_node_datas);
+    for (size_t i = 0; i < num_rr_node_data_node_datas; i++) {
+        auto rr_node_data_node_data = rr_node_data_node_datas[i];
+        auto child_context = in.get_rr_node_data_node_data(i, context);
+        rr_node_data_node_data.setCapacity(in.get_node_data_capacity(child_context));
+        rr_node_data_node_data.setCostIndex(in.get_node_data_cost_index(child_context));
+        if ((bool)in.get_node_data_direction(child_context))
+            rr_node_data_node_data.setDirection(conv_to_enum_node_direction(in.get_node_data_direction(child_context)));
+        rr_node_data_node_data.setDx(in.get_node_data_dx(child_context));
+        rr_node_data_node_data.setDy(in.get_node_data_dy(child_context));
+        rr_node_data_node_data.setRcIndex(in.get_node_data_rc_index(child_context));
+    }
+}
+
+template<class T, typename Context>
+inline void write_rr_rc_data_capnp_type(T& in, ucap::RrRcData::Builder& root, Context& context) {
+    (void)in;
+    (void)root;
+
+    size_t num_rr_rc_data_rc_datas = in.num_rr_rc_data_rc_data(context);
+    auto rr_rc_data_rc_datas = root.initRcDatas(num_rr_rc_data_rc_datas);
+    for (size_t i = 0; i < num_rr_rc_data_rc_datas; i++) {
+        auto rr_rc_data_rc_data = rr_rc_data_rc_datas[i];
+        auto child_context = in.get_rr_rc_data_rc_data(i, context);
+        if ((bool)in.get_rc_data_C(child_context))
+            rr_rc_data_rc_data.setC(in.get_rc_data_C(child_context));
+        if ((bool)in.get_rc_data_R(child_context))
+            rr_rc_data_rc_data.setR(in.get_rc_data_R(child_context));
+    }
+}
+
+template<class T, typename Context>
 inline void write_meta_capnp_type(T& in, ucap::Meta::Builder& root, Context& context) {
     (void)in;
     (void)root;
@@ -1132,62 +1167,6 @@ inline void write_metadata_capnp_type(T& in, ucap::Metadata::Builder& root, Cont
         auto child_context = in.get_metadata_meta(i, context);
         metadata_meta.setName(in.get_meta_name(child_context));
         write_meta_capnp_type(in, metadata_meta, child_context);
-    }
-}
-
-template<class T, typename Context>
-inline void write_node_capnp_type(T& in, ucap::Node::Builder& root, Context& context) {
-    (void)in;
-    (void)root;
-
-    {
-        auto child_context = in.get_node_loc(context);
-        auto node_loc = root.initLoc();
-        node_loc.setPtc(in.get_node_loc_ptc(child_context));
-        if ((bool)in.get_node_loc_side(child_context))
-            node_loc.setSide(conv_to_enum_loc_side(in.get_node_loc_side(child_context)));
-        node_loc.setXhigh(in.get_node_loc_xhigh(child_context));
-        node_loc.setXlow(in.get_node_loc_xlow(child_context));
-        node_loc.setYhigh(in.get_node_loc_yhigh(child_context));
-        node_loc.setYlow(in.get_node_loc_ylow(child_context));
-    }
-
-    if (in.has_node_timing(context)) {
-        auto node_timing = root.initTiming();
-        auto child_context = in.get_node_timing(context);
-        node_timing.setC(in.get_node_timing_C(child_context));
-        node_timing.setR(in.get_node_timing_R(child_context));
-    }
-
-    if (in.has_node_segment(context)) {
-        auto node_segment = root.initSegment();
-        auto child_context = in.get_node_segment(context);
-        node_segment.setSegmentId(in.get_node_segment_segment_id(child_context));
-    }
-
-    if (in.has_node_metadata(context)) {
-        auto node_metadata = root.initMetadata();
-        auto child_context = in.get_node_metadata(context);
-        write_metadata_capnp_type(in, node_metadata, child_context);
-    }
-}
-
-template<class T, typename Context>
-inline void write_rr_nodes_capnp_type(T& in, ucap::RrNodes::Builder& root, Context& context) {
-    (void)in;
-    (void)root;
-
-    size_t num_rr_nodes_nodes = in.num_rr_nodes_node(context);
-    auto rr_nodes_nodes = root.initNodes(num_rr_nodes_nodes);
-    for (size_t i = 0; i < num_rr_nodes_nodes; i++) {
-        auto rr_nodes_node = rr_nodes_nodes[i];
-        auto child_context = in.get_rr_nodes_node(i, context);
-        rr_nodes_node.setCapacity(in.get_node_capacity(child_context));
-        if ((bool)in.get_node_direction(child_context))
-            rr_nodes_node.setDirection(conv_to_enum_node_direction(in.get_node_direction(child_context)));
-        rr_nodes_node.setId(in.get_node_id(child_context));
-        rr_nodes_node.setType(conv_to_enum_node_type(in.get_node_type(child_context)));
-        write_node_capnp_type(in, rr_nodes_node, child_context);
     }
 }
 
@@ -1259,6 +1238,18 @@ inline void write_rr_graph_capnp_type(T& in, ucap::RrGraph::Builder& root, Conte
         auto child_context = in.get_rr_graph_rr_nodes(context);
         auto rr_graph_rr_nodes = root.initRrNodes();
         write_rr_nodes_capnp_type(in, rr_graph_rr_nodes, child_context);
+    }
+
+    {
+        auto child_context = in.get_rr_graph_rr_node_data(context);
+        auto rr_graph_rr_node_data = root.initRrNodeData();
+        write_rr_node_data_capnp_type(in, rr_graph_rr_node_data, child_context);
+    }
+
+    {
+        auto child_context = in.get_rr_graph_rr_rc_data(context);
+        auto rr_graph_rr_rc_data = root.initRrRcData();
+        write_rr_rc_data_capnp_type(in, rr_graph_rr_rc_data, child_context);
     }
 
     {

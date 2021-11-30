@@ -2,11 +2,11 @@
 # https://github.com/duck2/uxsdcxx
 # Modify only if your build process doesn't involve regenerating this file.
 #
-# Cmdline: uxsdcxx/uxsdcap.py /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# Input file: /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# md5sum of input file: cd57d47fc9dfa62c7030397ca759217e
+# Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# md5sum of input file: 9af9e93fbfec437324eb4f9fd34d84a8
 
-@0xe4650d345d47589d;
+@0xa616314b6f93c625;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -41,25 +41,6 @@ enum NodeDirection {
 	incDir @1;
 	decDir @2;
 	biDir @3;
-}
-
-enum LocSide {
-	uxsdInvalid @0;
-	left @1;
-	right @2;
-	top @3;
-	bottom @4;
-	rightLeft @5;
-	rightBottom @6;
-	rightBottomLeft @7;
-	topRight @8;
-	topBottom @9;
-	topLeft @10;
-	topRightBottom @11;
-	topRightLeft @12;
-	topBottomLeft @13;
-	topRightBottomLeft @14;
-	bottomLeft @15;
 }
 
 struct Channel {
@@ -160,22 +141,43 @@ struct GridLocs {
 	gridLocs @0 :List(GridLoc);
 }
 
-struct NodeLoc {
-	ptc @0 :Int32;
-	side @1 :LocSide;
-	xhigh @2 :Int32;
-	xlow @3 :Int32;
-	yhigh @4 :Int32;
-	ylow @5 :Int32;
+struct NodeSegment {
+	segmentId @0 :Int32;
 }
 
-struct NodeTiming {
+struct Node {
+	dataIdx @0 :Int32;
+	id @1 :UInt32;
+	type @2 :NodeType;
+	xlow @3 :Int32;
+	ylow @4 :Int32;
+	segment @5 :NodeSegment;
+}
+
+struct RrNodes {
+	nodes @0 :List(Node);
+}
+
+struct NodeData {
+	capacity @0 :UInt32;
+	costIndex @1 :Int32;
+	direction @2 :NodeDirection;
+	dx @3 :Int32;
+	dy @4 :Int32;
+	rcIndex @5 :Int32;
+}
+
+struct RrNodeData {
+	nodeDatas @0 :List(NodeData);
+}
+
+struct RcData {
 	c @0 :Float32;
 	r @1 :Float32;
 }
 
-struct NodeSegment {
-	segmentId @0 :Int32;
+struct RrRcData {
+	rcDatas @0 :List(RcData);
 }
 
 struct Meta {
@@ -185,21 +187,6 @@ struct Meta {
 
 struct Metadata {
 	metas @0 :List(Meta);
-}
-
-struct Node {
-	capacity @0 :UInt32;
-	direction @1 :NodeDirection;
-	id @2 :UInt32;
-	type @3 :NodeType;
-	loc @4 :NodeLoc;
-	timing @5 :NodeTiming;
-	segment @6 :NodeSegment;
-	metadata @7 :Metadata;
-}
-
-struct RrNodes {
-	nodes @0 :List(Node);
 }
 
 struct Edge {
@@ -223,5 +210,7 @@ struct RrGraph {
 	blockTypes @6 :BlockTypes;
 	grid @7 :GridLocs;
 	rrNodes @8 :RrNodes;
-	rrEdges @9 :RrEdges;
+	rrNodeData @9 :RrNodeData;
+	rrRcData @10 :RrRcData;
+	rrEdges @11 :RrEdges;
 }
