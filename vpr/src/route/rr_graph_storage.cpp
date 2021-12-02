@@ -661,62 +661,37 @@ short t_rr_graph_storage::node_class_num(RRNodeId id) const {
 void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
     node_storage_[id].type_ = new_type;
 }
-
-void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
-    auto& node = node_storage_[id];
-    if (x1 < x2) {
-        node.xlow_ = x1;
-        node.xhigh_ = x2;
-    } else {
-        node.xlow_ = x2;
-        node.xhigh_ = x1;
-    }
-
-    if (y1 < y2) {
-        node.ylow_ = y1;
-        node.yhigh_ = y2;
-    } else {
-        node.ylow_ = y2;
-        node.yhigh_ = y1;
-    }
+void t_rr_graph_storage::set_node_xlow(RRNodeId id, int coord) {
+    node_storage_[id].xlow_ = coord;
+}
+void t_rr_graph_storage::set_node_ylow(RRNodeId id, int coord) {
+    node_storage_[id].ylow_ = coord;
 }
 
-void t_rr_graph_storage::set_node_cost_index(RRNodeId id, RRIndexedDataId new_cost_index) {
-    auto& node = node_storage_[id];
-    if ((size_t)new_cost_index >= std::numeric_limits<decltype(node.cost_index_)>::max()) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set cost_index_ %zu above cost_index storage max value.",
-                        new_cost_index);
-    }
-    node.cost_index_ = (size_t)new_cost_index;
+
+void t_rr_graph_storage::set_node_data_idx(RRNodeId id, int new_data_idx) {
+    VTR_ASSERT(new_data_idx >= 0);
+    node_storage_[id].data_idx_ = new_data_idx;
 }
 
-void t_rr_graph_storage::set_node_rc_index(RRNodeId id, NodeRCIndex new_rc_index) {
-    node_storage_[id].rc_index_ = (size_t)new_rc_index;
-}
+// void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction) {
+//     if (node_type(id) != CHANX && node_type(id) != CHANY) {
+//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
+//     }
+//     node_storage_[id].dir_side_.direction = new_direction;
+// }
 
-void t_rr_graph_storage::set_node_capacity(RRNodeId id, short new_capacity) {
-    VTR_ASSERT(new_capacity >= 0);
-    node_storage_[id].capacity_ = new_capacity;
-}
-
-void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction) {
-    if (node_type(id) != CHANX && node_type(id) != CHANY) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
-    }
-    node_storage_[id].dir_side_.direction = new_direction;
-}
-
-void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
-    if (node_type(id) != IPIN && node_type(id) != OPIN) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
-    }
-    std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;
-    side_bits[size_t(new_side)] = true;
-    if (side_bits.to_ulong() > CHAR_MAX) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node %u", SIDE_STRING[new_side], size_t(id));
-    }
-    node_storage_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
-}
+// void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
+//     if (node_type(id) != IPIN && node_type(id) != OPIN) {
+//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
+//     }
+//     std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;
+//     side_bits[size_t(new_side)] = true;
+//     if (side_bits.to_ulong() > CHAR_MAX) {
+//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node %u", SIDE_STRING[new_side], size_t(id));
+//     }
+//     node_storage_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
+// }
 
 short t_rr_graph_view::node_ptc_num(RRNodeId id) const {
     return node_ptc_[id].ptc_.pin_num;

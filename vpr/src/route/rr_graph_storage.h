@@ -48,39 +48,20 @@
  * side: The side of a grid location where an IPIN or OPIN is located.       *
  *       This field is valid only for IPINs and OPINs and should be ignored  *
  *       otherwise.                                                          */
-struct alignas(16) t_rr_node_data {
-    int16_t cost_index_ = -1;
-    int16_t rc_index_ = -1;
+struct alignas(8) t_rr_node_data {
 
     int16_t xlow_ = -1;
     int16_t ylow_ = -1;
-    int16_t xhigh_ = -1;
-    int16_t yhigh_ = -1;
 
+    int16_t data_idx_ = -1;
     t_rr_type type_ = NUM_RR_TYPES;
-
-    /* The character is a hex number which is a 4-bit truth table for node sides
-     * The 4-bits in serial represent 4 sides on which a node could appear 
-     * It follows a fixed sequence, which is (LEFT, BOTTOM, RIGHT, TOP) whose indices are (3, 2, 1, 0) 
-     *   - When a node appears on a given side, it is set to "1"
-     *   - When a node does not appear on a given side, it is set to "0"
-     * For example,
-     *   - '1' means '0001' in hex number, which means the node appears on TOP 
-     *   - 'A' means '1100' in hex number, which means the node appears on LEFT and BOTTOM sides, 
-     */
-    union {
-        Direction direction;       //Valid only for CHANX/CHANY
-        unsigned char sides = 0x0; //Valid only for IPINs/OPINs
-    } dir_side_;
-
-    uint16_t capacity_ = 0;
 };
 
 // t_rr_node_data is a key data structure, so fail at compile time if the
 // structure gets bigger than expected (16 bytes right now). Developers
 // should only expand it after careful consideration and measurement.
-static_assert(sizeof(t_rr_node_data) == 16, "Check t_rr_node_data size");
-static_assert(alignof(t_rr_node_data) == 16, "Check t_rr_node_data size");
+// static_assert(sizeof(t_rr_node_data) == 16, "Check t_rr_node_data size");
+// static_assert(alignof(t_rr_node_data) == 16, "Check t_rr_node_data size");
 
 /* t_rr_node_ptc_data is cold data is therefore kept seperate from
  * t_rr_node_data.
@@ -93,6 +74,23 @@ struct t_rr_node_ptc_data {
         int16_t track_num;
         int16_t class_num;
     } ptc_;
+};
+
+/* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
+struct t_folded_node_pattern { // 12 + 5*edges_.size() Bytes total
+    int16_t cost_index_; // 2 Bytes
+    int16_t rc_index_; // 2 Bytes
+
+    int16_t dx_; // 2 Bytes
+    int16_t dy_; // 2 Bytes
+
+    uint16_t capacity_; // 2 Bytes
+
+    union {
+        Direction direction_; //Valid only for CHANX/CHANY
+        unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
+    } dir_side_; // 1 Byte
+
 };
 
 class t_rr_graph_view;
@@ -164,7 +162,7 @@ class t_rr_graph_storage {
     const char* node_type_string(RRNodeId id) const;
 
     int16_t node_rc_index(RRNodeId id) const {
-        return node_storage_[id].rc_index_;
+        return node_data_[node_storage_[id].data_idx_].rc_index_;
     }
     float node_R(RRNodeId id) const;
     float node_C(RRNodeId id) const;
@@ -176,17 +174,17 @@ class t_rr_graph_storage {
         return node_storage_[id].ylow_;
     }
     short node_xhigh(RRNodeId id) const {
-        return node_storage_[id].xhigh_;
+        return node_storage_[id].xlow_ + node_data_[node_storage_[id].data_idx_].dx_;
     }
     short node_yhigh(RRNodeId id) const {
-        return node_storage_[id].yhigh_;
+        return node_storage_[id].ylow_ + node_data_[node_storage_[id].data_idx_].dy_;
     }
 
     short node_capacity(RRNodeId id) const {
-        return node_storage_[id].capacity_;
+        return node_data_[node_storage_[id].data_idx_].capacity_;
     }
     RRIndexedDataId node_cost_index(RRNodeId id) const {
-        return RRIndexedDataId(node_storage_[id].cost_index_);
+        return RRIndexedDataId(node_data_[node_storage_[id].data_idx_].cost_index_);
     }
 
     Direction node_direction(RRNodeId id) const {
@@ -391,6 +389,19 @@ class t_rr_graph_storage {
         node_ptc_.reserve(node_storage_.capacity());
         node_ptc_.resize(node_storage_.size());
     }
+    int node_data_push_back(unsigned int capacity, int cost_index, int dx, int dy, int rc_index) {
+        t_folded_node_pattern pattern = {
+            (int16_t)cost_index,
+            (int16_t)rc_index, 
+            (int16_t)dx,
+            (int16_t)dy,
+            (uint16_t)capacity,
+            {Direction::NUM_DIRECTIONS}
+        };
+        node_data_.push_back(pattern);
+        return node_data_.size()-1;
+    }
+
 
     // Reserve storage for RR nodes.
     void reserve(size_t size) {
@@ -471,11 +482,23 @@ class t_rr_graph_storage {
     void set_node_class_num(RRNodeId id, short); //Same as set_ptc_num() by checks type() is consistent
 
     void set_node_type(RRNodeId id, t_rr_type new_type);
-    void set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2);
-    void set_node_cost_index(RRNodeId, RRIndexedDataId new_cost_index);
-    void set_node_rc_index(RRNodeId, NodeRCIndex new_rc_index);
-    void set_node_capacity(RRNodeId, short new_capacity);
-    void set_node_direction(RRNodeId, Direction new_direction);
+    void set_node_xlow(RRNodeId id, int xlow);
+    void set_node_ylow(RRNodeId id, int ylow);
+    void set_node_data_idx(RRNodeId, int data_idx);
+    // inline void set_node_data_side(int idx, e_side side){
+    //     node_data_[idx].dir_side_.sides_ = side;
+    // }
+    inline void add_node_data_side(int idx, e_side new_side) {
+        std::bitset<NUM_SIDES> side_bits = node_data_[idx].dir_side_.sides_;
+        side_bits[size_t(new_side)] = true;
+        if (side_bits.to_ulong() > CHAR_MAX) {
+            VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node data %u", SIDE_STRING[new_side], idx);
+        }
+        node_data_[idx].dir_side_.sides_ = static_cast<unsigned char>(side_bits.to_ulong());
+    }
+    void set_node_data_direction(int idx, Direction dir){
+        node_data_[idx].dir_side_.direction_ = dir;
+    }
 
     /* Add a side to the node abbributes
      * This is the function to use when you just add a new side WITHOUT reseting side attributes
@@ -597,7 +620,7 @@ class t_rr_graph_storage {
                             "Attempted to access RR node 'direction' for non-channel type '%s'",
                             rr_node_typename[node_data.type_]);
         }
-        return node_storage[id].dir_side_.direction;
+        return node_data_[node_storage[id].data_idx_].dir_side_.direction_;
     }
 
     /* Find if the given node appears on a specific side */
@@ -612,7 +635,7 @@ class t_rr_graph_storage {
                             rr_node_typename[node_data.type_]);
         }
         // Return a vector showing only the sides that the node appears
-        std::bitset<NUM_SIDES> side_tt = node_storage[id].dir_side_.sides;
+        std::bitset<NUM_SIDES> side_tt = node_data_[node_storage[id].data_idx_].dir_side_.sides_;
         return side_tt[size_t(side)];
     }
 
@@ -652,6 +675,9 @@ class t_rr_graph_storage {
     // The PTC data is cold data, and is generally not used during the inner
     // loop of either the placer or router.
     vtr::vector<RRNodeId, t_rr_node_ptc_data> node_ptc_;
+
+    /* stores folded node patterns */
+    inline static std::vector<t_folded_node_pattern> node_data_;
 
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is
@@ -733,7 +759,7 @@ class t_rr_graph_view {
     const char* node_type_string(RRNodeId id) const;
 
     int16_t node_rc_index(RRNodeId id) const {
-        return node_storage_[id].rc_index_;
+        return node_data_[node_storage_[id].data_idx_].rc_index_;
     }
 
     short node_xlow(RRNodeId id) const {
@@ -743,17 +769,17 @@ class t_rr_graph_view {
         return node_storage_[id].ylow_;
     }
     short node_xhigh(RRNodeId id) const {
-        return node_storage_[id].xhigh_;
+        return node_storage_[id].xlow_ + node_data_[node_storage_[id].data_idx_].dx_;
     }
     short node_yhigh(RRNodeId id) const {
-        return node_storage_[id].yhigh_;
+        return node_storage_[id].ylow_ + node_data_[node_storage_[id].data_idx_].dy_;
     }
 
     short node_capacity(RRNodeId id) const {
-        return node_storage_[id].capacity_;
+        return node_data_[node_storage_[id].data_idx_].capacity_;
     }
     RRIndexedDataId node_cost_index(RRNodeId id) const {
-        return RRIndexedDataId(node_storage_[id].cost_index_);
+        return (RRIndexedDataId)node_data_[node_storage_[id].data_idx_].cost_index_;
     }
 
     Direction node_direction(RRNodeId id) const {
@@ -808,6 +834,7 @@ class t_rr_graph_view {
     }
 
     vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage_;
+    std::vector<t_folded_node_pattern> node_data_;
     vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc_;
     vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;
     vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in_;

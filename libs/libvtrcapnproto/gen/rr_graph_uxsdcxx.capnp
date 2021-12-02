@@ -4,9 +4,9 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
 # Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
-# md5sum of input file: 9af9e93fbfec437324eb4f9fd34d84a8
+# md5sum of input file: 65f3415f826fd7ec980670b6ffd56c10
 
-@0xa616314b6f93c625;
+@0x9bda4eba3cc024a5;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -41,6 +41,25 @@ enum NodeDirection {
 	incDir @1;
 	decDir @2;
 	biDir @3;
+}
+
+enum LocSide {
+	uxsdInvalid @0;
+	left @1;
+	right @2;
+	top @3;
+	bottom @4;
+	rightLeft @5;
+	rightBottom @6;
+	rightBottomLeft @7;
+	topRight @8;
+	topBottom @9;
+	topLeft @10;
+	topRightBottom @11;
+	topRightLeft @12;
+	topBottomLeft @13;
+	topRightBottomLeft @14;
+	bottomLeft @15;
 }
 
 struct Channel {
@@ -141,8 +160,21 @@ struct GridLocs {
 	gridLocs @0 :List(GridLoc);
 }
 
+struct NodeLoc {
+	ptc @0 :Int32;
+}
+
 struct NodeSegment {
 	segmentId @0 :Int32;
+}
+
+struct Meta {
+	name @0 :Text;
+	value @1 :Text;
+}
+
+struct Metadata {
+	metas @0 :List(Meta);
 }
 
 struct Node {
@@ -151,7 +183,9 @@ struct Node {
 	type @2 :NodeType;
 	xlow @3 :Int32;
 	ylow @4 :Int32;
-	segment @5 :NodeSegment;
+	loc @5 :NodeLoc;
+	segment @6 :NodeSegment;
+	metadata @7 :Metadata;
 }
 
 struct RrNodes {
@@ -165,6 +199,7 @@ struct NodeData {
 	dx @3 :Int32;
 	dy @4 :Int32;
 	rcIndex @5 :Int32;
+	side @6 :LocSide;
 }
 
 struct RrNodeData {
@@ -178,15 +213,6 @@ struct RcData {
 
 struct RrRcData {
 	rcDatas @0 :List(RcData);
-}
-
-struct Meta {
-	name @0 :Text;
-	value @1 :Text;
-}
-
-struct Metadata {
-	metas @0 :List(Meta);
 }
 
 struct Edge {
