@@ -668,7 +668,6 @@ void t_rr_graph_storage::set_node_ylow(RRNodeId id, int coord) {
     node_storage_[id].ylow_ = coord;
 }
 
-
 void t_rr_graph_storage::set_node_data_idx(RRNodeId id, int new_data_idx) {
     VTR_ASSERT(new_data_idx >= 0);
     node_storage_[id].data_idx_ = new_data_idx;

@@ -49,7 +49,6 @@
  *       This field is valid only for IPINs and OPINs and should be ignored  *
  *       otherwise.                                                          */
 struct alignas(8) t_rr_node_data {
-
     int16_t xlow_ = -1;
     int16_t ylow_ = -1;
 
@@ -78,8 +77,8 @@ struct t_rr_node_ptc_data {
 
 /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
 struct t_folded_node_pattern { // 12 + 5*edges_.size() Bytes total
-    int16_t cost_index_; // 2 Bytes
-    int16_t rc_index_; // 2 Bytes
+    int16_t cost_index_;       // 2 Bytes
+    int16_t rc_index_;         // 2 Bytes
 
     int16_t dx_; // 2 Bytes
     int16_t dy_; // 2 Bytes
@@ -87,10 +86,9 @@ struct t_folded_node_pattern { // 12 + 5*edges_.size() Bytes total
     uint16_t capacity_; // 2 Bytes
 
     union {
-        Direction direction_; //Valid only for CHANX/CHANY
+        Direction direction_;       //Valid only for CHANX/CHANY
         unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
-    } dir_side_; // 1 Byte
-
+    } dir_side_;                    // 1 Byte
 };
 
 class t_rr_graph_view;
@@ -392,16 +390,14 @@ class t_rr_graph_storage {
     int node_data_push_back(unsigned int capacity, int cost_index, int dx, int dy, int rc_index) {
         t_folded_node_pattern pattern = {
             (int16_t)cost_index,
-            (int16_t)rc_index, 
+            (int16_t)rc_index,
             (int16_t)dx,
             (int16_t)dy,
             (uint16_t)capacity,
-            {Direction::NUM_DIRECTIONS}
-        };
+            {Direction::NUM_DIRECTIONS}};
         node_data_.push_back(pattern);
-        return node_data_.size()-1;
+        return node_data_.size() - 1;
     }
-
 
     // Reserve storage for RR nodes.
     void reserve(size_t size) {
@@ -496,7 +492,7 @@ class t_rr_graph_storage {
         }
         node_data_[idx].dir_side_.sides_ = static_cast<unsigned char>(side_bits.to_ulong());
     }
-    void set_node_data_direction(int idx, Direction dir){
+    void set_node_data_direction(int idx, Direction dir) {
         node_data_[idx].dir_side_.direction_ = dir;
     }
 

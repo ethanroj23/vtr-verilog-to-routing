@@ -239,7 +239,6 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     // using RrRcDataReadContext = const t_rr_node;
     // using RrRcDataWriteContext = const t_rr_node;
 
-
     using EdgeReadContext = const EdgeWalker*;
     using RrEdgesReadContext = EdgeWalker;
     using TimingWriteContext = t_rr_switch_inf*;
@@ -600,7 +599,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return itr.advance(n);
     }
 
-
     /** Generated for complex type "node_segment":
      * <xs:complexType name="node_segment">
      *   <xs:attribute name="segment_id" type="xs:int" use="required" />
@@ -683,7 +681,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_graph_builder_->set_node_ylow(node_id, ylow);
         rr_graph_builder_->set_node_data_idx(node_id, data_idx);
 
-
         switch (rr_graph.node_type(node.id())) {
             case CHANX:
                 break;
@@ -735,102 +732,116 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         // return rr_graph.node_data_idx(node.id());
     }
 
-	inline int get_node_xlow(const t_rr_node& node) final { node.id(); return -1;}
-	inline int get_node_ylow(const t_rr_node& node) final { node.id(); return -1;}
+    inline int get_node_xlow(const t_rr_node& node) final {
+        node.id();
+        return -1;
+    }
+    inline int get_node_ylow(const t_rr_node& node) final {
+        node.id();
+        return -1;
+    }
 
     /** Generated for complex type "node_data":
-	 * <xs:complexType name="node_data">
-	 *   <xs:attribute name="dx" type="xs:int" use="required" />
-	 *   <xs:attribute name="dy" type="xs:int" use="required" />
-	 *   <xs:attribute name="cost_index" type="xs:int" use="required" />
-	 *   <xs:attribute name="rc_index" type="xs:int" use="required" />
-	 *   <xs:attribute name="direction" type="node_direction" />
-	 *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
-	 *   <xs:attribute name="side" type="loc_side" />
-	 * </xs:complexType>
-	*/
+     * <xs:complexType name="node_data">
+     *   <xs:attribute name="dx" type="xs:int" use="required" />
+     *   <xs:attribute name="dy" type="xs:int" use="required" />
+     *   <xs:attribute name="cost_index" type="xs:int" use="required" />
+     *   <xs:attribute name="rc_index" type="xs:int" use="required" />
+     *   <xs:attribute name="direction" type="node_direction" />
+     *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
+     *   <xs:attribute name="side" type="loc_side" />
+     * </xs:complexType>
+     */
     // ESR TODO define these functions
-	inline unsigned int get_node_data_capacity(void*& /*ctx*/) final {return -1;}
-	inline int get_node_data_cost_index(void*& /*ctx*/) final {return -1;}
-	inline uxsd::enum_node_direction get_node_data_direction(void*& /*ctx*/) final {return uxsd::enum_node_direction::INC_DIR;}
-	inline void set_node_data_direction(uxsd::enum_node_direction direction, int& node_data) final {
+    inline unsigned int get_node_data_capacity(void*& /*ctx*/) final { return -1; }
+    inline int get_node_data_cost_index(void*& /*ctx*/) final { return -1; }
+    inline uxsd::enum_node_direction get_node_data_direction(void*& /*ctx*/) final { return uxsd::enum_node_direction::INC_DIR; }
+    inline void set_node_data_direction(uxsd::enum_node_direction direction, int& node_data) final {
         rr_nodes_->set_node_data_direction(node_data, from_uxsd_node_direction(direction));
-        }
-    inline int get_node_data_dx(void*& /*ctx*/) final {return -1;}
-	inline int get_node_data_dy(void*& /*ctx*/) final {return -1;}
-	inline int get_node_data_rc_index(void*& /*ctx*/) final {return -1;}
-	inline uxsd::enum_loc_side get_node_data_side(void*& /*ctx*/) final {return uxsd::enum_loc_side::TOP;}
-	inline void set_node_data_side(uxsd::enum_loc_side side, int& node_data) final {
+    }
+    inline int get_node_data_dx(void*& /*ctx*/) final { return -1; }
+    inline int get_node_data_dy(void*& /*ctx*/) final { return -1; }
+    inline int get_node_data_rc_index(void*& /*ctx*/) final { return -1; }
+    inline uxsd::enum_loc_side get_node_data_side(void*& /*ctx*/) final { return uxsd::enum_loc_side::TOP; }
+    inline void set_node_data_side(uxsd::enum_loc_side side, int& node_data) final {
         std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
-            for (const e_side& side_to_add : SIDES) {
-                if (sides_to_add[side_to_add]) {
-                    rr_nodes_->add_node_data_side(node_data, side_to_add);
-                }
+        for (const e_side& side_to_add : SIDES) {
+            if (sides_to_add[side_to_add]) {
+                rr_nodes_->add_node_data_side(node_data, side_to_add);
             }
         }
-    
+    }
 
     /** Generated for complex type "rr_node_data":
-	 * <xs:complexType name="rr_node_data">
-	 *   <xs:choice maxOccurs="unbounded">
-	 *     <xs:element name="node_data" type="node_data" />
-	 *   </xs:choice>
-	 * </xs:complexType>
-	*/
-// ESR TODO define these functions
-	inline void preallocate_rr_node_data_node_data(int& /*ctx*/, size_t size) final {(void)size;}
-	
+     * <xs:complexType name="rr_node_data">
+     *   <xs:choice maxOccurs="unbounded">
+     *     <xs:element name="node_data" type="node_data" />
+     *   </xs:choice>
+     * </xs:complexType>
+     */
+    // ESR TODO define these functions
+    inline void preallocate_rr_node_data_node_data(int& /*ctx*/, size_t size) final { (void)size; }
+
     /* adds node_data to rr_graph_storage */
     inline int add_rr_node_data_node_data(int& node_data, unsigned int capacity, int cost_index, int dx, int dy, int rc_index) final {
         int idx = rr_nodes_->node_data_push_back(capacity, cost_index, dx, dy, rc_index);
-        return idx;}
-	inline void finish_rr_node_data_node_data(int& node_data) final {(void)node_data;}
-	inline size_t num_rr_node_data_node_data(void*& /*ctx*/) final {return -1;}
-	inline void* get_rr_node_data_node_data(int n, void*& /*ctx*/) final {(void)n; return nullptr;}
+        return idx;
+    }
+    inline void finish_rr_node_data_node_data(int& node_data) final { (void)node_data; }
+    inline size_t num_rr_node_data_node_data(void*& /*ctx*/) final { return -1; }
+    inline void* get_rr_node_data_node_data(int n, void*& /*ctx*/) final {
+        (void)n;
+        return nullptr;
+    }
 
-	inline int get_node_loc_ptc(const t_rr_node& node) final {(void)node;return -1;}
+    inline int get_node_loc_ptc(const t_rr_node& node) final {
+        (void)node;
+        return -1;
+    }
 
     inline int init_node_loc(int& loc, int ptc) final {
         rr_graph_builder_->set_node_ptc_num(RRNodeId(loc), ptc);
-        return ptc;}
-	inline void finish_node_loc(int& loc) final {(void)loc;}
-	inline const t_rr_node get_node_loc(const t_rr_node& node) final {return node;}
-    	/** Generated for complex type "rc_data":
-	 * <xs:complexType name="rc_data">
-	 *   <xs:attribute name="R" type="xs:float" />
-	 *   <xs:attribute name="C" type="xs:float" />
-	 * </xs:complexType>
-	*/
-// ESR TODO define these functions
-	inline float get_rc_data_C(void*& /*ctx*/) final {return -1;}
-	inline float get_rc_data_R(void*& /*ctx*/) final {return -1;}
+        return ptc;
+    }
+    inline void finish_node_loc(int& loc) final { (void)loc; }
+    inline const t_rr_node get_node_loc(const t_rr_node& node) final { return node; }
+    /** Generated for complex type "rc_data":
+     * <xs:complexType name="rc_data">
+     *   <xs:attribute name="R" type="xs:float" />
+     *   <xs:attribute name="C" type="xs:float" />
+     * </xs:complexType>
+     */
+    // ESR TODO define these functions
+    inline float get_rc_data_C(void*& /*ctx*/) final { return -1; }
+    inline float get_rc_data_R(void*& /*ctx*/) final { return -1; }
 
-	/** Generated for complex type "rr_rc_data":
-	 * <xs:complexType name="rr_rc_data">
-	 *   <xs:choice maxOccurs="unbounded">
-	 *     <xs:element name="rc_data" type="rc_data" />
-	 *   </xs:choice>
-	 * </xs:complexType>
-	*/
-// ESR TODO define these functions
-	inline void preallocate_rr_rc_data_rc_data(void*& /*ctx*/, size_t size) final {(void)size;}
-	inline void* add_rr_rc_data_rc_data(void*& /*ctx*/, float C, float R) final {
+    /** Generated for complex type "rr_rc_data":
+     * <xs:complexType name="rr_rc_data">
+     *   <xs:choice maxOccurs="unbounded">
+     *     <xs:element name="rc_data" type="rc_data" />
+     *   </xs:choice>
+     * </xs:complexType>
+     */
+    // ESR TODO define these functions
+    inline void preallocate_rr_rc_data_rc_data(void*& /*ctx*/, size_t size) final { (void)size; }
+    inline void* add_rr_rc_data_rc_data(void*& /*ctx*/, float C, float R) final {
         find_create_rr_rc_data(R, C);
-        return nullptr;}
-	inline void finish_rr_rc_data_rc_data(void*& /*ctx*/) final {}
-	inline size_t num_rr_rc_data_rc_data(void*& /*ctx*/) final {return -1;}
-	inline void* get_rr_rc_data_rc_data(int n, void*& /*ctx*/) final {(void)n; return nullptr;}
+        return nullptr;
+    }
+    inline void finish_rr_rc_data_rc_data(void*& /*ctx*/) final {}
+    inline size_t num_rr_rc_data_rc_data(void*& /*ctx*/) final { return -1; }
+    inline void* get_rr_rc_data_rc_data(int n, void*& /*ctx*/) final {
+        (void)n;
+        return nullptr;
+    }
 
-
-
-// *((int *)args0[0])
-    inline int  init_rr_graph_rr_node_data(void*& node_data) final {return *((int*)node_data);}
-	inline void finish_rr_graph_rr_node_data(int& /*ctx*/) final {}
-	inline void* get_rr_graph_rr_node_data(void*& /*ctx*/) final {return nullptr;}
-	inline void* init_rr_graph_rr_rc_data(void*& /*ctx*/) final {return nullptr;}
-	inline void finish_rr_graph_rr_rc_data(void*& /*ctx*/) final {}
-	inline void* get_rr_graph_rr_rc_data(void*& /*ctx*/) final {return nullptr;}
-
+    // *((int *)args0[0])
+    inline int init_rr_graph_rr_node_data(void*& node_data) final { return *((int*)node_data); }
+    inline void finish_rr_graph_rr_node_data(int& /*ctx*/) final {}
+    inline void* get_rr_graph_rr_node_data(void*& /*ctx*/) final { return nullptr; }
+    inline void* init_rr_graph_rr_rc_data(void*& /*ctx*/) final { return nullptr; }
+    inline void finish_rr_graph_rr_rc_data(void*& /*ctx*/) final {}
+    inline void* get_rr_graph_rr_rc_data(void*& /*ctx*/) final { return nullptr; }
 
     inline void* init_rr_graph_rr_nodes(void*& /*ctx*/) final {
         rr_nodes_->clear();
