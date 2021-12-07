@@ -49,7 +49,7 @@ void get_segment_usage_stats(std::vector<t_segment_inf>& segment_inf) {
     seg_occ_by_type = (int*)vtr::calloc(segment_inf.size(), sizeof(int));
     seg_cap_by_type = (int*)vtr::calloc(segment_inf.size(), sizeof(int));
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         if (rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_graph.node_type(RRNodeId(inode)) == CHANY) {
             cost_index = rr_graph.node_cost_index(RRNodeId(inode));
             size_t seg_type = device_ctx.rr_indexed_data[cost_index].seg_index;

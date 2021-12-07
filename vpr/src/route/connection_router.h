@@ -34,7 +34,7 @@ class ConnectionRouter : public ConnectionRouterInterface {
         std::vector<t_rr_node_route_inf>& rr_node_route_inf)
         : grid_(grid)
         , router_lookahead_(router_lookahead)
-        , rr_nodes_(rr_nodes.view())
+        , rr_nodes_(rr_nodes.view_no_node_storage())
         , rr_graph_(rr_graph)
         , rr_rc_data_(rr_rc_data.data(), rr_rc_data.size())
         , rr_switch_inf_(rr_switch_inf.data(), rr_switch_inf.size())
@@ -42,7 +42,7 @@ class ConnectionRouter : public ConnectionRouterInterface {
         , router_stats_(nullptr)
         , router_debug_(false) {
         heap_.init_heap(grid);
-        heap_.set_prune_limit(rr_nodes_.size(), kHeapPruneFactor * rr_nodes_.size());
+        heap_.set_prune_limit(rr_graph_->size(), kHeapPruneFactor * rr_graph_->size());
     }
 
     // Clear's the modified list.  Should be called after reset_path_costs
@@ -247,7 +247,7 @@ class ConnectionRouter : public ConnectionRouterInterface {
 
     const DeviceGrid& grid_;
     const RouterLookahead& router_lookahead_;
-    const t_rr_graph_view rr_nodes_;
+    const t_rr_graph_view_no_node_storage rr_nodes_;
     const RRGraphView* rr_graph_;
     vtr::array_view<const t_rr_rc_data> rr_rc_data_;
     vtr::array_view<const t_rr_switch_inf> rr_switch_inf_;

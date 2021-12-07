@@ -175,11 +175,25 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
     return node_storage_.fan_in(node);
   }
 
+  /* Get all data of a routing resource node. This function is inlined for runtime optimization. */
+  inline t_rr_node_loc node_loc(RRNodeId node) const {
+    FoldedNodePattern p = node_patterns_[nodes_[node].node_data_index_];
+    int16_t xlow = nodes_[node].xlow_;
+    int16_t ylow = nodes_[node].ylow_;
+    t_rr_node_loc loc = {
+        xlow,
+        ylow,
+        int16_t(xlow + p.dx_),
+        int16_t(ylow + p.dy_)
+    };
+    return loc;
+  }
+
   /* PTC get methods */
-//   short node_ptc_num(RRNodeId id) const;
-//   short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
-//   short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
-//   short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_ptc_num(RRNodeId id) const;
+  short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
+  short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+  short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
 
   /* Edge Methods */
 

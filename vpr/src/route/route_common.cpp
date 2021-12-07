@@ -334,7 +334,7 @@ bool feasible_routing() {
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         if (route_ctx.rr_node_route_inf[inode].occ() > rr_graph.node_capacity(RRNodeId(inode))) {
             return (false);
         }
@@ -350,7 +350,7 @@ std::vector<int> collect_congested_rr_nodes() {
     auto& route_ctx = g_vpr_ctx.routing();
 
     std::vector<int> congested_rr_nodes;
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         short occ = route_ctx.rr_node_route_inf[inode].occ();
         short capacity = rr_graph.node_capacity(RRNodeId(inode));
 
@@ -361,14 +361,14 @@ std::vector<int> collect_congested_rr_nodes() {
     return congested_rr_nodes;
 }
 
-/* Returns a vector from [0..device_ctx.rr_nodes.size()-1] containing the set
+/* Returns a vector from [0..device_ctx.rr_graph.size()-1] containing the set
  * of nets using each RR node */
 std::vector<std::set<ClusterNetId>> collect_rr_node_nets() {
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
     auto& cluster_ctx = g_vpr_ctx.clustering();
 
-    std::vector<std::set<ClusterNetId>> rr_node_nets(device_ctx.rr_nodes.size());
+    std::vector<std::set<ClusterNetId>> rr_node_nets(device_ctx.rr_graph.size());
     for (ClusterNetId inet : cluster_ctx.clb_nlist.nets()) {
         t_trace* trace_elem = route_ctx.trace[inet].head;
         while (trace_elem) {
@@ -436,7 +436,7 @@ void pathfinder_update_acc_cost_and_overuse_info(float acc_fac, OveruseInfo& ove
     auto& route_ctx = g_vpr_ctx.mutable_routing();
     size_t overused_nodes = 0, total_overuse = 0, worst_overuse = 0;
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         int overuse = route_ctx.rr_node_route_inf[inode].occ() - rr_graph.node_capacity(RRNodeId(inode));
 
         // If overused, update the acc_cost and add this node to the overuse info
@@ -939,8 +939,8 @@ void alloc_and_load_rr_node_route_structs() {
     auto& route_ctx = g_vpr_ctx.mutable_routing();
     auto& device_ctx = g_vpr_ctx.device();
 
-    route_ctx.rr_node_route_inf.resize(device_ctx.rr_nodes.size());
-    route_ctx.non_configurable_bitset.resize(device_ctx.rr_nodes.size());
+    route_ctx.rr_node_route_inf.resize(device_ctx.rr_graph.size());
+    route_ctx.non_configurable_bitset.resize(device_ctx.rr_graph.size());
     route_ctx.non_configurable_bitset.fill(false);
 
     reset_rr_node_route_structs();
@@ -957,9 +957,9 @@ void reset_rr_node_route_structs() {
     auto& route_ctx = g_vpr_ctx.mutable_routing();
     auto& device_ctx = g_vpr_ctx.device();
 
-    VTR_ASSERT(route_ctx.rr_node_route_inf.size() == size_t(device_ctx.rr_nodes.size()));
+    VTR_ASSERT(route_ctx.rr_node_route_inf.size() == size_t(device_ctx.rr_graph.size()));
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         auto& node_inf = route_ctx.rr_node_route_inf[inode];
 
         node_inf.prev_node = NO_PREVIOUS;
@@ -1399,7 +1399,7 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
                 /* Always 0 for pads and for RECEIVER (IPIN) classes */
                 for (ipin = 0; ipin < num_local_opin; ipin++) {
                     inode = route_ctx.clb_opins_used_locally[blk_id][iclass][ipin];
-                    VTR_ASSERT(inode >= 0 && inode < (ssize_t)device_ctx.rr_nodes.size());
+                    VTR_ASSERT(inode >= 0 && inode < (ssize_t)device_ctx.rr_graph.size());
                     adjust_one_rr_occ_and_acc_cost(inode, -1, acc_fac);
                 }
             }
@@ -1612,7 +1612,7 @@ void print_invalid_routing_info() {
         }
     }
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         int occ = route_ctx.rr_node_route_inf[inode].occ();
         int cap = rr_graph.node_capacity(RRNodeId(inode));
         if (occ > cap) {

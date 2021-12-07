@@ -96,7 +96,16 @@ struct t_rr_node_ptc_data {
     } ptc_;
 };
 
+struct t_rr_node_loc {
+    int16_t xlow_ = -1;
+    int16_t ylow_ = -1;
+    int16_t xhigh_ = -1;
+    int16_t yhigh_ = -1;
+};
+
 class t_rr_graph_view;
+class t_rr_graph_view_no_node_storage;
+
 
 // RR node and edge storage class.
 //
@@ -154,6 +163,7 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     // t_rr_graph_view is a value object, and should be passed around by value
     // and stored.
     t_rr_graph_view view() const;
+    t_rr_graph_view_no_node_storage view_no_node_storage() const;
 
     /****************
      * Node methods *
@@ -227,6 +237,16 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     }
     t_edge_size node_fan_in(RRNodeId id) const {
         return node_fan_in_[id];
+    }
+      /* Get all data of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_node_loc node_loc(RRNodeId node) const {
+        t_rr_node_loc loc = {
+            node_storage_[node].xlow_,
+            node_storage_[node].ylow_,
+            node_storage_[node].xhigh_,
+            node_storage_[node].yhigh_
+        };
+        return loc;
     }
 
     t_rr_node_data get_remove_last_node() {
@@ -831,5 +851,87 @@ class t_rr_graph_view {
     vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node_;
     vtr::array_view_id<RREdgeId, const short> edge_switch_;
 };
+
+/* Now that node_storage_ is contained within the RRGraphView object, remove node_storage from this t_rr_graph_view */
+class t_rr_graph_view_no_node_storage {
+  public:
+    t_rr_graph_view_no_node_storage();
+    t_rr_graph_view_no_node_storage(
+        const vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
+        const vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge,
+        const vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in,
+        const vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node,
+        const vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node,
+        const vtr::array_view_id<RREdgeId, const short> edge_switch)
+        : node_ptc_(node_ptc)
+        , node_first_edge_(node_first_edge)
+        , node_fan_in_(node_fan_in)
+        , edge_src_node_(edge_src_node)
+        , edge_dest_node_(edge_dest_node)
+        , edge_switch_(edge_switch) {}
+
+    /****************
+     * Node methods *
+     ****************/
+
+
+    void rr_graph_name(){
+        VTR_LOG("rr_graph_storage\n");
+    }
+
+    const char* node_type_string(RRNodeId id) const;
+
+    /* PTC get methods */
+    short node_ptc_num(RRNodeId id) const;
+    short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
+    short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+    short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
+
+    /* Retrieve fan_in for RRNodeId. */
+    t_edge_size fan_in(RRNodeId id) const {
+        return node_fan_in_[id];
+    }
+
+    t_edge_size node_fan_in(RRNodeId id) const {
+        return node_fan_in_[id];
+    }
+
+    /* Edge accessors */
+
+    // Returns a range of RREdgeId's belonging to RRNodeId id.
+    //
+    // If this range is empty, then RRNodeId id has no edges.
+    vtr::StrongIdRange<RREdgeId> edge_range(RRNodeId id) const {
+        return vtr::StrongIdRange<RREdgeId>(first_edge(id), last_edge(id));
+    }
+
+    // Get the destination node for the specified edge.
+    RRNodeId edge_sink_node(RREdgeId edge) const {
+        return edge_dest_node_[edge];
+    }
+
+    // Get the switch used for the specified edge.
+    short edge_switch(RREdgeId edge) const {
+        return edge_switch_[edge];
+    }
+
+  private:
+    RREdgeId first_edge(RRNodeId id) const {
+        return node_first_edge_[id];
+    }
+
+    RREdgeId last_edge(RRNodeId id) const {
+        return (&node_first_edge_[id])[1];
+    }
+
+    vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc_;
+    vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;
+    vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in_;
+    vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node_;
+    vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node_;
+    vtr::array_view_id<RREdgeId, const short> edge_switch_;
+};
+
+
 
 #endif /* _RR_GRAPH_STORAGE_ */

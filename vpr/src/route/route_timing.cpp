@@ -322,7 +322,7 @@ bool try_timing_driven_route_tmpl(const t_router_opts& router_opts,
      */
     bool routing_is_successful = false;
     WirelengthInfo wirelength_info;
-    OveruseInfo overuse_info(device_ctx.rr_nodes.size());
+    OveruseInfo overuse_info(device_ctx.rr_graph.size());
     tatum::TimingPathInfo critical_path;
     int itry; //Routing iteration number
     int itry_conflicted_mode = 0;
@@ -1668,7 +1668,7 @@ static size_t calculate_wirelength_available() {
 
     size_t available_wirelength = 0;
     // But really what's happening is that this for loop iterates over every node and determines the available wirelength
-    for (size_t i = 0; i < device_ctx.rr_nodes.size(); ++i) {
+    for (size_t i = 0; i < device_ctx.rr_graph.size(); ++i) {
         const t_rr_type channel_type = rr_graph.node_type(RRNodeId(i));
         if (channel_type == CHANX || channel_type == CHANY) {
             available_wirelength += rr_graph.node_capacity(RRNodeId(i)) * rr_graph.node_length(RRNodeId(i));

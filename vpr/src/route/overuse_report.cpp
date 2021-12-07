@@ -36,7 +36,7 @@ void log_overused_nodes_status(int max_logged_overused_rr_nodes) {
 
     //Print overuse info body
     int overuse_index = 0;
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         int overuse = route_ctx.rr_node_route_inf[inode].occ() - rr_graph.node_capacity(RRNodeId(inode));
 
         if (overuse > 0) {

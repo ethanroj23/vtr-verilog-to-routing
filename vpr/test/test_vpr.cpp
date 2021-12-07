@@ -135,7 +135,7 @@ TEST_CASE("read_rr_graph_metadata", "[vpr]") {
         const auto& device_ctx = g_vpr_ctx.device();
         const auto& rr_graph = device_ctx.rr_graph;
 
-        for (int inode = 0; inode < (int)device_ctx.rr_nodes.size(); ++inode) {
+        for (int inode = 0; inode < (int)device_ctx.rr_graph.size(); ++inode) {
             if ((rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_graph.node_type(RRNodeId(inode)) == CHANY) && device_ctx.rr_nodes[inode].num_edges() > 0) {
                 src_inode = inode;
                 break;
@@ -182,7 +182,7 @@ TEST_CASE("read_rr_graph_metadata", "[vpr]") {
     const auto& device_ctx = g_vpr_ctx.device();
 
     // recompute ordering from 'random_shuffle'
-    std::vector<int> src_order(device_ctx.rr_nodes.size()); // new id -> old id
+    std::vector<int> src_order(device_ctx.rr_graph.size()); // new id -> old id
     std::iota(src_order.begin(), src_order.end(), 0);       // Initialize to [0, 1, 2 ...]
     std::mt19937 g(1);
     std::shuffle(src_order.begin(), src_order.end(), g);

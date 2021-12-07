@@ -147,28 +147,28 @@ void FoldedNodesRRGraph::verify_folded_rr_graph(){
     }
 }
 
-// short FoldedNodesRRGraph::node_ptc_num(RRNodeId id) const {
-//     return node_storage_.node_ptc_num(id);
-// }
-// short FoldedNodesRRGraph::node_pin_num(RRNodeId id) const {
-//     auto cur_type = node_type(id);
-//     if (cur_type != IPIN && cur_type != OPIN) {
-//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[cur_type]);
-//     }
-//     return node_storage_.node_pin_num(id, false);
-// }
+short FoldedNodesRRGraph::node_ptc_num(RRNodeId id) const {
+    return node_storage_.node_ptc_num(id);
+}
+short FoldedNodesRRGraph::node_pin_num(RRNodeId id) const {
+    // auto cur_type = node_type(id);
+    // if (cur_type != IPIN && cur_type != OPIN) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[cur_type]);
+    // }
+    return node_storage_.node_pin_num(id);
+}
 
-// short FoldedNodesRRGraph::node_track_num(RRNodeId id) const {
-//     auto cur_type = node_type(id);
-//     if (cur_type != CHANX && cur_type != CHANY) {
-//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[cur_type]);
-//     }
-//     return node_storage_.node_track_num(id, false);
-// }
-// short FoldedNodesRRGraph::node_class_num(RRNodeId id) const {
-//     auto cur_type = node_type(id);
-//     if (cur_type != SOURCE && cur_type != SINK) {
-//         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[cur_type]);
-//     }
-//     return node_storage_.node_class_num(id, false);
-// }
+short FoldedNodesRRGraph::node_track_num(RRNodeId id) const {
+    // auto cur_type = node_type(id);
+    // if (cur_type != CHANX && cur_type != CHANY) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[cur_type]);
+    // }
+    return node_storage_.node_track_num(id);
+}
+short FoldedNodesRRGraph::node_class_num(RRNodeId id) const {
+    // auto cur_type = node_type(id);
+    // if (cur_type != SOURCE && cur_type != SINK) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[cur_type]);
+    // }
+    return node_storage_.node_class_num(id);
+}

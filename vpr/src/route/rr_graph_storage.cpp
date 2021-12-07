@@ -744,6 +744,44 @@ t_rr_graph_view t_rr_graph_storage::view() const {
         vtr::make_const_array_view_id(edge_switch_));
 }
 
+short t_rr_graph_view_no_node_storage::node_ptc_num(RRNodeId id) const {
+    return node_ptc_[id].ptc_.pin_num;
+}
+short t_rr_graph_view_no_node_storage::node_pin_num(RRNodeId id) const {
+    auto node_type = g_vpr_ctx.device().rr_graph.node_type(id);
+    if (node_type != IPIN && node_type != OPIN) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[node_type]);
+    }
+    return node_ptc_[id].ptc_.pin_num;
+}
+
+short t_rr_graph_view_no_node_storage::node_track_num(RRNodeId id) const {
+    auto node_type = g_vpr_ctx.device().rr_graph.node_type(id);
+    if (node_type != CHANX && node_type != CHANY) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[node_type]);
+    }
+    return node_ptc_[id].ptc_.track_num;
+}
+short t_rr_graph_view_no_node_storage::node_class_num(RRNodeId id) const {
+    auto node_type = g_vpr_ctx.device().rr_graph.node_type(id);
+    if (node_type != SOURCE && node_type != SINK) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[node_type]);
+    }
+    return node_ptc_[id].ptc_.class_num;
+}
+
+t_rr_graph_view_no_node_storage t_rr_graph_storage::view_no_node_storage() const {
+    VTR_ASSERT(partitioned_);
+    //VTR_ASSERT(node_storage_.size() == node_fan_in_.size());
+    return t_rr_graph_view_no_node_storage(
+        vtr::make_const_array_view_id(node_ptc_),
+        vtr::make_const_array_view_id(node_first_edge_),
+        vtr::make_const_array_view_id(node_fan_in_),
+        vtr::make_const_array_view_id(edge_src_node_),
+        vtr::make_const_array_view_id(edge_dest_node_),
+        vtr::make_const_array_view_id(edge_switch_));
+}
+
 // Given `order`, a vector mapping each RRNodeId to a new one (old -> new),
 // and `inverse_order`, its inverse (new -> old), update the t_rr_graph_storage
 // data structure to an isomorphic graph using the new RRNodeId's.

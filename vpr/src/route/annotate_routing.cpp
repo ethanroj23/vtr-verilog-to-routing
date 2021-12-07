@@ -28,7 +28,7 @@ vtr::vector<RRNodeId, ClusterNetId> annotate_rr_node_nets(const DeviceContext& d
     const auto& rr_graph = device_ctx.rr_graph;
 
     vtr::vector<RRNodeId, ClusterNetId> rr_node_nets;
-    rr_node_nets.resize(device_ctx.rr_nodes.size(), ClusterNetId::INVALID());
+    rr_node_nets.resize(device_ctx.rr_graph.size(), ClusterNetId::INVALID());
 
     for (auto net_id : clustering_ctx.clb_nlist.nets()) {
         if (clustering_ctx.clb_nlist.net_is_ignored(net_id)) {

@@ -1799,8 +1799,8 @@ void print_switch_usage() {
     switch_fanin_delay = new std::map<int, float>[device_ctx.num_arch_switches];
     // a node can have multiple inward switches, so
     // map key: switch index; map value: count (fanin)
-    std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_nodes.size()];
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_graph.size()];
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         const t_rr_node& from_node = device_ctx.rr_nodes[inode];
         int num_edges = from_node.num_edges();
         for (int iedge = 0; iedge < num_edges; iedge++) {
@@ -1815,7 +1815,7 @@ void print_switch_usage() {
             inward_switch_inf[to_node_index][switch_index]++;
         }
     }
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         std::map<int, int>::iterator itr;
         for (itr = inward_switch_inf[inode].begin(); itr != inward_switch_inf[inode].end(); itr++) {
             int switch_index = itr->first;
@@ -1864,7 +1864,7 @@ void print_switch_usage() {
  * map<int, int> used_wire_count;
  * map<int, int> total_wire_count;
  * auto& device_ctx = g_vpr_ctx.device();
- * for (int inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+ * for (int inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
  * if (rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_node[inode].type() == CHANY) {
  * //int length = abs(rr_graph.node_xhigh(RRNodeId(inode)) + rr_graph.node_yhigh(RRNodeId(inode))
  * //             - rr_graph.node_xlow(RRNodeId(inode)) - rr_graph.node_ylow(RRNodeId(inode)));

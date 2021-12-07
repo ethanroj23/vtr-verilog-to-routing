@@ -45,9 +45,9 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
     cblock_counted = (bool*)vtr::calloc(maxlen, sizeof(bool));
     buffer_Cin = (float*)vtr::calloc(maxlen, sizeof(float));
 
-    std::vector<float> rr_node_C(device_ctx.rr_nodes.size(), 0.); //Stores the final C
+    std::vector<float> rr_node_C(device_ctx.rr_graph.size(), 0.); //Stores the final C
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         //The C may have already been partly initialized (e.g. with metal capacitance)
         rr_node_C[inode] += rr_graph.node_C(RRNodeId(inode));
 
@@ -171,8 +171,8 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
      * Current structures only keep switch information from a node to the next node and
      * not the reverse.  Therefore I need to go through all the possible edges to figure
      * out what the Cout's should be */
-    Couts_to_add = (float*)vtr::calloc(device_ctx.rr_nodes.size(), sizeof(float));
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    Couts_to_add = (float*)vtr::calloc(device_ctx.rr_graph.size(), sizeof(float));
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[inode].num_edges(); iedge++) {
             switch_index = device_ctx.rr_nodes[inode].edge_switch(iedge);
             to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
@@ -185,12 +185,12 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
             }
         }
     }
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         rr_node_C[inode] += Couts_to_add[inode];
     }
 
     //Create the final flywieghted t_rr_rc_data
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         mutable_device_ctx.rr_graph_builder.set_node_rc_index(RRNodeId(inode), NodeRCIndex(find_create_rr_rc_data(rr_graph.node_R(RRNodeId(inode)), rr_node_C[inode])));
     }
 

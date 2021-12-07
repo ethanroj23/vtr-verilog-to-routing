@@ -473,7 +473,7 @@ static void compute_router_wire_lookahead(const std::vector<t_segment_inf>& segm
             if (!sample_nodes[chan_type].empty()) continue;
 
             //Try an exhaustive search to find a suitable sample point
-            for (int inode = 0; inode < int(device_ctx.rr_nodes.size()); ++inode) {
+            for (int inode = 0; inode < int(device_ctx.rr_graph.size()); ++inode) {
                 auto rr_node = RRNodeId(inode);
                 auto rr_type = temp_rr_graph.node_type(rr_node);
                 if (rr_type != chan_type) continue;
@@ -588,14 +588,14 @@ static RRNodeId get_start_node(int start_x, int start_y, int target_x, int targe
 static void run_dijkstra(RRNodeId start_node, int start_x, int start_y, t_routing_cost_map& routing_cost_map, t_dijkstra_data* data) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the rr_graph below is unneeded
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     auto& node_expanded = data->node_expanded;
-    node_expanded.resize(device_ctx.rr_nodes.size());
+    node_expanded.resize(device_ctx.rr_graph.size());
     std::fill(node_expanded.begin(), node_expanded.end(), false);
 
     auto& node_visited_costs = data->node_visited_costs;
-    node_visited_costs.resize(device_ctx.rr_nodes.size());
+    node_visited_costs.resize(device_ctx.rr_graph.size());
     std::fill(node_visited_costs.begin(), node_visited_costs.end(), -1.0);
 
     /* a priority queue for expansion */
@@ -861,7 +861,6 @@ Cost_Entry Expansion_Cost_Entry::get_median_entry() {
 static void get_xy_deltas(const RRNodeId from_node, const RRNodeId to_node, int* delta_x, int* delta_y) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the rr_graph below is unneeded
-    auto& rr_graph = device_ctx.rr_nodes;
 
     e_rr_type from_type = temp_rr_graph.node_type(from_node);
     e_rr_type to_type = temp_rr_graph.node_type(to_node);
@@ -889,17 +888,17 @@ static void get_xy_deltas(const RRNodeId from_node, const RRNodeId to_node, int*
         int to_seg;
         int to_chan;
         if (from_type == CHANY) {
-            from_seg_low = rr_graph.node_ylow(from_node);
-            from_seg_high = rr_graph.node_yhigh(from_node);
-            from_chan = rr_graph.node_xlow(from_node);
-            to_seg = rr_graph.node_ylow(to_node);
-            to_chan = rr_graph.node_xlow(to_node);
+            from_seg_low = temp_rr_graph.node_ylow(from_node);
+            from_seg_high = temp_rr_graph.node_yhigh(from_node);
+            from_chan = temp_rr_graph.node_xlow(from_node);
+            to_seg = temp_rr_graph.node_ylow(to_node);
+            to_chan = temp_rr_graph.node_xlow(to_node);
         } else {
-            from_seg_low = rr_graph.node_xlow(from_node);
-            from_seg_high = rr_graph.node_xhigh(from_node);
-            from_chan = rr_graph.node_ylow(from_node);
-            to_seg = rr_graph.node_xlow(to_node);
-            to_chan = rr_graph.node_ylow(to_node);
+            from_seg_low = temp_rr_graph.node_xlow(from_node);
+            from_seg_high = temp_rr_graph.node_xhigh(from_node);
+            from_chan = temp_rr_graph.node_ylow(from_node);
+            to_seg = temp_rr_graph.node_xlow(to_node);
+            to_chan = temp_rr_graph.node_ylow(to_node);
         }
 
         /* now we want to count the minimum number of *channel segments* between the from and to nodes */
@@ -935,7 +934,7 @@ static void get_xy_deltas(const RRNodeId from_node, const RRNodeId to_node, int*
 
         /* account for wire direction. lookahead map was computed by looking up and to the right starting at INC wires. for targets
          * that are opposite of the wire direction, let's add 1 to delta_seg */
-        Direction from_dir = rr_graph.node_direction(from_node);
+        Direction from_dir = temp_rr_graph.node_direction(from_node);
         if (is_chan(from_type)
             && ((to_seg < from_seg_low && from_dir == Direction::INC) || (to_seg > from_seg_high && from_dir == Direction::DEC))) {
             delta_seg++;

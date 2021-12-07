@@ -57,6 +57,18 @@ class RRGraphView : public RRGraphViewInterface {
      * kind of accessors
      */
   public:
+
+    inline void set_primary_rr_graph(RRGraphViewInterface* new_rr_graph){
+        primary_rr_graph_ = new_rr_graph;
+    }
+
+    inline size_t size() const{
+        return primary_rr_graph_->size();
+    }
+    inline bool empty() const{
+        return primary_rr_graph_->empty();
+    }
+    
     /** @brief Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type(RRNodeId node) const {
         return primary_rr_graph_->node_type(node);
@@ -287,6 +299,12 @@ class RRGraphView : public RRGraphViewInterface {
      *  which are SOURCE and SINK nodes. This function is inlined for runtime optimization. */
     inline short node_class_num(RRNodeId node) const {
         return primary_rr_graph_->node_class_num(node);
+    }
+
+    // This prefetechs hot RR node data required for optimization.
+    // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
+    inline void prefetch_node(RRNodeId node) const {
+        return primary_rr_graph_->prefetch_node(node);
     }
 
     /** @brief Get the cost index of a routing resource node. This function is inlined for runtime optimization. */

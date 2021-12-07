@@ -283,7 +283,7 @@ template<typename Heap>
 std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_paths_from_heap(
     const t_conn_cost_params cost_params,
     t_bb bounding_box) {
-    std::vector<t_heap> cheapest_paths(rr_nodes_.size());
+    std::vector<t_heap> cheapest_paths(rr_graph_->size());
 
     VTR_ASSERT_SAFE(heap_.is_valid());
 
@@ -388,6 +388,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
         target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
         target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
         target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
+        // target_bb = rr_graph_->node_loc(RRNodeId(target_node));
     }
 
     //For each node associated with the current heap element, expand all of it's neighbors
@@ -414,7 +415,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //
     for (RREdgeId from_edge : edges) {
         RRNodeId to_node = rr_nodes_.edge_sink_node(from_edge);
-        rr_nodes_.prefetch_node(to_node);
+        rr_graph_->prefetch_node(to_node);
 
         int switch_idx = rr_nodes_.edge_switch(from_edge);
         VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
@@ -450,6 +451,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
     int to_ylow = rr_graph_->node_ylow(to_node);
     int to_xhigh = rr_graph_->node_xhigh(to_node);
     int to_yhigh = rr_graph_->node_yhigh(to_node);
+    // t_rr_node_loc to_node_loc = rr_graph_->node_loc(to_node);
 
     // BB-pruning
     // Disable BB-pruning if RCV is enabled, as this can make it harder for circuits with high negative hold slack to resolve this

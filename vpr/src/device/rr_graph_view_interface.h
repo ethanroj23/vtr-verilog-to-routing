@@ -34,7 +34,7 @@ class RRGraphViewInterface {
       virtual t_edge_size fan_in(RRNodeId node) const=0;
       virtual t_edge_size node_fan_in(RRNodeId node) const=0;
 
-    //   virtual void prefetch_node(RRNodeId id) const=0;
+      virtual void prefetch_node(RRNodeId id) const=0;
 
 
       virtual bool is_node_on_specific_side(RRNodeId node, e_side side) const=0;
@@ -66,9 +66,9 @@ class RRGraphViewInterface {
 
       /* Other Methods */
     //   virtual const char* rr_graph_name() const=0;
-    //   virtual size_t size() const=0;
+      virtual size_t size() const=0;
     //   virtual size_t edge_count() const=0;
-    //   virtual bool empty() const=0;
+      virtual bool empty() const=0;
     //   virtual int memory_used() const=0;
 
 

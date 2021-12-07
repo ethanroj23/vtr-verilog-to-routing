@@ -297,7 +297,8 @@ static void build_rr_graph(const t_graph_type graph_type,
                            const t_direct_inf* directs,
                            const int num_directs,
                            int* wire_to_rr_ipin_switch,
-                           int* Warnings);
+                           int* Warnings,
+                           t_det_routing_arch* det_routing_arch);
 
 /******************* Subroutine definitions *******************************/
 
@@ -330,7 +331,7 @@ void create_rr_graph(const t_graph_type graph_type,
             reorder_rr_graph_nodes(router_opts);
         }
     } else {
-        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
+        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_graph.empty()) {
             //No change in channel width, so skip re-building RR graph
             VTR_LOG("RR graph channel widths unchanged, skipping RR graph rebuild\n");
             return;
@@ -356,7 +357,8 @@ void create_rr_graph(const t_graph_type graph_type,
                        router_opts.clock_modeling,
                        directs, num_directs,
                        &det_routing_arch->wire_to_rr_ipin_switch,
-                       Warnings);
+                       Warnings,
+                       det_routing_arch);
         reorder_rr_graph_nodes(router_opts);
     }
 
@@ -380,7 +382,7 @@ void print_rr_graph_stats() {
         num_rr_edges += rr_node.edges().size();
     }
 
-    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_nodes.size());
+    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.size());
     VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
 }
 
@@ -417,11 +419,14 @@ static void build_rr_graph(const t_graph_type graph_type,
                            const t_direct_inf* directs,
                            const int num_directs,
                            int* wire_to_rr_ipin_switch,
-                           int* Warnings) {
+                           int* Warnings,
+                           t_det_routing_arch* det_routing_arch) {
     vtr::ScopedStartFinishTimer timer("Build routing resource graph");
 
     /* Reset warning flag */
     *Warnings = RR_GRAPH_NO_WARN;
+
+    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().rr_nodes);
 
     /* Decode the graph_type */
     bool is_global_graph = ((GRAPH_GLOBAL == graph_type) ? true : false);
@@ -694,14 +699,14 @@ static void build_rr_graph(const t_graph_type graph_type,
         clock_modeling);
 
     // Verify no incremental node allocation.
-    if (device_ctx.rr_nodes.size() > expected_node_count) {
+    if (device_ctx.rr_graph.size() > expected_node_count) {
         VTR_LOG_ERROR("Expected no more than %zu nodes, have %zu nodes\n",
-                      expected_node_count, device_ctx.rr_nodes.size());
+                      expected_node_count, device_ctx.rr_graph.size());
     }
 
     /* Update rr_nodes capacities if global routing */
     if (graph_type == GRAPH_GLOBAL) {
-        // Using num_rr_nodes here over device_ctx.rr_nodes.size() because
+        // Using num_rr_nodes here over device_ctx.rr_graph.size() because
         // clock_modeling::DEDICATED_NETWORK will append some rr nodes after
         // the regular graph.
         for (int i = 0; i < num_rr_nodes; i++) {
@@ -749,6 +754,16 @@ static void build_rr_graph(const t_graph_type graph_type,
     free_type_track_to_pin_map(track_to_pin_lookup, types, max_chan_width);
     if (clb_to_clb_directs != nullptr) {
         free(clb_to_clb_directs);
+    }
+    /* USE FOLDED RR GRAPH */
+    if (det_routing_arch->write_rr_graph_filename.empty()){
+        VTR_LOG("Folding RRGraph...\n");
+        if (det_routing_arch->primary_rr_graph == "FoldedNodesRRGraph"){
+            // build the folded representation
+            g_vpr_ctx.mutable_device().folded_nodes_rr_graph.build_graph();
+            // Set primary rr_graph to the FoldedRRGraph
+            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
+        }
     }
 }
 

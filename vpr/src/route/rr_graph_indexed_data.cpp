@@ -242,7 +242,7 @@ static std::vector<size_t> count_rr_segment_types() {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.size(); ++inode) {
         if (rr_graph.node_type(RRNodeId(inode)) != CHANX && rr_graph.node_type(RRNodeId(inode)) != CHANY) continue;
 
         auto cost_index = rr_graph.node_cost_index(RRNodeId(inode));
