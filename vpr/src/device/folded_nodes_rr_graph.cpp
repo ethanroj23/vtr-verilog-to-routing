@@ -108,9 +108,9 @@ void FoldedNodesRRGraph::build_graph(){
     /* reverse nodes because they were added in reverse order */
     std::reverse(nodes_.begin(), nodes_.end());
     built = true;
-    for (size_t edge = 0; edge < node_storage_.edge_count(); edge++){
-        edge_dest_node_.push_back(node_storage_.edge_sink_node(RREdgeId(edge)));
-    }
+    // for (size_t edge = 0; edge < node_storage_.edge_count(); edge++){
+    //     edge_dest_node_.push_back(node_storage_.edge_sink_node(RREdgeId(edge)));
+    // }
     
 
     print_memory_stats();
