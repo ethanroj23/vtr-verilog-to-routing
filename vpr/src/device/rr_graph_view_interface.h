@@ -31,6 +31,7 @@ class RRGraphViewInterface {
       virtual short node_track_num(RRNodeId id) const=0;
       virtual short node_class_num(RRNodeId id) const=0;
 
+      virtual t_rr_node_loc node_loc(RRNodeId node) const=0;
       virtual t_edge_size fan_in(RRNodeId node) const=0;
       virtual t_edge_size node_fan_in(RRNodeId node) const=0;
 

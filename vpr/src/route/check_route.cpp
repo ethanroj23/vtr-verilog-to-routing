@@ -324,7 +324,7 @@ static bool check_adjacent(int from_node, int to_node) {
     VTR_ASSERT(reached);
 
     num_adj = 0;
-
+    //ESR TODO
     auto from_rr = RRNodeId(from_node);
     auto to_rr = RRNodeId(to_node);
     from_type = rr_graph.node_type(from_rr);

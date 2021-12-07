@@ -1949,6 +1949,7 @@ static t_bb calc_current_bb(const t_trace* head) {
         //'within' of the BB. Only those which are *strictly* out side the
         //box are excluded, hence we use the nodes xhigh/yhigh for xmin/xmax,
         //and xlow/ylow for xmax/ymax calculations
+        //ESR TODO
         bb.xmin = std::min<int>(bb.xmin, rr_graph.node_xhigh(node.id()));
         bb.ymin = std::min<int>(bb.ymin, rr_graph.node_yhigh(node.id()));
         bb.xmax = std::max<int>(bb.xmax, rr_graph.node_xlow(node.id()));

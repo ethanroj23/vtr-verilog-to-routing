@@ -1146,6 +1146,7 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor) {
     RRNodeId driver_rr = RRNodeId(route_ctx.net_rr_terminals[net_id][0]);
     VTR_ASSERT(rr_graph.node_type(driver_rr) == SOURCE);
 
+    //ESR TODO
     VTR_ASSERT(rr_graph.node_xlow(driver_rr) <= rr_graph.node_xhigh(driver_rr));
     VTR_ASSERT(rr_graph.node_ylow(driver_rr) <= rr_graph.node_yhigh(driver_rr));
 
@@ -1161,7 +1162,7 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor) {
 
         VTR_ASSERT(rr_graph.node_xlow(sink_rr) <= rr_graph.node_xhigh(sink_rr));
         VTR_ASSERT(rr_graph.node_ylow(sink_rr) <= rr_graph.node_yhigh(sink_rr));
-
+        //ESR TODO
         xmin = std::min<int>(xmin, rr_graph.node_xlow(sink_rr));
         xmax = std::max<int>(xmax, rr_graph.node_xhigh(sink_rr));
         ymin = std::min<int>(ymin, rr_graph.node_ylow(sink_rr));
@@ -1237,6 +1238,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                     int inode = tptr->index;
                     auto rr_node = RRNodeId(inode);
                     t_rr_type rr_type = rr_graph.node_type(rr_node);
+                    //ESR TODO
                     int ilow = rr_graph.node_xlow(rr_node);
                     int jlow = rr_graph.node_ylow(rr_node);
 

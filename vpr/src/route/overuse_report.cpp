@@ -153,6 +153,7 @@ static void report_overused_ipin_opin(std::ostream& os, RRNodeId node_id) {
     const auto& rr_graph = device_ctx.rr_graph;
     const auto& place_ctx = g_vpr_ctx.placement();
 
+    //ESR TODO
     auto grid_x = rr_graph.node_xlow(node_id);
     auto grid_y = rr_graph.node_ylow(node_id);
     VTR_ASSERT_MSG(

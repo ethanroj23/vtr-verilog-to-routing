@@ -543,6 +543,14 @@ struct t_bb {
     int ymax = 0;
 };
 
+struct t_rr_node_loc {
+    int16_t xlow_ = -1;
+    int16_t ylow_ = -1;
+    int16_t xhigh_ = -1;
+    int16_t yhigh_ = -1;
+};
+
+
 /**
  * @brief An offset between placement locations (t_pl_loc)
  *

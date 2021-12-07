@@ -382,13 +382,14 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     /* Puts all the rr_nodes adjacent to current on the heap.
      */
 
-    t_bb target_bb;
+    // t_bb target_bb;
+    t_rr_node_loc target_bb;
     if (target_node != OPEN) {
-        target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
-        target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
-        target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
-        target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
-        // target_bb = rr_graph_->node_loc(RRNodeId(target_node));
+        // target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
+        // target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
+        // target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
+        // target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
+        target_bb = rr_graph_->node_loc(RRNodeId(target_node));
     }
 
     //For each node associated with the current heap element, expand all of it's neighbors
@@ -445,28 +446,28 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
                                                             const t_conn_cost_params cost_params,
                                                             const t_bb bounding_box,
                                                             int target_node,
-                                                            const t_bb target_bb) {
+                                                            const t_rr_node_loc target_bb) {
     RRNodeId to_node(to_node_int);
-    int to_xlow = rr_graph_->node_xlow(to_node);
-    int to_ylow = rr_graph_->node_ylow(to_node);
-    int to_xhigh = rr_graph_->node_xhigh(to_node);
-    int to_yhigh = rr_graph_->node_yhigh(to_node);
-    // t_rr_node_loc to_node_loc = rr_graph_->node_loc(to_node);
+    // int to_node_loc.xlow_ = rr_graph_->node_xlow(to_node);
+    // int to_node_loc.ylow_ = rr_graph_->node_ylow(to_node);
+    // int to_node_loc.xhigh_ = rr_graph_->node_xhigh(to_node);
+    // int to_node_loc.yhigh_ = rr_graph_->node_yhigh(to_node);
+    t_rr_node_loc to_node_loc = rr_graph_->node_loc(to_node);
 
     // BB-pruning
     // Disable BB-pruning if RCV is enabled, as this can make it harder for circuits with high negative hold slack to resolve this
     // TODO: Only disable pruning if the net has negative hold slack, maybe go off budgets
-    if ((to_xhigh < bounding_box.xmin    //Strictly left of BB left-edge
-         || to_xlow > bounding_box.xmax  //Strictly right of BB right-edge
-         || to_yhigh < bounding_box.ymin //Strictly below BB bottom-edge
-         || to_ylow > bounding_box.ymax) //Strictly above BB top-edge
+    if ((to_node_loc.xhigh_ < bounding_box.xmin    //Strictly left of BB left-edge
+         || to_node_loc.xlow_ > bounding_box.xmax  //Strictly right of BB right-edge
+         || to_node_loc.yhigh_ < bounding_box.ymin //Strictly below BB bottom-edge
+         || to_node_loc.ylow_ > bounding_box.ymax) //Strictly above BB top-edge
         && !rcv_path_manager.is_enabled()) {
         VTR_LOGV_DEBUG(router_debug_,
                        "      Pruned expansion of node %d edge %zu -> %d"
                        " (to node location %d,%dx%d,%d outside of expanded"
                        " net bounding box %d,%dx%d,%d)\n",
                        from_node, size_t(from_edge), to_node_int,
-                       to_xlow, to_ylow, to_xhigh, to_yhigh,
+                       to_node_loc.xlow_, to_node_loc.ylow_, to_node_loc.xhigh_, to_node_loc.yhigh_,
                        bounding_box.xmin, bounding_box.ymin, bounding_box.xmax, bounding_box.ymax);
         return; /* Node is outside (expanded) bounding box. */
     }
@@ -480,17 +481,17 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
         if (to_type == IPIN) {
             //Check if this IPIN leads to the target block
             // IPIN's of the target block should be contained within it's bounding box
-            if (to_xlow < target_bb.xmin
-                || to_ylow < target_bb.ymin
-                || to_xhigh > target_bb.xmax
-                || to_yhigh > target_bb.ymax) {
+            if (to_node_loc.xlow_ < target_bb.xlow_
+                || to_node_loc.ylow_ < target_bb.ylow_
+                || to_node_loc.xhigh_ > target_bb.xhigh_
+                || to_node_loc.yhigh_ > target_bb.yhigh_) {
                 VTR_LOGV_DEBUG(router_debug_,
                                "      Pruned expansion of node %d edge %zu -> %d"
                                " (to node is IPIN at %d,%dx%d,%d which does not"
                                " lead to target block %d,%dx%d,%d)\n",
                                from_node, size_t(from_edge), to_node_int,
-                               to_xlow, to_ylow, to_xhigh, to_yhigh,
-                               target_bb.xmin, target_bb.ymin, target_bb.xmax, target_bb.ymax);
+                               to_node_loc.xlow_, to_node_loc.ylow_, to_node_loc.xhigh_, to_node_loc.yhigh_,
+                               target_bb.xlow_, target_bb.ylow_, target_bb.xhigh_, target_bb.yhigh_);
                 return;
             }
         }
@@ -904,6 +905,7 @@ t_bb ConnectionRouter<Heap>::add_high_fanout_route_tree_to_heap(
     int nodes_added = 0;
 
     t_bb highfanout_bb;
+    //ESR TODO
     highfanout_bb.xmin = rr_graph_->node_xlow(target_node_id);
     highfanout_bb.xmax = rr_graph_->node_xhigh(target_node_id);
     highfanout_bb.ymin = rr_graph_->node_ylow(target_node_id);

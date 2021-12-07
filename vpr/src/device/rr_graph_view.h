@@ -300,6 +300,10 @@ class RRGraphView : public RRGraphViewInterface {
     inline short node_class_num(RRNodeId node) const {
         return primary_rr_graph_->node_class_num(node);
     }
+      /* Get all data of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_node_loc node_loc(RRNodeId node) const {
+        return primary_rr_graph_->node_loc(node);
+    }
 
     // This prefetechs hot RR node data required for optimization.
     // Note: This is optional, but may lower time spent on memory stalls in some circumstances.

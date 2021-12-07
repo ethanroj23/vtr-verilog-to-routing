@@ -225,7 +225,7 @@ void check_rr_graph(const t_graph_type graph_type,
                 }
 
                 const auto& node = device_ctx.rr_nodes[inode];
-
+                //ESR TODO
                 bool is_fringe = ((rr_graph.node_xlow(rr_node) == 1)
                                   || (rr_graph.node_ylow(rr_node) == 1)
                                   || (rr_graph.node_xhigh(rr_node) == int(grid.width()) - 2)
@@ -300,7 +300,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     float C, R;
     const auto& rr_graph = device_ctx.rr_graph;
     RRNodeId rr_node = RRNodeId(inode);
-
+    //ESR TODO
     rr_type = rr_graph.node_type(rr_node);
     xlow = rr_graph.node_xlow(rr_node);
     xhigh = rr_graph.node_xhigh(rr_node);
@@ -590,7 +590,7 @@ static bool has_adjacent_channel(const t_rr_node& node, const DeviceGrid& grid) 
      */
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
     VTR_ASSERT(rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN);
-
+    //ESR TODO
     if ((rr_graph.node_xlow(node.id()) == 0 && !rr_graph.is_node_on_specific_side(node.id(), RIGHT))                          //left device edge connects only along block's right side
         || (rr_graph.node_ylow(node.id()) == int(grid.height() - 1) && !rr_graph.is_node_on_specific_side(node.id(), BOTTOM)) //top device edge connects only along block's bottom side
         || (rr_graph.node_xlow(node.id()) == int(grid.width() - 1) && !rr_graph.is_node_on_specific_side(node.id(), LEFT))    //right deivce edge connects only along block's left side

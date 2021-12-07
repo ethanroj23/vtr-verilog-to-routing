@@ -34,6 +34,7 @@ vtr::Matrix<float> calculate_routing_usage(t_rr_type rr_type) {
             VTR_ASSERT(rr_graph.node_ylow(rr_node) == rr_graph.node_yhigh(rr_node));
 
             int y = rr_graph.node_ylow(rr_node);
+            //ESR TODO
             for (int x = rr_graph.node_xlow(rr_node); x <= rr_graph.node_xhigh(rr_node); ++x) {
                 usage[x][y] += route_ctx.rr_node_route_inf[inode].occ();
             }

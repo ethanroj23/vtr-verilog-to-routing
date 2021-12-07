@@ -96,12 +96,6 @@ struct t_rr_node_ptc_data {
     } ptc_;
 };
 
-struct t_rr_node_loc {
-    int16_t xlow_ = -1;
-    int16_t ylow_ = -1;
-    int16_t xhigh_ = -1;
-    int16_t yhigh_ = -1;
-};
 
 class t_rr_graph_view;
 class t_rr_graph_view_no_node_storage;

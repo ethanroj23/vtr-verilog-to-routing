@@ -1006,6 +1006,7 @@ static void adjust_rr_pin_position(const RRNodeId rr, int& x, int& y) {
     auto& rr_graph = device_ctx.rr_graph;
 
     VTR_ASSERT_SAFE(is_pin(rr_graph.node_type(rr)));
+    //ESR TODO
     VTR_ASSERT_SAFE(rr_graph.node_xlow(rr) == rr_graph.node_xhigh(rr));
     VTR_ASSERT_SAFE(rr_graph.node_ylow(rr) == rr_graph.node_yhigh(rr));
 
@@ -1055,6 +1056,7 @@ static void adjust_rr_wire_position(const RRNodeId rr, int& x, int& y) {
         VTR_ASSERT_SAFE(rr_dir == Direction::BIDIR);
         //Not sure what to do here...
         //Try average for now.
+        //ESR TODO
         x = vtr::nint((rr_graph.node_xlow(rr) + rr_graph.node_xhigh(rr)) / 2.);
         y = vtr::nint((rr_graph.node_ylow(rr) + rr_graph.node_yhigh(rr)) / 2.);
     }

@@ -187,7 +187,7 @@ class ConnectionRouter : public ConnectionRouterInterface {
         const t_conn_cost_params cost_params,
         const t_bb bounding_box,
         int target_node,
-        const t_bb target_bb);
+        const t_rr_node_loc target_bb);
 
     // Add to_node to the heap, and also add any nodes which are connected by
     // non-configurable edges
