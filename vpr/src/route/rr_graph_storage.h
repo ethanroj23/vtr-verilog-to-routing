@@ -242,6 +242,19 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         };
         return loc;
     }
+    inline t_rr_node_loc_low node_loc_low(RRNodeId node) const {
+        return t_rr_node_loc_low({
+            node_storage_[node].xlow_,
+            node_storage_[node].ylow_});
+    }
+
+    inline t_rr_node_loc_high node_loc_high(RRNodeId node) const {
+        return t_rr_node_loc_high({
+            node_storage_[node].xhigh_,
+            node_storage_[node].yhigh_
+        });
+    }
+
 
     t_rr_node_data get_remove_last_node() {
         t_rr_node_data node = node_storage_.back();

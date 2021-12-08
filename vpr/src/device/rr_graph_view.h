@@ -305,6 +305,16 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->node_loc(node);
     }
 
+    /* Get all data of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_node_loc_low node_loc_low(RRNodeId node) const {
+        return primary_rr_graph_->node_loc_low(node);
+    }
+
+    /* Get all data of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_node_loc_high node_loc_high(RRNodeId node) const {
+        return primary_rr_graph_->node_loc_high(node);
+    }
+
     // This prefetechs hot RR node data required for optimization.
     // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
     inline void prefetch_node(RRNodeId node) const {

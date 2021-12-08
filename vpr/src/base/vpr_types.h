@@ -550,6 +550,15 @@ struct t_rr_node_loc {
     int16_t yhigh_ = -1;
 };
 
+struct t_rr_node_loc_low {
+    int16_t xlow_ = -1;
+    int16_t ylow_ = -1;
+};
+
+struct t_rr_node_loc_high {
+    int16_t xhigh_ = -1;
+    int16_t yhigh_ = -1;
+};
 
 /**
  * @brief An offset between placement locations (t_pl_loc)

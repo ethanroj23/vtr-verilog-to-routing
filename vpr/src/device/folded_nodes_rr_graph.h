@@ -180,14 +180,35 @@ class FoldedNodesRRGraph : public RRGraphViewInterface{
     FoldedNodePattern p = node_patterns_[nodes_[node].node_data_index_];
     int16_t xlow = nodes_[node].xlow_;
     int16_t ylow = nodes_[node].ylow_;
-    t_rr_node_loc loc = {
-        xlow,
+    // t_rr_node_loc loc = {
+    //     nodes_[node].xlow_,
+    //     nodes_[node].ylow_,
+    //     int16_t(xlow + p.dx_),
+    //     int16_t(ylow + p.dy_)
+    // };
+    return t_rr_node_loc(
+        {xlow,
         ylow,
         int16_t(xlow + p.dx_),
-        int16_t(ylow + p.dy_)
-    };
-    return loc;
+        int16_t(ylow + p.dy_)}
+    );
   }
+
+  inline t_rr_node_loc_low node_loc_low(RRNodeId node) const {
+    return t_rr_node_loc_low(
+        {nodes_[node].xlow_,
+        nodes_[node].ylow_}
+    );
+  }
+
+  inline t_rr_node_loc_high node_loc_high(RRNodeId node) const {
+    return t_rr_node_loc_high(
+        {int16_t(nodes_[node].xlow_ + node_patterns_[nodes_[node].node_data_index_].dx_),
+         int16_t(nodes_[node].ylow_ + node_patterns_[nodes_[node].node_data_index_].dy_)}
+    );
+  }
+
+
 
   /* PTC get methods */
   short node_ptc_num(RRNodeId id) const;

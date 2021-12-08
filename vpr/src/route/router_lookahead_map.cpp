@@ -888,6 +888,7 @@ static void get_xy_deltas(const RRNodeId from_node, const RRNodeId to_node, int*
         int to_seg;
         int to_chan;
         if (from_type == CHANY) {
+            // try using the t_rr_node_loc_low without adding an extra variable
             from_seg_low = temp_rr_graph.node_ylow(from_node);
             from_seg_high = temp_rr_graph.node_yhigh(from_node);
             from_chan = temp_rr_graph.node_xlow(from_node);

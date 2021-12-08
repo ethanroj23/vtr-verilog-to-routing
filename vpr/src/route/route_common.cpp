@@ -1238,7 +1238,6 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                     int inode = tptr->index;
                     auto rr_node = RRNodeId(inode);
                     t_rr_type rr_type = rr_graph.node_type(rr_node);
-                    //ESR TODO
                     int ilow = rr_graph.node_xlow(rr_node);
                     int jlow = rr_graph.node_ylow(rr_node);
 
