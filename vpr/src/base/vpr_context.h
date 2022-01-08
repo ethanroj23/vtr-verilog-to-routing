@@ -7,6 +7,7 @@
 #include "folded_edges_rr_graph.h"
 #include "folded_edges_1_rr_graph.h"
 #include "folded_nodes_rr_graph.h"
+#include "folded_per_tile_rr_graph.h"
 #include "folded_rr_graph.h"
 #include "vpr_types.h"
 #include "vtr_ndmatrix.h"
@@ -190,6 +191,7 @@ struct DeviceContext : public Context {
     FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
     FoldedEdges1RRGraph folded_edges_1_rr_graph{rr_nodes};
     FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
+    FoldedPerTileRRGraph folded_per_tile_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;
 //pCallback = new DerivedClass;

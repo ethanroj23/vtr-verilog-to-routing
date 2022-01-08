@@ -828,6 +828,12 @@ static void build_rr_graph(const t_graph_type graph_type,
             // Set primary rr_graph to the FoldedRRGraph
             g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
         }
+        if (det_routing_arch->primary_rr_graph == "FoldedPerTileRRGraph"){
+            // build the folded representation
+            g_vpr_ctx.mutable_device().folded_per_tile_rr_graph.build_graph();
+            // Set primary rr_graph to the FoldedRRGraph
+            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_per_tile_rr_graph);
+        }
     }
     // check how long it takes to access 100,000,000 nodes
     srand(23);
