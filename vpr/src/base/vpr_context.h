@@ -180,7 +180,7 @@ struct DeviceContext : public Context {
     /*  Completely folded routing resource graph. 
         Every possible way to fold the rr_graph was taken advantage of here
     */
-    FoldedRRGraph folded_rr_graph{rr_nodes};
+    // FoldedRRGraph folded_rr_graph{rr_nodes};
 
     /* Folded Nodes routing resource graph. 
         Only the nodes were folded in this instance */
@@ -188,9 +188,9 @@ struct DeviceContext : public Context {
 
     /* Folded Edges routing resource graph. 
         Only the edges were folded in this instance */
-    FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
-    FoldedEdges1RRGraph folded_edges_1_rr_graph{rr_nodes};
-    FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
+    // FoldedEdgesRRGraph folded_edges_rr_graph{rr_nodes};
+    // FoldedEdges1RRGraph folded_edges_1_rr_graph{rr_nodes};
+    // FoldedNodesRRGraph folded_nodes_rr_graph{rr_nodes};
     FoldedPerTileRRGraph folded_per_tile_rr_graph{rr_nodes};
 
 //DisablePairCollision* pCallback;

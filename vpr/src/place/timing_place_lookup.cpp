@@ -1172,7 +1172,7 @@ bool directconnect_exists(int src_rr_node, int sink_rr_node) {
 
     //TODO: This is a constant depth search, but still may be too slow
     for (t_edge_size i_src_edge = 0; i_src_edge < rr_graph.num_edges(RRNodeId(src_rr_node)); ++i_src_edge) {
-        int opin_rr_node = size_t(rr_graph.edge_sink_node(RRNodeId(src_rr_node), i_src_edge));
+        int opin_rr_node = size_t(rr_graph.edge_sink_node(RRNodeId(src_rr_node), i_src_edge)); // ESR TODO DIRECT
 
         if (rr_graph.node_type(RRNodeId(opin_rr_node)) != OPIN) continue;
 

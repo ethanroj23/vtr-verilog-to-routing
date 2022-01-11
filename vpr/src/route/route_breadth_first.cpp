@@ -387,16 +387,31 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    for (RREdgeId from_edge : rr_graph.edge_range(RRNodeId(inode))) {
-        RRNodeId to_node = rr_graph.edge_sink_node(from_edge);
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        for (t_edge_with_id from_edge : rr_graph.edge_range_with_id_direct(RRNodeId(inode))) {//ESR_EDGE iterate over edges
+            RRNodeId to_node = from_edge.dest;
 
-        if (rr_graph.node_xhigh(to_node) < route_ctx.route_bb[net_id].xmin
-            || rr_graph.node_xlow(to_node) > route_ctx.route_bb[net_id].xmax
-            || rr_graph.node_yhigh(to_node) < route_ctx.route_bb[net_id].ymin
-            || rr_graph.node_ylow(to_node) > route_ctx.route_bb[net_id].ymax)
-            continue; /* Node is outside (expanded) bounding box. */
+            if (rr_graph.node_xhigh(to_node) < route_ctx.route_bb[net_id].xmin
+                || rr_graph.node_xlow(to_node) > route_ctx.route_bb[net_id].xmax
+                || rr_graph.node_yhigh(to_node) < route_ctx.route_bb[net_id].ymin
+                || rr_graph.node_ylow(to_node) > route_ctx.route_bb[net_id].ymax)
+                continue; /* Node is outside (expanded) bounding box. */
 
-        breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, from_edge, pres_fac);
+            breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, from_edge.edge_id, pres_fac);
+        }
+    }
+    else{
+        for (RREdgeId from_edge : rr_graph.edge_range(RRNodeId(inode))) {
+            RRNodeId to_node = rr_graph.edge_sink_node(from_edge);
+
+            if (rr_graph.node_xhigh(to_node) < route_ctx.route_bb[net_id].xmin
+                || rr_graph.node_xlow(to_node) > route_ctx.route_bb[net_id].xmax
+                || rr_graph.node_yhigh(to_node) < route_ctx.route_bb[net_id].ymin
+                || rr_graph.node_ylow(to_node) > route_ctx.route_bb[net_id].ymax)
+                continue; /* Node is outside (expanded) bounding box. */
+
+            breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, from_edge, pres_fac);
+        }
     }
 }
 

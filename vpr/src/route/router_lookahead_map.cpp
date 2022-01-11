@@ -524,7 +524,7 @@ static void compute_router_wire_lookahead(const std::vector<t_segment_inf>& segm
                                  &dijkstra_data);
                 }
 
-                if (false) print_router_cost_map(routing_cost_map);
+                if (true) print_router_cost_map(routing_cost_map);
 
                 /* boil down the cost list in routing_cost_map at each coordinate to a representative cost entry and store it in the lookahead
                  * cost map */
@@ -537,7 +537,7 @@ static void compute_router_wire_lookahead(const std::vector<t_segment_inf>& segm
         }
     }
 
-    if (false) print_wire_cost_map(segment_inf);
+    if (true) print_wire_cost_map(segment_inf);
 }
 
 /* returns index of a node from which to start routing */
@@ -649,31 +649,64 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
 
     RRNodeId parent = parent_entry.rr_node;
 
-    for (RREdgeId edge : temp_rr_graph.edge_range(parent)) {
-        RRNodeId child_node = temp_rr_graph.edge_sink_node(edge);
-        int switch_ind = temp_rr_graph.edge_switch(edge);
+    if( strcmp(temp_rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        for (t_edge_struct edge : temp_rr_graph.edge_range_direct(parent)) {
+            RRNodeId child_node = edge.dest;
+            int switch_ind = edge.switch_id;
 
-        if (temp_rr_graph.node_type(child_node) == SINK) return; // ESR Memory Profiling
+            if (temp_rr_graph.node_type(child_node) == SINK) return; // ESR Memory Profiling
 
-        /* skip this child if it has already been expanded from */
-        if (node_expanded[child_node]) {
-            continue;
+            /* skip this child if it has already been expanded from */
+            if (node_expanded[child_node]) {
+                continue;
+            }
+
+            PQ_Entry child_entry(child_node, switch_ind, parent_entry.delay,
+                                parent_entry.R_upstream, parent_entry.congestion_upstream, false);
+
+            //VTR_ASSERT(child_entry.cost >= 0); //Asertion fails in practise. TODO: debug
+
+            /* skip this child if it has been visited with smaller cost */
+            if (node_visited_costs[child_node] >= 0 && node_visited_costs[child_node] < child_entry.cost) {
+                continue;
+            }
+
+            /* finally, record the cost with which the child was visited and put the child entry on the queue */
+            node_visited_costs[child_node] = child_entry.cost;
+            pq.push(child_entry);
         }
-
-        PQ_Entry child_entry(child_node, switch_ind, parent_entry.delay,
-                             parent_entry.R_upstream, parent_entry.congestion_upstream, false);
-
-        //VTR_ASSERT(child_entry.cost >= 0); //Asertion fails in practise. TODO: debug
-
-        /* skip this child if it has been visited with smaller cost */
-        if (node_visited_costs[child_node] >= 0 && node_visited_costs[child_node] < child_entry.cost) {
-            continue;
-        }
-
-        /* finally, record the cost with which the child was visited and put the child entry on the queue */
-        node_visited_costs[child_node] = child_entry.cost;
-        pq.push(child_entry);
     }
+    else{
+        for (RREdgeId edge : temp_rr_graph.edge_range(parent)) {
+            RRNodeId child_node = temp_rr_graph.edge_sink_node(edge);
+            int switch_ind = temp_rr_graph.edge_switch(edge);
+
+            if (temp_rr_graph.node_type(child_node) == SINK) return; // ESR Memory Profiling
+
+            /* skip this child if it has already been expanded from */
+            if (node_expanded[child_node]) {
+                continue;
+            }
+
+            PQ_Entry child_entry(child_node, switch_ind, parent_entry.delay,
+                                parent_entry.R_upstream, parent_entry.congestion_upstream, false);
+
+            //VTR_ASSERT(child_entry.cost >= 0); //Asertion fails in practise. TODO: debug
+
+            /* skip this child if it has been visited with smaller cost */
+            if (node_visited_costs[child_node] >= 0 && node_visited_costs[child_node] < child_entry.cost) {
+                continue;
+            }
+
+            /* finally, record the cost with which the child was visited and put the child entry on the queue */
+            node_visited_costs[child_node] = child_entry.cost;
+            pq.push(child_entry);
+        }
+    }
+
+
+
+    
 }
 
 /* sets the lookahead cost map entries based on representative cost entries from routing_cost_map */

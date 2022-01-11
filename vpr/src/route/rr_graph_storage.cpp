@@ -530,6 +530,12 @@ t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const
     return last_id - first_id;
 }
 
+bool t_rr_graph_storage::switch_is_configurable(short switch_idx){
+    const auto& device_ctx = g_vpr_ctx.device();
+    return device_ctx.rr_switch_inf[switch_idx].configurable();
+}
+
+
 t_edge_size t_rr_graph_storage::num_non_configurable_edges(const RRNodeId& id) const {
     return num_edges(id) - num_configurable_edges(id);
 }

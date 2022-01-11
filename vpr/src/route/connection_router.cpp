@@ -412,25 +412,52 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - directrf_stratixiv_arch_timing.blif
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
-    for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
-        rr_graph_->prefetch_node(to_node);
+    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        for (t_edge_struct from_edge : rr_graph_->edge_range_direct(from_node)) {//ESR_EDGE iterate over edges
+            int switch_idx = from_edge.switch_id;
+            VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+        }
+    }
+    else{
+        for (RREdgeId from_edge : edges) {
+                RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
+                rr_graph_->prefetch_node(to_node);
 
-        int switch_idx = rr_graph_->edge_switch(from_edge);
-        VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+                int switch_idx = rr_graph_->edge_switch(from_edge);
+                VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+            }
     }
 
-    for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
-        timing_driven_expand_neighbour(current,
-                                       from_node_int,
-                                       from_edge,
-                                       size_t(to_node),
-                                       cost_params,
-                                       bounding_box,
-                                       target_node,
-                                       target_bb);
+    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        for (t_edge_with_id from_edge : rr_graph_->edge_range_with_id_direct(from_node)) {//ESR_EDGE iterate over edges
+            RRNodeId to_node = from_edge.dest;
+            timing_driven_expand_neighbour(current,
+                                        from_node_int,
+                                        from_edge.edge_id,
+                                        size_t(to_node),
+                                        cost_params,
+                                        bounding_box,
+                                        target_node,
+                                        target_bb,
+                                        from_edge.switch_id);
+        }
     }
+    else{
+        for (RREdgeId from_edge : edges) {
+            RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
+            short switch_id = -1; // only applies to FoldedPerTileRRGraph
+            timing_driven_expand_neighbour(current,
+                                        from_node_int,
+                                        from_edge,
+                                        size_t(to_node),
+                                        cost_params,
+                                        bounding_box,
+                                        target_node,
+                                        target_bb,
+                                        switch_id);
+        }
+    }
+    
 }
 
 //Conditionally adds to_node to the router heap (via path from from_node via from_edge).
@@ -444,7 +471,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
                                                             const t_conn_cost_params cost_params,
                                                             const t_bb bounding_box,
                                                             int target_node,
-                                                            const t_bb target_bb) {
+                                                            const t_bb target_bb,
+                                                            const short switch_id) {
     RRNodeId to_node(to_node_int);
     int to_xlow = rr_graph_->node_xlow(to_node);
     int to_ylow = rr_graph_->node_ylow(to_node);
@@ -511,7 +539,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
                                   from_node,
                                   to_node_int,
                                   from_edge,
-                                  target_node);
+                                  target_node,
+                                  switch_id);
     }
 }
 
@@ -522,7 +551,8 @@ void ConnectionRouter<Heap>::timing_driven_add_to_heap(const t_conn_cost_params 
                                                        const int from_node,
                                                        const int to_node,
                                                        const RREdgeId from_edge,
-                                                       const int target_node) {
+                                                       const int target_node,
+                                                       const short switch_id) {
     t_heap next;
 
     // Initalize RCV data struct if needed, otherwise it's set to nullptr
@@ -547,7 +577,8 @@ void ConnectionRouter<Heap>::timing_driven_add_to_heap(const t_conn_cost_params 
                                       from_node,
                                       to_node,
                                       from_edge,
-                                      target_node);
+                                      target_node,
+                                      switch_id);
 
     float best_total_cost = rr_node_route_inf_[to_node].path_cost;
     float best_back_cost = rr_node_route_inf_[to_node].backward_path_cost;
@@ -667,7 +698,8 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
                                                                const int from_node,
                                                                const int to_node,
                                                                const RREdgeId from_edge,
-                                                               const int target_node) {
+                                                               const int target_node,
+                                                               const short switch_id) {
     /* new_costs.backward_cost: is the "known" part of the cost to this node -- the
      * congestion cost of all the routing resources back to the existing route
      * plus the known delay of the total path back to the source.
@@ -677,8 +709,13 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
      * new_costs.R_upstream: is the upstream resistance at the end of this node
      */
 
+    int iswitch;
     //Info for the switch connecting from_node to_node
-    int iswitch = rr_graph_->edge_switch(from_edge);
+    if (switch_id == -1) // from rr_graph_storage
+        iswitch = rr_graph_->edge_switch(from_edge);
+    else // from FoldedPerTileRRGraph
+        iswitch = switch_id;
+
     bool switch_buffered = rr_switch_inf_[iswitch].buffered();
     bool reached_configurably = rr_switch_inf_[iswitch].configurable();
     float switch_R = rr_switch_inf_[iswitch].R;

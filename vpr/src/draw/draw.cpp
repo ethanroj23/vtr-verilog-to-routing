@@ -1577,7 +1577,7 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
     from_ptc_num = device_ctx.rr_nodes[inode].ptc_num();
 
     for (t_edge_size iedge = 0, l = rr_graph.num_edges(RRNodeId(inode)); iedge < l; iedge++) {
-        to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+        to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); // ESR TODO DIRECT
         to_type = rr_graph.node_type(RRNodeId(to_node));
         to_ptc_num = device_ctx.rr_nodes[to_node].ptc_num();
         bool edge_configurable = device_ctx.rr_nodes[inode].edge_is_configurable(iedge);
@@ -2553,7 +2553,7 @@ void draw_highlight_fan_in_fan_out(const std::set<int>& nodes) {
     for (auto node : nodes) {
         /* Highlight the fanout nodes in red. */
         for (t_edge_size iedge = 0, l = rr_graph.num_edges(RRNodeId(node)); iedge < l; iedge++) {
-            int fanout_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge);
+            int fanout_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge); // ESR TODO DIRECT
 
             if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA && draw_state->draw_rr_node[fanout_node].color != ezgl::MAGENTA) {
                 // If node is highlighted, highlight its fanout
@@ -2569,7 +2569,7 @@ void draw_highlight_fan_in_fan_out(const std::set<int>& nodes) {
         /* Highlight the nodes that can fanin to this node in blue. */
         for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
             for (t_edge_size iedge = 0, l = rr_graph.num_edges(RRNodeId(inode)); iedge < l; iedge++) {
-                int fanout_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                int fanout_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); // ESR TODO DIRECT
                 if (fanout_node == node) {
                     if (draw_state->draw_rr_node[node].color == ezgl::MAGENTA && draw_state->draw_rr_node[inode].color != ezgl::MAGENTA) {
                         // If node is highlighted, highlight its fanin
@@ -2671,7 +2671,7 @@ void draw_expand_non_configurable_rr_nodes_recurr(int from_node, std::set<int>& 
 
     for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(from_node)); ++iedge) {
         bool edge_configurable = device_ctx.rr_nodes[from_node].edge_is_configurable(iedge);
-        int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
+        int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge); // ESR TODO DIRECT
 
         if (!edge_configurable && !expanded_nodes.count(to_node)) {
             draw_expand_non_configurable_rr_nodes_recurr(to_node, expanded_nodes);
@@ -3568,7 +3568,7 @@ static t_edge_size find_edge(int prev_inode, int inode) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
     for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(prev_inode)); ++iedge) {
-        if ((size_t) rr_graph.edge_sink_node(RRNodeId(prev_inode), iedge) == inode) {
+        if ((size_t) rr_graph.edge_sink_node(RRNodeId(prev_inode), iedge) == inode) { // ESR TODO DIRECT
             return iedge;
         }
     }

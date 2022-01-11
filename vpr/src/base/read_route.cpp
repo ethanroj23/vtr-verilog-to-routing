@@ -511,16 +511,32 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     // If it's starting a new sub branch this is ok
     if (rr_graph.node_type(prev_node) == SINK) return true;
 
-    for (RREdgeId edge : rr_graph.edge_range(prev_node)) {//ESR_EDGE iterate over edges
-        //If the sink node is reachable by previous node return true
-        if (rr_graph.edge_sink_node(edge) == node) {
-            return true;
-        }
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        for (t_edge_struct edge : rr_graph.edge_range_direct(prev_node)) {//ESR_EDGE iterate over edges
+            //If the sink node is reachable by previous node return true
+            if (edge.dest == node) {
+                return true;
+            }
 
-        // If there are any non-configurable branches return true
-        short edge_switch = rr_graph.edge_switch(edge);
-        if (!(switch_info[edge_switch].configurable())) return true;
+            // If there are any non-configurable branches return true
+            short edge_switch = edge.switch_id;
+            if (!(switch_info[edge_switch].configurable())) return true;
+        }
     }
+    else{
+        for (RREdgeId edge : rr_graph.edge_range(prev_node)) {//ESR_EDGE iterate over edges
+            //If the sink node is reachable by previous node return true
+            if (rr_graph.edge_sink_node(edge) == node) {
+                return true;
+            }
+
+            // If there are any non-configurable branches return true
+            short edge_switch = rr_graph.edge_switch(edge);
+            if (!(switch_info[edge_switch].configurable())) return true;
+        }
+    }
+
+
 
     // If it's part of a non configurable node list, return true
     if (rr_graph.num_non_configurable_edges(node) != 0) {

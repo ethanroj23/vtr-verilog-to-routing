@@ -405,7 +405,7 @@ void print_rr_graph_stats() {
 
     size_t num_rr_edges = 0;
     for (size_t rr_node=0; rr_node < rr_graph.size(); rr_node++) {
-        num_rr_edges += rr_graph.edges(RRNodeId(rr_node)).size();
+        num_rr_edges += rr_graph.edge_range_direct(RRNodeId(rr_node)).size();
     }
 
     device_ctx.rr_graph.print_memory_used();
@@ -793,82 +793,90 @@ static void build_rr_graph(const t_graph_type graph_type,
     // build folded rr_graph from rr_graph_storage version if not writing rr_graph (because that code still uses flat representation)
     if (det_routing_arch->write_rr_graph_filename.empty()){
         VTR_LOG("Folding RRGraph...\n");
-        if (det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
-            // build the folded representation
-            g_vpr_ctx.mutable_device().folded_rr_graph.build_graph();
-            // Set primary rr_graph to the FoldedRRGraph
-            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
-            /// delete rr_nodes.node_storage_ as it will no longer be used
-            g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
-            // Edges should also be deleted here
-        }
+        // if (det_routing_arch->primary_rr_graph == "FoldedRRGraph"){
+        //     // build the folded representation
+        //     g_vpr_ctx.mutable_device().folded_rr_graph.build_graph();
+        //     // Set primary rr_graph to the FoldedRRGraph
+        //     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_rr_graph);
+        //     /// delete rr_nodes.node_storage_ as it will no longer be used
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+        //     // Edges should also be deleted here
+        // }
 
-        if (det_routing_arch->primary_rr_graph == "FoldedEdgesRRGraph"){
-            // build the folded representation
-            g_vpr_ctx.mutable_device().folded_edges_rr_graph.build_graph();
-            // Set primary rr_graph to the FoldedRRGraph
-            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_edges_rr_graph);
-            /// delete rr_nodes.node_storage_ as it will no longer be used
-            g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
-            // Edges should also be deleted here
-        }
-        if (det_routing_arch->primary_rr_graph == "FoldedEdges1RRGraph"){
-            // build the folded representation
-            g_vpr_ctx.mutable_device().folded_edges_1_rr_graph.build_graph();
-            // Set primary rr_graph to the FoldedRRGraph
-            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_edges_1_rr_graph);
-            /// delete rr_nodes.node_storage_ as it will no longer be used
-            g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_nodes();
-            // Edges should also be deleted here
-        }
+        // if (det_routing_arch->primary_rr_graph == "FoldedEdgesRRGraph"){
+        //     // build the folded representation
+        //     g_vpr_ctx.mutable_device().folded_edges_rr_graph.build_graph();
+        //     // Set primary rr_graph to the FoldedRRGraph
+        //     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_edges_rr_graph);
+        //     /// delete rr_nodes.node_storage_ as it will no longer be used
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_edges();
+        //     // Edges should also be deleted here
+        // }
+        // if (det_routing_arch->primary_rr_graph == "FoldedEdges1RRGraph"){
+        //     // build the folded representation
+        //     g_vpr_ctx.mutable_device().folded_edges_1_rr_graph.build_graph();
+        //     // Set primary rr_graph to the FoldedRRGraph
+        //     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_edges_1_rr_graph);
+        //     /// delete rr_nodes.node_storage_ as it will no longer be used
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_nodes();
+        //     // Edges should also be deleted here
+        // }
 
-        if (det_routing_arch->primary_rr_graph == "FoldedNodesRRGraph"){
-            // build the folded representation
-            g_vpr_ctx.mutable_device().folded_nodes_rr_graph.build_graph();
-            // Set primary rr_graph to the FoldedRRGraph
-            g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
-        }
+        // if (det_routing_arch->primary_rr_graph == "FoldedNodesRRGraph"){
+        //     // build the folded representation
+        //     g_vpr_ctx.mutable_device().folded_nodes_rr_graph.build_graph();
+        //     // Set primary rr_graph to the FoldedRRGraph
+        //     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_nodes_rr_graph);
+        // }
         if (det_routing_arch->primary_rr_graph == "FoldedPerTileRRGraph"){
             // build the folded representation
             g_vpr_ctx.mutable_device().folded_per_tile_rr_graph.build_graph();
             // Set primary rr_graph to the FoldedRRGraph
             g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_per_tile_rr_graph);
+
+            // remove unused data from node_storage
+            // g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage();
+            // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_node();
+            // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_dest_node();
+            // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_switch();
+            
+
         }
     }
-    // check how long it takes to access 100,000,000 nodes
-    srand(23);
-    int num_nodes = rr_graph.size();
-    int num_random = 10000000;
-    // RRNodeId a[10000000];
-    RRNodeId* a = new RRNodeId[10000000];    // may throw std::bad_alloc
+//     // check how long it takes to access 100,000,000 nodes
+//     srand(23);
+//     int num_nodes = rr_graph.size();
+//     int num_random = 10000000;
+//     // RRNodeId a[10000000];
+//     RRNodeId* a = new RRNodeId[10000000];    // may throw std::bad_alloc
 
 
-    /* Build random id array */
-   for(int i = 0; i < num_random; i++ ) {
-      a[i] = RRNodeId(rand() % num_nodes);
-   }
+//     /* Build random id array */
+//    for(int i = 0; i < num_random; i++ ) {
+//       a[i] = RRNodeId(rand() % num_nodes);
+//    }
 
  
 
-    auto start = std::chrono::system_clock::now();    
+//     auto start = std::chrono::system_clock::now();    
 
-    /* Access nodes */
-   for (int i=0; i < num_random; i++){
-        rr_graph.node_xlow(a[i]);       
-   }
-   for (int i=0; i < num_random; i++){
-        rr_graph.node_type(a[i]);       
-   }
-   for (int i=0; i < num_random; i++){
-        rr_graph.node_yhigh(a[i]);       
-   }
-   for (int i=0; i < num_random; i++){
-        rr_graph.node_capacity(a[i]);       
-   }
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-    delete [] a;
+//     /* Access nodes */
+//    for (int i=0; i < num_random; i++){
+//         rr_graph.node_xlow(a[i]);       
+//    }
+//    for (int i=0; i < num_random; i++){
+//         rr_graph.node_type(a[i]);       
+//    }
+//    for (int i=0; i < num_random; i++){
+//         rr_graph.node_yhigh(a[i]);       
+//    }
+//    for (int i=0; i < num_random; i++){
+//         rr_graph.node_capacity(a[i]);       
+//    }
+//     auto end = std::chrono::system_clock::now();
+//     std::chrono::duration<double> elapsed_seconds = end-start;
+//     std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+//     delete [] a;
 }
 
 /* Allocates and loads the global rr_switch_inf array based on the global
@@ -3121,15 +3129,33 @@ static void create_edge_groups(EdgeGroups* groups) {
 
     clock_t  t1,  t2;
     t1 = clock();
-    rr_graph.for_each_edge(
+    // rr_graph.for_each_edge(
+    //     [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
+    //         if (!device_ctx.rr_switch_inf[rr_graph.edge_switch(edge)].configurable()) {
+    //             groups->add_non_config_edge(size_t(src), size_t(sink));
+    //         }
+    //     });
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+        rr_graph.for_each_edge_direct( // replicates the above function, but for FoldedPerTileRRGraph
+            [&](RREdgeId edge, RRNodeId src, RRNodeId sink, short switch_id) {
+                if (!device_ctx.rr_switch_inf[switch_id].configurable()) {
+                    groups->add_non_config_edge(size_t(src), size_t(sink));
+                }
+            });
+    }
+    else{
+        rr_graph.for_each_edge(
         [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
             if (!device_ctx.rr_switch_inf[rr_graph.edge_switch(edge)].configurable()) {
                 groups->add_non_config_edge(size_t(src), size_t(sink));
             }
         });
+    }
+    
+
     t2 = clock();
     double edge_time = ((double)(t2-t1))/CLOCKS_PER_SEC;
-    printf("Time to iterate over %d edges: %lf seconds (%fs per edge) [%s]\n",
+    printf("Time to iterate over %lu edges: %lf seconds (%fs per edge) [%s]\n",
          rr_graph.edge_count(), edge_time, edge_time / rr_graph.edge_count(), rr_graph.rr_graph_name());
 
     groups->create_sets();

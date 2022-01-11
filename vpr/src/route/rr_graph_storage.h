@@ -98,6 +98,8 @@ struct t_rr_node_ptc_data {
     } ptc_;
 };
 
+
+
 class t_rr_graph_view;
 class t_rr_graph_view_no_node_storage;
 
@@ -296,18 +298,19 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     edge_idx_range edges(const RRNodeId& id) const {
         return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id)));
     }
-    edge_idx_range configurable_edges(const RRNodeId& id) const {
+
+    edge_idx_range configurable_edges(const RRNodeId& id) const { // ESR used 1 time
         return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)));
     }
-    edge_idx_range non_configurable_edges(const RRNodeId& id) const {
+    edge_idx_range non_configurable_edges(const RRNodeId& id) const { // ESR used 3 times
         return vtr::make_range(edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)), edge_idx_iterator(num_edges(id)));
     }
 
-    t_edge_size num_edges(const RRNodeId& id) const {
+    t_edge_size num_edges(const RRNodeId& id) const { // ESR used over 40 times
         return size_t(last_edge(id)) - size_t(first_edge(id));
     }
     t_edge_size num_configurable_edges(const RRNodeId& id) const;
-    t_edge_size num_non_configurable_edges(const RRNodeId& id) const;
+    t_edge_size num_non_configurable_edges(const RRNodeId& id) const; // ESR used once
 
     // Get the first and last RREdgeId for the specified RRNodeId.
     //
@@ -366,12 +369,33 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     }
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId, short)> apply) const {
+        for (size_t i = 0; i < edge_dest_node_.size(); i++) {
+            RREdgeId edge(i);
+            apply(edge, edge_src_node_[edge], edge_dest_node_[edge], edge_switch_[edge]);
+        }
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
         for (size_t i = 0; i < edge_dest_node_.size(); i++) {
             RREdgeId edge(i);
             apply(edge, edge_dest_node_[edge]);
         }
     }
+          
+    inline std::vector<t_edge_struct> edge_range_direct(RRNodeId node) const {
+        (void) node;
+        std::vector<t_edge_struct> empty;
+        return empty;
+    }
+    inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const {
+        (void) node;
+        std::vector<t_edge_with_id> empty;
+        return empty;
+    }
+
+
 
     // Get the destination node for the iedge'th edge from specified RRNodeId.
     //
@@ -490,6 +514,16 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         node_first_edge_.clear();
         edge_src_node_.clear();
         edge_dest_node_.clear();
+        edge_switch_.clear();
+    }
+    /* free the memory used by node_storage_. Only use this if you are accessing rr_node data elsewhere */
+    inline void clear_edge_src_node(){
+        edge_src_node_.clear();
+    }
+    inline void clear_edge_dest_node(){
+        edge_dest_node_.clear();
+    }
+    inline void clear_edge_switch(){
         edge_switch_.clear();
     }
 
@@ -664,6 +698,9 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     inline size_t edge_count() const {
         return edge_dest_node_.size();
     }
+
+    // Return number of edges.
+    bool switch_is_configurable(short switch_idx);
 
     /******************
      * Fan-in methods *

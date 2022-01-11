@@ -297,6 +297,15 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->edge_range(node);
     }
 
+    inline std::vector<t_edge_struct> edge_range_direct(RRNodeId node) const {
+        return primary_rr_graph_->edge_range_direct(node);
+    }
+
+    inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const {
+        return primary_rr_graph_->edge_range_with_id_direct(node);
+    }
+
+
     // Retrieve the RREdgeId for iedge'th edge in RRNodeId.
     //
     // This method should generally not be used, and instead first_edge and
@@ -314,6 +323,14 @@ class RRGraphView : public RRGraphViewInterface {
     inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
         primary_rr_graph_->for_each_edge(apply);
     }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    inline void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId, short)> apply) const {
+        primary_rr_graph_->for_each_edge_direct(apply);
+    }
+
+
+
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {

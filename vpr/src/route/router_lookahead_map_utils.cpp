@@ -503,19 +503,38 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             int cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
-                int iswitch = rr_graph.edge_switch(edge);
-                float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+                for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
+                    int iswitch = edge.switch_id;
+                    float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 
-                RRNodeId next_node = rr_graph.edge_sink_node(edge);
+                    RRNodeId next_node = edge.dest;
 
-                t_pq_entry next;
-                next.congestion = curr.congestion + incr_cong; //Of current node
-                next.delay = curr.delay + incr_delay;          //To reach next node
-                next.node = next_node;
+                    t_pq_entry next;
+                    next.congestion = curr.congestion + incr_cong; //Of current node
+                    next.delay = curr.delay + incr_delay;          //To reach next node
+                    next.node = next_node;
 
-                pq.push(next);
+                    pq.push(next);
+                }
             }
+            else{
+                for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
+                    int iswitch = rr_graph.edge_switch(edge);
+                    float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
+
+                    RRNodeId next_node = rr_graph.edge_sink_node(edge);
+
+                    t_pq_entry next;
+                    next.congestion = curr.congestion + incr_cong; //Of current node
+                    next.delay = curr.delay + incr_delay;          //To reach next node
+                    next.node = next_node;
+
+                    pq.push(next);
+                }
+            }
+
+
         } else {
             VPR_ERROR(VPR_ERROR_ROUTE, "Unrecognized RR type");
         }
@@ -598,19 +617,37 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             int cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
-                int iswitch = rr_nodes.edge_switch(edge);
-                float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+                for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
+                    int iswitch = edge.switch_id;
+                    float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 
-                RRNodeId next_node = rr_graph.edge_sink_node(edge);
+                    RRNodeId next_node = edge.dest;
 
-                t_pq_entry next;
-                next.congestion = new_cong; //Of current node
-                next.delay = new_delay;     //To reach next node
-                next.node = next_node;
-                next.level = curr.level + 1;
+                    t_pq_entry next;
+                    next.congestion = new_cong; //Of current node
+                    next.delay = new_delay;     //To reach next node
+                    next.node = next_node;
+                    next.level = curr.level + 1;
 
-                pq.push(next);
+                    pq.push(next);
+                }
+            }
+            else{
+                for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
+                    int iswitch = rr_graph.edge_switch(edge);
+                    float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
+
+                    RRNodeId next_node = rr_graph.edge_sink_node(edge);
+
+                    t_pq_entry next;
+                    next.congestion = new_cong; //Of current node
+                    next.delay = new_delay;     //To reach next node
+                    next.node = next_node;
+                    next.level = curr.level + 1;
+
+                    pq.push(next);
+                }
             }
         } else {
             VPR_ERROR(VPR_ERROR_ROUTE, "Unrecognized RR type");
