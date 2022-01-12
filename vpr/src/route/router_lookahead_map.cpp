@@ -649,7 +649,7 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
 
     RRNodeId parent = parent_entry.rr_node;
 
-    if( strcmp(temp_rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+    if( strcmp(temp_rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
         for (t_edge_struct edge : temp_rr_graph.edge_range_direct(parent)) {
             RRNodeId child_node = edge.dest;
             int switch_ind = edge.switch_id;

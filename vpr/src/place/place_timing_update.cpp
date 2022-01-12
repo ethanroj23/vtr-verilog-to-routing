@@ -360,7 +360,8 @@ static double sum_td_net_cost(ClusterNetId net) {
 
     double net_td_cost = 0;
     for (unsigned ipin = 1; ipin < cluster_ctx.clb_nlist.net_pins(net).size(); ipin++) {
-        net_td_cost += connection_timing_cost[net][ipin];
+        net_td_cost += connection_timing_cost[net][ipin]; //7.1444872240533641e-10 net: 0, ipin: 1
+        // 4.0531894507367383e-10 for flat
     }
 
     return net_td_cost;

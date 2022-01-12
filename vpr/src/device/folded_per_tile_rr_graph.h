@@ -309,18 +309,20 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
     return size_t(last_edge(legacy_node)) - size_t(first_edge(legacy_node));
   }
 
-  t_edge_size num_configurable_edges(const RRNodeId& id) const {
-      // VTR_ASSERT(!node_first_edge_.empty());
-      auto first_id = size_t(first_edge(id));
-      auto last_id = size_t(last_edge(id));
-      for (size_t idx = first_id; idx < last_id; ++idx) {
-          auto switch_idx = edge_switch(RREdgeId(idx));
-          if (!node_storage_.switch_is_configurable(switch_idx)) {
-              return idx - first_id;
-          }
-      }
+  // t_edge_size num_configurable_edges(const RRNodeId& id) const {
+  //     // VTR_ASSERT(!node_first_edge_.empty());
+  //     int edge_count = 0;
+  //     for (auto edge : edge_range_direct(id)) {
+  //         if (!node_storage_.switch_is_configurable(edge.switch_id)) {
+  //             return edge_count;
+  //         }
+  //         edge_count++;
+  //     }
 
-      return last_id - first_id;
+  //     return edge_count;
+  // }
+  t_edge_size num_configurable_edges(const RRNodeId& id) const {
+      return node_storage_.num_configurable_edges(id);
   }
 
 
@@ -361,6 +363,7 @@ inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) cons
           cur_edge_id
         };
         return_edges.push_back(add_edge);
+        k++;
       }
       return return_edges;
 }

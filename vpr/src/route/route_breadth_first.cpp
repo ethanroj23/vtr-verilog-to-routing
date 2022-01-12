@@ -387,7 +387,7 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
         for (t_edge_with_id from_edge : rr_graph.edge_range_with_id_direct(RRNodeId(inode))) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
 

@@ -373,7 +373,7 @@ t_src_opin_delays compute_router_src_opin_lookahead() {
         }
     }
 
-    return src_opin_delays;
+    return src_opin_delays; //@1,1,0:delay:5.80000006e-11 // congestion:6.66575337e-11
 }
 
 t_chan_ipins_delays compute_router_chan_ipin_lookahead() {
@@ -503,7 +503,7 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             int cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
                 for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
                     int iswitch = edge.switch_id;
                     float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
@@ -617,7 +617,7 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             int cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
-            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
                 for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
                     int iswitch = edge.switch_id;
                     float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;

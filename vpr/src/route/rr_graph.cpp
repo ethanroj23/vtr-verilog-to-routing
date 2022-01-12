@@ -3135,7 +3135,7 @@ static void create_edge_groups(EdgeGroups* groups) {
     //             groups->add_non_config_edge(size_t(src), size_t(sink));
     //         }
     //     });
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
         rr_graph.for_each_edge_direct( // replicates the above function, but for FoldedPerTileRRGraph
             [&](RREdgeId edge, RRNodeId src, RRNodeId sink, short switch_id) {
                 if (!device_ctx.rr_switch_inf[switch_id].configurable()) {

@@ -511,7 +511,7 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     // If it's starting a new sub branch this is ok
     if (rr_graph.node_type(prev_node) == SINK) return true;
 
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
         for (t_edge_struct edge : rr_graph.edge_range_direct(prev_node)) {//ESR_EDGE iterate over edges
             //If the sink node is reachable by previous node return true
             if (edge.dest == node) {

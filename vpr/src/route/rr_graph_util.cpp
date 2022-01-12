@@ -199,7 +199,7 @@ vtr::vector<RRNodeId, std::vector<RREdgeId>> get_fan_in_list() {
     //     [&](RREdgeId edge, RRNodeId sink) {
     //         node_fan_in_list[sink].push_back(edge);
     //     });
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
         rr_graph.for_each_edge_direct( // replicates the above function, but for FoldedPerTileRRGraph
             [&](RREdgeId edge, RRNodeId src, RRNodeId sink, short switch_id) {
                 node_fan_in_list[sink].push_back(edge);

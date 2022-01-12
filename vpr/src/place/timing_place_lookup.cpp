@@ -1066,7 +1066,7 @@ static bool verify_delta_delays(const vtr::Matrix<float>& delta_delays) {
     for (size_t x = 0; x < grid.width(); ++x) {
         for (size_t y = 0; y < grid.height(); ++y) {
             float delta_delay = delta_delays[x][y];
-
+            printf("%lu, %lu: %g\n", x, y, delta_delay);
             if (delta_delay < 0.) {
                 VPR_ERROR(VPR_ERROR_PLACE,
                           "Found invaild negative delay %g for delta (%d,%d)",
@@ -1166,7 +1166,6 @@ bool directconnect_exists(int src_rr_node, int sink_rr_node) {
     //which starts at src_rr_node and ends at sink_rr_node
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    auto& rr_nodes = device_ctx.rr_nodes;
 
     VTR_ASSERT(rr_graph.node_type(RRNodeId(src_rr_node)) == SOURCE && rr_graph.node_type(RRNodeId(sink_rr_node)) == SINK);
 

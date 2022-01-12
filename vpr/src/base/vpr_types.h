@@ -60,7 +60,7 @@
 
 #define TOKENS " \t\n" /* Input file parsing. */
 
-//#define VERBOSE //Prints additional intermediate data
+// #define VERBOSE //Prints additional intermediate data
 
 /**
  * @brief For update_screen. Denotes importance of update.

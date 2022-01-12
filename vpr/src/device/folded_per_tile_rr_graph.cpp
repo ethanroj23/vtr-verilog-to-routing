@@ -280,31 +280,15 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
     );
 
 
-
+        VTR_ASSERT(node_storage_.size() == size());
+        VTR_ASSERT(node_storage_.edge_count() == edge_count());
+        VTR_ASSERT(node_storage_.empty() == empty());
 
     // NODES
     for (size_t idx = 0; idx < node_storage_.size(); idx++) { 
         RRNodeId id = RRNodeId(idx);
         if (idx % 1000 == 0)
-            printf("%d\n", idx);
-        if (node_storage_.node_xlow(id) != node_xlow(id)){
-            printf("node_xlow Assertion failed for \nid: %d\noriginal: %d\nfolded: %d\n", id, node_storage_.node_xlow(id), node_xlow(id));
-            print_node_info_string(id);
-            }
-        if (node_storage_.node_xhigh(id) != node_xhigh(id)){
-            printf("node_xhigh Assertion failed for \nid: %d\noriginal: %d\nfolded: %d\n", id, node_storage_.node_xhigh(id), node_xhigh(id));
-            printf("original node type: %s", node_storage_.node_type_string(id));
-            print_node_info_string(id);
-            }
-        if (node_storage_.node_ylow(id) != node_ylow(id)){
-            printf("node_ylow Assertion failed for \nid: %d\noriginal: %d\nfolded: %d\n", id, node_storage_.node_xlow(id), node_ylow(id));
-            print_node_info_string(id);
-            }
-        if (node_storage_.node_yhigh(id) != node_yhigh(id)){
-            printf("node_yhigh Assertion failed for \nid: %d\noriginal: %d\nfolded: %d\n", id, node_storage_.node_xlow(id), node_yhigh(id));
-            print_node_info_string(id);
-            }
-
+            printf("%lu\n", idx);
 
         VTR_ASSERT(node_storage_.node_xlow(id) == node_xlow(id));
         VTR_ASSERT(node_storage_.node_xhigh(id) == node_xhigh(id));
@@ -312,21 +296,42 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
         VTR_ASSERT(node_storage_.node_yhigh(id) == node_yhigh(id)); // SINK/SOURCE should always have the same ylow/yhigh, but they don't in some instances. vtr_main RRNodeId 1494
 
         VTR_ASSERT(node_storage_.node_rc_index(id) == node_rc_index(id));
+        VTR_ASSERT(node_storage_.node_R(id) == node_R(id));
+        VTR_ASSERT(node_storage_.node_C(id) == node_C(id));
+        VTR_ASSERT(node_storage_.node_fan_in(id) == node_fan_in(id));
+        VTR_ASSERT(node_storage_.fan_in(id) == fan_in(id));
+
+        VTR_ASSERT(node_storage_.node_ptc_num(id) == node_ptc_num(id));
+        // VTR_ASSERT(node_storage_.node_pin_num(id) == node_pin_num(id));
+        // VTR_ASSERT(node_storage_.node_track_num(id) == node_track_num(id));
+        // VTR_ASSERT(node_storage_.node_class_num(id) == node_class_num(id));
 
         VTR_ASSERT(node_storage_.node_cost_index(id) == node_cost_index(id));
         VTR_ASSERT(node_storage_.node_type(id) == node_type(id));
         VTR_ASSERT(node_storage_.node_capacity(id) == node_capacity(id));
+
+
+        // Verify Edges
         VTR_ASSERT(node_storage_.num_configurable_edges(id) == num_configurable_edges(id));
+        VTR_ASSERT(node_storage_.num_non_configurable_edges(id) == num_non_configurable_edges(id));
         VTR_ASSERT(node_storage_.num_edges(id) == num_edges(id));
         VTR_ASSERT(node_storage_.first_edge(id) == first_edge(id));
         VTR_ASSERT(node_storage_.last_edge(id) == last_edge(id));
         
 
-        if (node_type(id) == CHANX || node_type(id) == CHANY) 
+        if (node_type(id) == CHANX || node_type(id) == CHANY) {
             VTR_ASSERT(node_storage_.node_direction(id) == node_direction(id));
+            VTR_ASSERT(node_storage_.node_direction_string(id) == node_direction_string(id));
+        }
         
         if(node_type(id) == IPIN || node_type(id) == OPIN)
             VTR_ASSERT(strcmp(node_storage_.node_side_string(id),node_side_string(id))==0);
+
+
+        for (int k = 0; k < num_edges(id); k++){
+            VTR_ASSERT(node_storage_.edge_sink_node(id, k) == edge_sink_node(id, k));
+            VTR_ASSERT(node_storage_.edge_switch(id, k) == edge_switch(id, k));
+        }
 
         // EDGES using RREdgeIds...
         // for (RREdgeId edge : node_storage_.edge_range(id)) {//ESR_EDGE iterate over edges
