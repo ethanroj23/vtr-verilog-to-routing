@@ -396,7 +396,32 @@ inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
   return edges_direct(node)[k];
 }
 
+
 inline t_edge_struct get_t_edge_struct(RREdgeId edge_id) const {
+  // optimized this to be a binary search
+   size_t edge_id_size = size_t(edge_id);
+    int l = 0; // start left index at 0
+    int r = size_ - 1; // start right index at end of nodes
+    while (r >= l){
+        int mid = l + (r - l) / 2; //  mid is node id
+        RRNodeId node = RRNodeId(mid);
+        size_t first = (size_t)first_edge(node);
+        size_t last = (size_t)last_edge(node);
+
+        if (edge_id_size < first) // try again with left half of nodes
+          r = mid - 1;
+        else if (last <= edge_id_size) // try again with right half of nodes
+          l = mid + 1;
+        else if (first != last){ // edge is a part of this node
+            int edge_idx = edge_id_size - first;
+            return kth_edge_for_node(node, edge_idx);
+          }
+    }
+   return {RRNodeId(0), RRNodeId(0), 0}; // INVALID
+}
+
+inline t_edge_struct legacy_get_t_edge_struct(RREdgeId edge_id) const {
+  // optimize this to be a binary search
    size_t edge_id_size = size_t(edge_id);
    for (size_t i=0; i<node_count(); i++){ //  for each node
       RRNodeId node = RRNodeId(i);
@@ -475,7 +500,8 @@ inline RREdgeId edge_id(const RRNodeId& id, t_edge_size iedge) const {
 // This method should generally not be used, and instead first_edge and
 // last_edge should be used.
 inline RRNodeId edge_sink_node(const RRNodeId& id, t_edge_size iedge) const {
-    return edge_sink_node(edge_id(id, iedge));
+    return kth_edge_for_node(id, iedge).dest;
+    // return edge_sink_node(edge_id(id, iedge)); // ESR1
 }
 
 // Get the switch used for the iedge'th edge from specified RRNodeId.
@@ -483,7 +509,8 @@ inline RRNodeId edge_sink_node(const RRNodeId& id, t_edge_size iedge) const {
 // This method should generally not be used, and instead first_edge and
 // last_edge should be used.
 short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
-    return edge_switch(edge_id(id, iedge));
+    return kth_edge_for_node(id, iedge).switch_id;
+    // return edge_switch(edge_id(id, iedge)); // ESR1
 }
 
   /* OTHER METHODS */

@@ -165,7 +165,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
             case CHANY:
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
-                for (iedge = 0; iedge < num_edges; iedge++) {
+                for (iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
                     size_t to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
                     to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
@@ -364,7 +364,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
                 /* Increment number of inputs per cblock if IPIN */
-                for (iedge = 0; iedge < num_edges; iedge++) {
+                for (iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
                     to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
                     to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 

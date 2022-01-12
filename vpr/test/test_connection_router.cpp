@@ -86,7 +86,7 @@ std::tuple<size_t, size_t, int> find_source_and_sink() {
     std::tuple<size_t, size_t, int> longest = std::make_tuple(0, 0, 0);
 
     // Start from each RR node
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
         for (size_t id = 0; id < rr_graph.size(); id++) {
             RRNodeId source(id), sink = source;
             for (int hops = 0; hops < kMaxHops; hops++) {
@@ -95,7 +95,6 @@ std::tuple<size_t, size_t, int> find_source_and_sink() {
                 if (edge == rr_graph.last_edge(sink)) {
                     break;
                 }
-                // sink = rr_graph.edge_sink_node(edge); // ESR replace for FoldedPerTileRRGraph
                 sink = rr_graph.edge_range_direct(sink)[0].dest;
 
                 // If this is the new longest walk, store it.

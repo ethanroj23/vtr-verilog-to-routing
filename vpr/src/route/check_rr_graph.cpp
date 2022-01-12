@@ -80,7 +80,7 @@ void check_rr_graph(const t_graph_type graph_type,
         edges.resize(0);
         edges.reserve(num_edges);
 
-        for (int iedge = 0; iedge < num_edges; iedge++) {
+        for (int iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
             int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
 
             if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
@@ -110,7 +110,7 @@ void check_rr_graph(const t_graph_type graph_type,
         });
 
         //Check that multiple edges between the same from/to nodes make sense
-        for (int iedge = 0; iedge < num_edges; iedge++) {
+        for (int iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
             int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
 
             auto range = std::equal_range(edges.begin(), edges.end(),
@@ -544,7 +544,7 @@ static void check_unbuffered_edges(int from_node) {
 
     from_num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
-    for (from_edge = 0; from_edge < from_num_edges; from_edge++) {
+    for (from_edge = 0; from_edge < from_num_edges; from_edge++) { // ESR TODO DIRECT
         to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), from_edge);
         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
@@ -563,7 +563,7 @@ static void check_unbuffered_edges(int from_node) {
         to_num_edges = rr_graph.num_edges(RRNodeId(to_node));
         trans_matched = false;
 
-        for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
+        for (to_edge = 0; to_edge < to_num_edges; to_edge++) { // ESR TODO DIRECT
             if ((size_t) rr_graph.edge_sink_node(RRNodeId(to_node), to_edge) == from_node
                 && rr_graph.edge_switch(RRNodeId(to_node), to_edge) == from_switch_type) {
                 trans_matched = true;

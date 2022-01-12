@@ -263,7 +263,7 @@ void expand_dijkstra_neighbours(const t_rr_graph_storage& rr_nodes,
 
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
-    for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) {
+    for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) { // ESR TODO DIRECT
         int child_node_ind = (size_t) rr_graph.edge_sink_node(parent, iedge);
         int switch_ind = rr_graph.edge_switch(parent, iedge);
 
@@ -373,7 +373,7 @@ t_src_opin_delays compute_router_src_opin_lookahead() {
         }
     }
 
-    return src_opin_delays; //@1,1,0:delay:5.80000006e-11 // congestion:6.66575337e-11
+    return src_opin_delays;
 }
 
 t_chan_ipins_delays compute_router_chan_ipin_lookahead() {

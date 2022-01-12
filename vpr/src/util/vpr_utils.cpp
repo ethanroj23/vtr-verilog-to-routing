@@ -1804,7 +1804,7 @@ void print_switch_usage() {
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         RRNodeId from_node = RRNodeId(inode);
         int num_edges = rr_graph.num_edges(RRNodeId(inode));
-        for (int iedge = 0; iedge < num_edges; iedge++) {
+        for (int iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
             int switch_index = rr_graph.edge_switch(from_node, iedge);
             int to_node_index = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
             // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).

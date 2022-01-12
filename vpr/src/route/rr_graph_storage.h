@@ -256,15 +256,21 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         return node_fan_in_[id];
     }
 
+    // Used for FoldedRRGraph data structures
     t_rr_node_data get_remove_last_node() {
         t_rr_node_data node = node_storage_.back();
         node_storage_.pop_back();
         return node;
     }
-
+    // Used for FoldedRRGraph data structures
     t_rr_node_data get_node(RRNodeId id){
         return node_storage_[id];
     }
+
+
+
+
+
 
     // This prefetechs hot RR node data required for optimization.
     //

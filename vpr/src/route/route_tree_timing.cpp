@@ -418,7 +418,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
                 VTR_ASSERT(rt_node->inode == rr_node);
             }
         }
-        for (int iedge : rr_graph.non_configurable_edges(RRNodeId(rr_node))) {
+        for (int iedge : rr_graph.non_configurable_edges(RRNodeId(rr_node))) { // ESR TODO DIRECT
             //Recursive case: expand children
             VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable(iedge));
 

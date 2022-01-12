@@ -524,7 +524,7 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
         }
     }
     else{
-        for (RREdgeId edge : rr_graph.edge_range(prev_node)) {//ESR_EDGE iterate over edges
+        for (RREdgeId edge : rr_graph.edge_range(prev_node)) { // ESR TODO DIRECT
             //If the sink node is reachable by previous node return true
             if (rr_graph.edge_sink_node(edge) == node) {
                 return true;

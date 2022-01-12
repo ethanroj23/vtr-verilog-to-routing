@@ -92,7 +92,7 @@ void RoutingToClockConnection::create_switches(const ClockRRGraphBuilder& clock_
 RRNodeId RoutingToClockConnection::create_virtual_clock_network_sink_node(int x, int y) {
     auto& device_ctx = g_vpr_ctx.mutable_device();
     auto& rr_nodes = device_ctx.rr_nodes;
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
     auto& node_lookup = device_ctx.rr_graph_builder.node_lookup();
     rr_nodes.emplace_back();
     RRNodeId node_index = RRNodeId(rr_nodes.size() - 1);

@@ -274,7 +274,15 @@ struct t_edge_struct {
       RRNodeId src;
       RRNodeId dest;
       short switch_id;
+
+      friend bool operator==(const t_edge_struct& lhs, const t_edge_struct& rhs) {
+            return lhs.src == rhs.src &&
+                    lhs.dest == rhs.dest &&
+                    lhs.switch_id == rhs.switch_id;
+        }
+
   };
+
 struct t_edge_with_id {
       RRNodeId src;
       RRNodeId dest;

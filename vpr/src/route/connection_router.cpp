@@ -428,7 +428,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
             }
     }
 
-    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
         for (t_edge_with_id from_edge : rr_graph_->edge_range_with_id_direct(from_node)) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
             timing_driven_expand_neighbour(current,
