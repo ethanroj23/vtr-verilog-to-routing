@@ -280,11 +280,18 @@ struct t_edge_struct {
                     lhs.dest == rhs.dest &&
                     lhs.switch_id == rhs.switch_id;
         }
+  };
+struct t_dest_switch {
+      RRNodeId dest;
+      short switch_id;
 
+      friend bool operator==(const t_dest_switch& lhs, const t_dest_switch& rhs) {
+            return  lhs.dest == rhs.dest &&
+                    lhs.switch_id == rhs.switch_id;
+        }
   };
 
 struct t_edge_with_id {
-      RRNodeId src;
       RRNodeId dest;
       short switch_id;
       RREdgeId edge_id;

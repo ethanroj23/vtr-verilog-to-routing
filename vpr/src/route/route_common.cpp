@@ -566,7 +566,10 @@ static t_trace_branch traceback_branch(int node, int target_net_pin_index, std::
         t_trace* prev_ptr = alloc_trace_data();
         prev_ptr->index = inode;
         prev_ptr->net_pin_index = OPEN; //Net pin index is invalid for Non-SINK nodes
-        prev_ptr->iswitch = rr_graph.edge_switch(iedge);
+        if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 )//ESR1
+            prev_ptr->iswitch = rr_graph.edge_switch_in_node(RRNodeId(inode), iedge); //ESR2
+        else
+            prev_ptr->iswitch = rr_graph.edge_switch(iedge);
         prev_ptr->next = branch_head;
         branch_head = prev_ptr;
 
@@ -627,15 +630,30 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
     std::vector<t_edge_size> unvisited_non_configurable_edges;
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    for (auto iedge : rr_graph.non_configurable_edges(RRNodeId(node))) { // ESR TODO DIRECT
-        VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable(iedge));
 
-        int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge);
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+        for (auto edge : rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(node))) {
+            VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
 
-        if (!trace_nodes.count(to_node)) {
-            unvisited_non_configurable_edges.push_back(iedge);
+            int to_node = (size_t) edge.dest;
+
+            if (!trace_nodes.count(to_node)) {
+                unvisited_non_configurable_edges.push_back((size_t)edge.edge_id);
+            }
         }
     }
+    else{
+        for (auto iedge : rr_graph.non_configurable_edges(RRNodeId(node))) {
+            VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable(iedge));
+
+            int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge);
+
+            if (!trace_nodes.count(to_node)) {
+                unvisited_non_configurable_edges.push_back(iedge);
+            }
+        }
+    }
+
 
     if (unvisited_non_configurable_edges.size() == 0) {
         //Base case: leaf node with no non-configurable edges

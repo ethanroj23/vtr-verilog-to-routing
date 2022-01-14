@@ -504,7 +504,7 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
             if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
-                for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
+                for (auto edge : rr_graph.edge_range_direct(curr.node)) {
                     int iswitch = edge.switch_id;
                     float incr_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 
@@ -618,7 +618,7 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
             if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
-                for (t_edge_struct edge : rr_graph.edge_range_direct(curr.node)) {
+                for (auto edge : rr_graph.edge_range_direct(curr.node)) {
                     int iswitch = edge.switch_id;
                     float new_delay = device_ctx.rr_switch_inf[iswitch].Tdel;
 

@@ -363,86 +363,169 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
             case CHANY:
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
-                /* Increment number of inputs per cblock if IPIN */
-                for (iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
-                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
-                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+                if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+                    for (auto edge : rr_graph.edge_range_direct(RRNodeId(from_node))) {
+                        to_node = (size_t) edge.dest;
+                        to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                    /* Ignore any uninitialized rr_graph nodes */
-                    if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
-                        && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
-                        && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
-                        continue;
-                    }
+                        /* Ignore any uninitialized rr_graph nodes */
+                        if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
+                            && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
+                            && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
+                            continue;
+                        }
 
-                    switch (to_rr_type) {
-                        case CHANX:
-                        case CHANY:
-                            if (!chan_node_switch_done[to_node]) {
-                                int switch_index = rr_graph.edge_switch(RRNodeId(from_node), iedge);
-                                auto switch_type = device_ctx.rr_switch_inf[switch_index].type();
+                        switch (to_rr_type) {
+                            case CHANX:
+                            case CHANY:
+                                if (!chan_node_switch_done[to_node]) {
+                                    int switch_index = edge.switch_id;
+                                    auto switch_type = device_ctx.rr_switch_inf[switch_index].type();
 
-                                int fan_in = rr_graph.node_fan_in(RRNodeId(to_node));
+                                    int fan_in = rr_graph.node_fan_in(RRNodeId(to_node));
 
-                                if (device_ctx.rr_switch_inf[switch_index].type() == SwitchType::MUX) {
-                                    /* Each wire segment begins with a multipexer followed by a driver for unidirectional */
-                                    /* Each multiplexer contains all the fan-in to that routing node */
-                                    /* Add up area of multiplexer */
-                                    ntrans += trans_per_mux(fan_in, trans_sram_bit,
-                                                            device_ctx.rr_switch_inf[switch_index].mux_trans_size);
+                                    if (device_ctx.rr_switch_inf[switch_index].type() == SwitchType::MUX) {
+                                        /* Each wire segment begins with a multipexer followed by a driver for unidirectional */
+                                        /* Each multiplexer contains all the fan-in to that routing node */
+                                        /* Add up area of multiplexer */
+                                        ntrans += trans_per_mux(fan_in, trans_sram_bit,
+                                                                device_ctx.rr_switch_inf[switch_index].mux_trans_size);
 
-                                    /* Add up area of buffer */
-                                    /* The buffer size should already have been auto-sized (if required) when
-                                     * the rr switches were created from the arch switches */
-                                    ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
-                                } else if (switch_type == SwitchType::SHORT) {
-                                    ntrans += 0.; //Electrical shorts contribute no transisitor area
-                                } else if (switch_type == SwitchType::BUFFER) {
-                                    if (fan_in != 1) {
-                                        std::string msg = vtr::string_fmt(
-                                            "Uni-directional RR node driven by non-configurable "
-                                            "BUFFER has fan in %d (expected 1)\n",
-                                            fan_in);
-                                        msg += "  " + describe_rr_node(to_node);
-                                        VPR_FATAL_ERROR(VPR_ERROR_OTHER, msg.c_str());
+                                        /* Add up area of buffer */
+                                        /* The buffer size should already have been auto-sized (if required) when
+                                        * the rr switches were created from the arch switches */
+                                        ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    } else if (switch_type == SwitchType::SHORT) {
+                                        ntrans += 0.; //Electrical shorts contribute no transisitor area
+                                    } else if (switch_type == SwitchType::BUFFER) {
+                                        if (fan_in != 1) {
+                                            std::string msg = vtr::string_fmt(
+                                                "Uni-directional RR node driven by non-configurable "
+                                                "BUFFER has fan in %d (expected 1)\n",
+                                                fan_in);
+                                            msg += "  " + describe_rr_node(to_node);
+                                            VPR_FATAL_ERROR(VPR_ERROR_OTHER, msg.c_str());
+                                        }
+
+                                        //This is a non-configurable buffer, so there are no mux transistors,
+                                        //only the buffer area
+                                        ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    } else {
+                                        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "Unexpected switch type %d while calculating area of uni-directional routing", switch_type);
                                     }
-
-                                    //This is a non-configurable buffer, so there are no mux transistors,
-                                    //only the buffer area
-                                    ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
-                                } else {
-                                    VPR_FATAL_ERROR(VPR_ERROR_OTHER, "Unexpected switch type %d while calculating area of uni-directional routing", switch_type);
+                                    chan_node_switch_done[to_node] = true;
                                 }
-                                chan_node_switch_done[to_node] = true;
-                            }
 
-                            break;
+                                break;
 
-                        case IPIN:
-                            num_inputs_to_cblock[to_node]++;
-                            max_inputs_to_cblock = std::max(max_inputs_to_cblock,
-                                                            num_inputs_to_cblock[to_node]);
-                            iseg = seg_index_of_cblock(from_rr_type, to_node);
+                            case IPIN:
+                                num_inputs_to_cblock[to_node]++;
+                                max_inputs_to_cblock = std::max(max_inputs_to_cblock,
+                                                                num_inputs_to_cblock[to_node]);
+                                iseg = seg_index_of_cblock(from_rr_type, to_node);
 
-                            if (cblock_counted[iseg] == false) {
-                                cblock_counted[iseg] = true;
-                                ntrans += trans_track_to_cblock_buf;
-                            }
-                            break;
+                                if (cblock_counted[iseg] == false) {
+                                    cblock_counted[iseg] = true;
+                                    ntrans += trans_track_to_cblock_buf;
+                                }
+                                break;
 
-                        case SINK:
-                            break; //ignore virtual sinks
+                            case SINK:
+                                break; //ignore virtual sinks
 
-                        default:
-                            VPR_ERROR(VPR_ERROR_ROUTE,
-                                      "in count_routing_transistors:\n"
-                                      "\tUnexpected connection from node %d (type %d) to node %d (type %d).\n",
-                                      from_node, from_rr_type, to_node, to_rr_type);
-                            break;
+                            default:
+                                VPR_ERROR(VPR_ERROR_ROUTE,
+                                        "in count_routing_transistors:\n"
+                                        "\tUnexpected connection from node %d (type %d) to node %d (type %d).\n",
+                                        from_node, from_rr_type, to_node, to_rr_type);
+                                break;
 
-                    } /* End switch on to_rr_type. */
+                        } /* End switch on to_rr_type. */
+                    }
+                }
+                else{ // Using flat RRGraph
+                    /* Increment number of inputs per cblock if IPIN */
+                    for (iedge = 0; iedge < num_edges; iedge++) {
+                        to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
+                        to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                } /* End for each edge. */
+                        /* Ignore any uninitialized rr_graph nodes */
+                        if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
+                            && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
+                            && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
+                            continue;
+                        }
+
+                        switch (to_rr_type) {
+                            case CHANX:
+                            case CHANY:
+                                if (!chan_node_switch_done[to_node]) {
+                                    int switch_index = rr_graph.edge_switch(RRNodeId(from_node), iedge);
+                                    auto switch_type = device_ctx.rr_switch_inf[switch_index].type();
+
+                                    int fan_in = rr_graph.node_fan_in(RRNodeId(to_node));
+
+                                    if (device_ctx.rr_switch_inf[switch_index].type() == SwitchType::MUX) {
+                                        /* Each wire segment begins with a multipexer followed by a driver for unidirectional */
+                                        /* Each multiplexer contains all the fan-in to that routing node */
+                                        /* Add up area of multiplexer */
+                                        ntrans += trans_per_mux(fan_in, trans_sram_bit,
+                                                                device_ctx.rr_switch_inf[switch_index].mux_trans_size);
+
+                                        /* Add up area of buffer */
+                                        /* The buffer size should already have been auto-sized (if required) when
+                                        * the rr switches were created from the arch switches */
+                                        ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    } else if (switch_type == SwitchType::SHORT) {
+                                        ntrans += 0.; //Electrical shorts contribute no transisitor area
+                                    } else if (switch_type == SwitchType::BUFFER) {
+                                        if (fan_in != 1) {
+                                            std::string msg = vtr::string_fmt(
+                                                "Uni-directional RR node driven by non-configurable "
+                                                "BUFFER has fan in %d (expected 1)\n",
+                                                fan_in);
+                                            msg += "  " + describe_rr_node(to_node);
+                                            VPR_FATAL_ERROR(VPR_ERROR_OTHER, msg.c_str());
+                                        }
+
+                                        //This is a non-configurable buffer, so there are no mux transistors,
+                                        //only the buffer area
+                                        ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    } else {
+                                        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "Unexpected switch type %d while calculating area of uni-directional routing", switch_type);
+                                    }
+                                    chan_node_switch_done[to_node] = true;
+                                }
+
+                                break;
+
+                            case IPIN:
+                                num_inputs_to_cblock[to_node]++;
+                                max_inputs_to_cblock = std::max(max_inputs_to_cblock,
+                                                                num_inputs_to_cblock[to_node]);
+                                iseg = seg_index_of_cblock(from_rr_type, to_node);
+
+                                if (cblock_counted[iseg] == false) {
+                                    cblock_counted[iseg] = true;
+                                    ntrans += trans_track_to_cblock_buf;
+                                }
+                                break;
+
+                            case SINK:
+                                break; //ignore virtual sinks
+
+                            default:
+                                VPR_ERROR(VPR_ERROR_ROUTE,
+                                        "in count_routing_transistors:\n"
+                                        "\tUnexpected connection from node %d (type %d) to node %d (type %d).\n",
+                                        from_node, from_rr_type, to_node, to_rr_type);
+                                break;
+
+                        } /* End switch on to_rr_type. */
+
+                    } /* End for each edge. */
+
+                }
 
                 /* Reset some flags */
                 if (from_rr_type == CHANX) {

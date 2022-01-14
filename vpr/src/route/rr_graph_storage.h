@@ -390,9 +390,9 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         }
     }
           
-    inline std::vector<t_edge_struct> edge_range_direct(RRNodeId node) const {
+    inline std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const {
         (void) node;
-        std::vector<t_edge_struct> empty;
+        std::vector<t_dest_switch> empty;
         return empty;
     }
     inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const {
@@ -400,6 +400,43 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         std::vector<t_edge_with_id> empty;
         return empty;
     }
+
+    inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const {
+        (void) node;
+        std::vector<t_edge_struct> empty;
+        return empty;
+    }
+
+    inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RRNodeId node) const {
+        (void) node;
+        std::vector<t_edge_with_id> empty;
+        return empty;
+    }
+
+    inline std::vector<RRNodeId> edge_range_dest_direct(RRNodeId node) const {
+        (void) node;
+        std::vector<RRNodeId> empty;
+        return empty;
+    }
+
+    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const {
+        (void) src_rr_node;
+        (void) dest_rr_node;
+        return false;
+    }
+
+    inline short edge_switch_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        (void) node;
+        (void) edge_id;
+        return -1;
+    }
+
+    inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        (void) edge_id;
+        return node;
+    }
+
+
 
 
 

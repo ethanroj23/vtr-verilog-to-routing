@@ -131,7 +131,11 @@ void reorder_rr_graph_nodes(const t_router_opts& router_opts) {
                 que.pop();
                 degree[u] += rr_graph.num_edges(u);
                 for (RREdgeId edge = rr_graph.first_edge(u); edge < rr_graph.last_edge(u); edge = RREdgeId(size_t(edge) + 1)) { // ESR TODO DIRECT
-                    RRNodeId v = rr_graph.edge_sink_node(edge);
+                    RRNodeId v; // ESR2
+                    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 )//ESR1
+                        v = rr_graph.edge_sink_node_in_node(RRNodeId(u), edge); //ESR2
+                    else
+                        v = rr_graph.edge_sink_node(edge);
                     degree[v]++;
                     if (bfs_idx[v]) continue;
                     bfs_idx[v] = cur_idx++;

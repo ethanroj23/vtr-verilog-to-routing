@@ -393,7 +393,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //For each node associated with the current heap element, expand all of it's neighbors
     int from_node_int = current->index;
     RRNodeId from_node(from_node_int);
-    auto edges = rr_graph_->edge_range(from_node);
+
 
     // This is a simple prefetch that prefetches:
     //  - RR node data reachable from this node
@@ -412,23 +412,11 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - directrf_stratixiv_arch_timing.blif
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
-    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESRworks
-        for (t_edge_struct from_edge : rr_graph_->edge_range_direct(from_node)) {//ESR_EDGE iterate over edges
+    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
+        for (auto from_edge : rr_graph_->edge_range_direct(from_node)) {//ESR_EDGE iterate over edges
             int switch_idx = from_edge.switch_id;
             VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
         }
-    }
-    else{
-        for (RREdgeId from_edge : edges) {
-                RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
-                rr_graph_->prefetch_node(to_node);
-
-                int switch_idx = rr_graph_->edge_switch(from_edge);
-                VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
-            }
-    }
-
-    if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
         for (t_edge_with_id from_edge : rr_graph_->edge_range_with_id_direct(from_node)) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
             timing_driven_expand_neighbour(current,
@@ -443,6 +431,15 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
         }
     }
     else{
+        auto edges = rr_graph_->edge_range(from_node);
+        for (RREdgeId from_edge : edges) {
+                RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
+                rr_graph_->prefetch_node(to_node);
+
+                int switch_idx = rr_graph_->edge_switch(from_edge);
+                VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+            }
+
         for (RREdgeId from_edge : edges) {
             RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
             short switch_id = -1; // only applies to FoldedPerTileRRGraph
@@ -457,7 +454,6 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
                                         switch_id);
         }
     }
-    
 }
 
 //Conditionally adds to_node to the router heap (via path from from_node via from_edge).

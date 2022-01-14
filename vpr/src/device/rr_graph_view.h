@@ -297,7 +297,7 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->edge_range(node);
     }
 
-    inline std::vector<t_edge_struct> edge_range_direct(RRNodeId node) const {
+    inline std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const {
         return primary_rr_graph_->edge_range_direct(node);
     }
 
@@ -305,6 +305,29 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->edge_range_with_id_direct(node);
     }
 
+    inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const {
+        return primary_rr_graph_->non_configurable_edge_range_direct(node);
+    }
+
+    inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RRNodeId node) const {
+        return primary_rr_graph_->non_configurable_edge_with_id_range_direct(node);
+    }
+
+    inline std::vector<RRNodeId> edge_range_dest_direct(RRNodeId node) const {
+        return primary_rr_graph_->edge_range_dest_direct(node);
+    }
+    
+    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const {
+        return primary_rr_graph_->directconnect_exists(src_rr_node, dest_rr_node);
+    }
+
+    inline short edge_switch_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return primary_rr_graph_->edge_switch_in_node(node, edge_id);
+    }
+
+    inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return primary_rr_graph_->edge_sink_node_in_node(node, edge_id);
+    }
 
     // Retrieve the RREdgeId for iedge'th edge in RRNodeId.
     //

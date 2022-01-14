@@ -309,10 +309,20 @@ static bool check_adjacent(int from_node, int to_node) {
 
     reached = false;
 
-    for (t_edge_size iconn = 0; iconn < rr_graph.num_edges(RRNodeId(from_node)); iconn++) { // ESR TODO DIRECT
-        if ((size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iconn) == to_node) {
-            reached = true;
-            break;
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+        for (auto edge : rr_graph.edge_range_direct(RRNodeId(from_node))) {
+            if ((size_t) edge.dest == to_node) {
+                reached = true;
+                break;
+            }
+        }
+    }
+    else{
+        for (t_edge_size iconn = 0; iconn < rr_graph.num_edges(RRNodeId(from_node)); iconn++) {
+            if ((size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iconn) == to_node) {
+                reached = true;
+                break;
+            }
         }
     }
 

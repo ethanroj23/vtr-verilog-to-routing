@@ -63,7 +63,11 @@ void FoldedPerTileRRGraph::build_graph(){
 
     // vvv CREATE ORDERED NODES IN TILES
     size_ = node_storage_.size();
+    // node_to_tile_.resize(size_);
+    vtr::vector<RRNodeId, std::array<TileIdx, 3>> temp_node_to_tile; // goes from RRNodeId to array of [x, y]
+    temp_node_to_tile.resize(size_);
     node_to_tile_.resize(size_);
+
     node_to_pattern_idx_.resize(size_);
     for (int i=0; i<size_; i++){ // for each NODE
         RRNodeId node_id = RRNodeId(i);
@@ -122,7 +126,8 @@ void FoldedPerTileRRGraph::build_graph(){
     for (int x = 0; x < tile_to_node_.size(); x++){
         for (int y = 0; y < tile_to_node_[x].size(); y++){
             for (int idx = 0; idx < tile_to_node_[x][y].size(); idx++){
-                node_to_tile_[tile_to_node_[x][y][idx]] = {x, y, idx};
+                temp_node_to_tile[tile_to_node_[x][y][idx]] = {x, y, idx};
+                node_to_tile_[tile_to_node_[x][y][idx]] = {x, y};
                 nodes_processed += 1;
             }
         }
@@ -147,22 +152,34 @@ void FoldedPerTileRRGraph::build_graph(){
             // current_type, // remove type for now
             {Direction::NUM_DIRECTIONS}
         };
+        t_folded_node node_pattern_node = {
+            node_storage_.node_cost_index(node_id),
+            node_storage_.node_rc_index(node_id),
+            node_length(node_id),
+            node_storage_.node_capacity(node_id)
+        };
+        t_folded_dir_side node_pattern_dir_side = {
+            {Direction::NUM_DIRECTIONS}
+        };
 
         // set direction if using CHANX or CHANY
         if (current_type == CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(node_id);    
+                    node_pattern_dir_side.dir_side_.direction_ = node_storage_.node_direction(node_id);    
         }
         // set sides if using IPIN or OPIN
         if (current_type== IPIN || current_type == OPIN){
             for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
                 if (strcmp(SIDE_STRING[side], node_storage_.node_side_string(node_id))==0){
                     node_pattern.dir_side_.sides_ = side;
+                    node_pattern_dir_side.dir_side_.sides_ = side;
                 }
             }
         }
 
         // vvv FOR EACH EDGE
         std::vector<t_folded_edge_data> edges; //  used for edge pattern
+
         std::vector<t_folded_edge_data> temp_edges; //  used for edge pattern
         for (RREdgeId edge : edge_range(node_id)) {// for each edge of this node
 
@@ -173,25 +190,28 @@ void FoldedPerTileRRGraph::build_graph(){
             int dest_y_low = node_storage_.node_ylow(dest_node);
             t_rr_type dest_current_type = node_storage_.node_type(dest_node);
 
-            int16_t dx = dest_x_low - x_low;
-            int16_t dy = dest_y_low - y_low;
-            TileIdx tile_idx = node_to_tile_[dest_node][2];
-            DxDy cur_dx_dy = {dx, dy};
+            short dx = dest_x_low - x_low;
+            short dy = dest_y_low - y_low;
+            TileIdx tile_idx = temp_node_to_tile[dest_node][2];
+            // DxDy cur_dx_dy = {dx, dy};
 
 
-            if (!(temp_dx_dy.count(cur_dx_dy)>0)){ // cur_dx_dy not in temp_dx_dy
-                temp_dx_dy[cur_dx_dy] = dx_dy_idx;
-                dx_dy_idx++;
-                dx_dy_.push_back(cur_dx_dy);
-            }
-            DxDyIdx cur_dx_dy_idx = temp_dx_dy[cur_dx_dy];
+            // if (!(temp_dx_dy.count(cur_dx_dy)>0)){ // cur_dx_dy not in temp_dx_dy
+            //     temp_dx_dy[cur_dx_dy] = dx_dy_idx;
+            //     dx_dy_idx++;
+            //     dx_dy_.push_back(cur_dx_dy);
+            // }
+            // DxDyIdx cur_dx_dy_idx = temp_dx_dy[cur_dx_dy];
 
             t_folded_edge_data cur_edge = {
-                cur_dx_dy_idx,
+                // cur_dx_dy_idx,
+                dx,
+                dy,
                 switch_id,
                 tile_idx
             };
             edges.push_back(cur_edge);
+
             temp_edges.push_back(cur_edge);
         }
         // ^^^ FOR EACH EDGE
@@ -212,7 +232,8 @@ void FoldedPerTileRRGraph::build_graph(){
             shared_edges_.push_back(edges);
             if (!(temp_shared_node_data.count(node_pattern)>0)) { // not in shared node data yet
                 temp_shared_node_data[node_pattern] = shared_node_data_idx;
-                shared_node_data_.push_back(node_pattern);
+                shared_node_data_.push_back(node_pattern_node);
+                shared_node_dir_side_.push_back(node_pattern_dir_side);
                 shared_node_data_idx++;
             }
             shared_node_.push_back(temp_shared_node_data[node_pattern]);
@@ -261,7 +282,7 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
         }
     }
     int max_NodePatternIdx = shared_node_.size();
-    int max_DxDyIdx = dx_dy_.size();
+    // int max_DxDyIdx = dx_dy_.size();
     int max_SharedNodeDataIdx = shared_node_data_.size();
 
     printf("The Following numbers should not exceed 65,536 since they only have 2 Bytes allotted to them\n"
@@ -269,15 +290,16 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
            "y -> %d\n"
            "TileIdx -> %d\n"
            "NodePatternIdx -> %d\n"
-           "DxDyIdx -> %d\n"
+        //    "DxDyIdx -> %d\n"
            "SharedNodeDataIdx -> %d\n",
            max_x,
            max_y,
            max_TileIdx,
            max_NodePatternIdx,
-           max_DxDyIdx,
+        //    max_DxDyIdx,
            max_SharedNodeDataIdx
     );
+    return;
 
 
         VTR_ASSERT(node_storage_.size() == size());
@@ -347,7 +369,7 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
             std::array<int, 3> cur_edge = {(size_t) edge_src_node(edge), (size_t) edge_sink_node(edge), edge_switch(edge)};
             original_edges.push_back(cur_edge);
         }
-        for (auto edge : edge_range_direct(id)){
+        for (auto edge : edge_range_src(id)){
             std::array<int, 3> cur_edge = {(size_t) edge.src, (size_t) edge.dest, (size_t) edge.switch_id};
             folded_edges.push_back(cur_edge);
         }
