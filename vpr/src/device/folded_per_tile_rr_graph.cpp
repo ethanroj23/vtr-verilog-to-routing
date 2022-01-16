@@ -48,9 +48,8 @@ void FoldedPerTileRRGraph::build_graph(){
     // Clear all data structures of any previous data
     tile_to_node_.clear();
     node_type_.clear();
-    node_to_tile_.clear();
+    node_coords_.clear();
     node_to_rc_.clear();
-    node_to_dir_side_.clear();
     edge_count_ = node_storage_.edge_count();
 
 
@@ -66,14 +65,12 @@ void FoldedPerTileRRGraph::build_graph(){
 
     // vvv CREATE ORDERED NODES IN TILES
     size_ = node_storage_.size();
-    node_to_tile_.reserve(size_);
+    node_coords_.reserve(size_);
     node_to_rc_.reserve(size_);
-    node_to_dir_side_.reserve(size_);
     node_type_.reserve(size_);
     
 
 
-    // node_to_tile_.resize(size_);
     vtr::vector<RRNodeId, std::array<TileIdx, 3>> temp_node_to_tile; // goes from RRNodeId to array of [x, y]
     temp_node_to_tile.resize(size_);
 
@@ -136,7 +133,6 @@ void FoldedPerTileRRGraph::build_graph(){
         for (int y = 0; y < tile_to_node_[x].size(); y++){
             for (int idx = 0; idx < tile_to_node_[x][y].size(); idx++){
                 temp_node_to_tile[tile_to_node_[x][y][idx]] = {x, y, idx};
-                // node_to_tile_[tile_to_node_[x][y][idx]] = {x, y};
                 nodes_processed += 1;
             }
         }
@@ -150,6 +146,8 @@ void FoldedPerTileRRGraph::build_graph(){
         RRNodeId node_id = RRNodeId(i);
         uint16_t x_low = node_storage_.node_xlow(node_id);
         uint16_t y_low = node_storage_.node_ylow(node_id);
+        uint16_t x_high = node_storage_.node_xhigh(node_id);
+        uint16_t y_high = node_storage_.node_yhigh(node_id);
         t_rr_type current_type = node_storage_.node_type(node_id);
         node_type_.push_back(current_type);
 
@@ -171,27 +169,29 @@ void FoldedPerTileRRGraph::build_graph(){
         //     node_length(node_id),
         //     node_storage_.node_capacity(node_id)
         // };
-        t_folded_node_dir_side node_pattern_dir_side = {
+        t_folded_rc node_pattern_rc = {
+            node_pattern.rc_index_, 
+            node_pattern.cost_index_, 
+            node_pattern.capacity_, 
             {Direction::NUM_DIRECTIONS}
         };
 
         // set direction if using CHANX or CHANY
         if (current_type == CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(node_id);    
-                    node_pattern_dir_side.dir_side.direction = node_storage_.node_direction(node_id);    
+                    node_pattern_rc.dir_side.direction = node_storage_.node_direction(node_id);    
         }
         // set sides if using IPIN or OPIN
         if (current_type== IPIN || current_type == OPIN){
             for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
                 if (strcmp(SIDE_STRING[side], node_storage_.node_side_string(node_id))==0){
                     node_pattern.dir_side_.sides_ = side;
-                    node_pattern_dir_side.dir_side.sides = side;
+                    node_pattern_rc.dir_side.sides = side;
                 }
             }
         }
-        node_to_tile_.push_back({x_low, y_low, node_pattern.length_, node_pattern.cost_index_});
-        node_to_rc_.push_back({node_pattern.rc_index_, node_pattern.capacity_});
-        node_to_dir_side_.push_back(node_pattern_dir_side);
+        node_coords_.push_back({x_low, y_low, x_high, y_high});
+        node_to_rc_.push_back(node_pattern_rc);
 
 
         // vvv FOR EACH EDGE
