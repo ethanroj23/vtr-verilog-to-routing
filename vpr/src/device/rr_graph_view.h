@@ -352,6 +352,11 @@ class RRGraphView : public RRGraphViewInterface {
         primary_rr_graph_->for_each_edge_direct(apply);
     }
 
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    inline void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const {
+        primary_rr_graph_->for_each_edge_sink_direct(apply);
+    }
+
 
 
 

@@ -383,12 +383,12 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
      */
 
     t_bb target_bb;
-    if (target_node != OPEN) {
-        target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
-        target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
-        target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
-        target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
-    }
+    // if (target_node != OPEN) {
+    //     target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
+    //     target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
+    //     target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
+    //     target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
+    // }
 
     //For each node associated with the current heap element, expand all of it's neighbors
     int from_node_int = current->index;
@@ -413,9 +413,18 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
     if( strcmp(rr_graph_->rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
-        for (auto from_edge : rr_graph_->edge_range_direct(from_node)) {//ESR_EDGE iterate over edges
-            int switch_idx = from_edge.switch_id;
-            VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+        // for (auto from_edge : rr_graph_->edge_range_direct(from_node)) {//ESR_EDGE iterate over edges
+        //     RRNodeId to_node = from_edge.dest;
+        //     rr_graph_->prefetch_node(to_node);
+
+        //     int switch_idx = from_edge.switch_id;
+        //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+        // }
+        if (target_node != OPEN) {
+            target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
+            target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
+            target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
+            target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
         }
         for (t_edge_with_id from_edge : rr_graph_->edge_range_with_id_direct(from_node)) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
@@ -431,6 +440,12 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
         }
     }
     else{
+        if (target_node != OPEN) {
+            target_bb.xmin = rr_graph_->node_xlow(RRNodeId(target_node));
+            target_bb.ymin = rr_graph_->node_ylow(RRNodeId(target_node));
+            target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
+            target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
+        }
         auto edges = rr_graph_->edge_range(from_node);
         for (RREdgeId from_edge : edges) {
                 RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);

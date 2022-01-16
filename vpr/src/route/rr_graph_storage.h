@@ -383,6 +383,11 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     }
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const {
+        (void) apply; // this function is only used in FoldedPerTileRRGraph
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
         for (size_t i = 0; i < edge_dest_node_.size(); i++) {
             RREdgeId edge(i);

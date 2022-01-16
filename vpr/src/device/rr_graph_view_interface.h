@@ -45,6 +45,8 @@ class RRGraphViewInterface {
       virtual void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const=0;
       virtual void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const=0;
       virtual void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId, short)> apply) const=0;
+      virtual void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const=0;
+
       virtual std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const=0;
       virtual std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const=0;
       virtual std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RRNodeId node) const=0;

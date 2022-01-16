@@ -88,13 +88,12 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
   }
 
   inline short node_capacity(RRNodeId node) const{ 
-    SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-    return shared_node_data_[data_idx].capacity_;
+    return node_to_rc_[node].capacity;
   }
   
   /* Get the type string of a routing resource node. This function is inlined for runtime optimization. */
   inline const char* node_type_string(RRNodeId node) const {
-      return rr_node_typename[node_type(node)];
+      return rr_node_typename[node_type_[node]];
   }
 
   /* Get the direction of a routing resource node. This function is inlined for runtime optimization.
@@ -104,8 +103,7 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
     * Direction::NONE: node does not have a direction, such as IPIN/OPIN
     */
   inline Direction node_direction(RRNodeId node) const {
-    SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-    return shared_node_dir_side_[data_idx].dir_side_.direction_;
+    return node_to_dir_side_[node].dir_side.direction;
   }
 
   /* Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
@@ -138,8 +136,7 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 
   /* Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
   inline int16_t node_rc_index(RRNodeId node) const {
-    SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-    return shared_node_data_[data_idx].rc_index_;
+      return node_to_rc_[node].rc_index;
   }
 
   /* Get the xlow of a routing resource node. This function is inlined for runtime optimization. */
@@ -149,11 +146,10 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 
   /* Get the xhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_xhigh(RRNodeId node) const {  
-    if (node_type_[node] == CHANX) { //|| shared_node_data_[data_idx].type_ == SINK || shared_node_data_[data_idx].type_ == SOURCE)
-        SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-        return node_to_tile_[node].x + shared_node_data_[data_idx].length_;
-    }
-      return node_to_tile_[node].x;
+    // if (node_type_[node] == CHANX) { //|| shared_node_data_[data_idx].type_ == SINK || shared_node_data_[data_idx].type_ == SOURCE)
+    //     return node_to_tile_[node].x + node_to_tile_[node].length;
+    // }
+      return node_to_tile_[node].x + node_to_tile_[node].length * (node_type_[node]==CHANX);
   }
 
   /* Get the ylow of a routing resource node. This function is inlined for runtime optimization. */
@@ -163,11 +159,10 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 
   /* Get the yhigh of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_yhigh(RRNodeId node) const {  
-    if (node_type_[node] == CHANY || node_type_[node]== SINK || node_type_[node] == SOURCE){
-      SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-      return node_to_tile_[node].y + shared_node_data_[data_idx].length_;
-    }
-    return node_to_tile_[node].y;
+    // if (node_type_[node] == CHANY || node_type_[node]== SINK || node_type_[node] == SOURCE){
+    //     return node_to_tile_[node].y + node_to_tile_[node].length;
+    // }
+      return node_to_tile_[node].y + node_to_tile_[node].length * (node_type_[node] == CHANY || node_type_[node]== SINK || node_type_[node] == SOURCE);
   }
 
   void print_node_info_string(RRNodeId node) const {
@@ -182,19 +177,17 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 
   /* Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
   inline short node_cost_index(RRNodeId node) const {
-    SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-    return shared_node_data_[data_idx].cost_index_;
+    return node_to_tile_[node].cost_index;
   }
 
   inline bool is_node_on_specific_side(RRNodeId node, e_side side) const{
-    t_rr_type current_type = node_type(node);
+    t_rr_type current_type = node_type_[node];
     if (current_type != IPIN && current_type != OPIN){
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
           "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
           rr_node_typename[current_type]);
     }
-    SharedNodeDataIdx data_idx = shared_node_[node_to_pattern_idx_[node]];
-    return SIDES[shared_node_dir_side_[data_idx].dir_side_.sides_]==side;
+    return SIDES[node_to_dir_side_[node].dir_side.sides]==side;
   }
 
   /* Check whether a routing node is on a specific side. This function is inlined for runtime optimization. */
@@ -266,14 +259,16 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 
     int shared_edges_bytes = edge_count * (2 + 2 + 2); // dx_dy, switch, tile_idx
 
-    int shared_node_bytes = shared_node_.size() * (2); // SharedNodeDataIdx
-    int shared_node_data_bytes = shared_node_data_.size() * (2 + 2 + 2 + 1 + 2); // type, length, rc, capacity, dir_side, cost_index EACH // trying without type for now
+    // int shared_node_bytes = shared_node_.size() * (2); // SharedNodeDataIdx
+    // int shared_node_data_bytes = shared_node_data_.size() * (2 + 2 + 2 + 1 + 2); // type, length, rc, capacity, dir_side, cost_index EACH // trying without type for now
     int node_type_bytes = node_count * 1; // 1 byte each
 
 
     // int dx_dy_bytes = dx_dy_.size() * (2 + 2); // dx, dy
 
-    return node_to_tile_bytes + tile_to_node_bytes + node_to_pattern_idx_bytes + shared_edges_bytes + shared_node_bytes + shared_node_data_bytes + 
+    return node_to_tile_bytes + tile_to_node_bytes + node_to_pattern_idx_bytes + shared_edges_bytes + 
+    // shared_node_bytes + 
+    // shared_node_data_bytes + 
     // dx_dy_bytes + 
     node_type_bytes;
     }
@@ -368,8 +363,8 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
 inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const{
       // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
 
-      NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
-      auto folded_edges = shared_edges_[pattern_idx];
+      // NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
+      auto folded_edges = shared_edges_[node_to_pattern_idx_[node]];
 
       std::vector<t_edge_with_id> return_edges; // initialize return vector
       return_edges.reserve(folded_edges.size());
@@ -378,11 +373,10 @@ inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) cons
       size_t first = (size_t)first_edge(node);
       for (auto cur_edge : folded_edges){
         // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
-        RREdgeId cur_edge_id = RREdgeId(first+k);
         t_edge_with_id add_edge = {
           tile_to_node_[x_y_tile.x+cur_edge.dx][x_y_tile.y+cur_edge.dy][cur_edge.tile_idx], // dest
           cur_edge.switch_id, // switch
-          cur_edge_id
+          RREdgeId(first+k)
         };
         return_edges.push_back(add_edge);
         k++;
@@ -407,65 +401,81 @@ inline std::vector<RRNodeId> edge_range_dest_direct(RRNodeId node) const{
 
 
 inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const{
-    (void) src_rr_node;
-    (void) dest_rr_node;
-    return false;
+    const auto& folded_edges = shared_edges_[node_to_pattern_idx_[src_rr_node]];
+
+    const auto& x_y_tile = node_to_tile_[src_rr_node];
+    for (const auto& i_src_edge : folded_edges){
+      uint16_t x = x_y_tile.x+i_src_edge.dx;
+      uint16_t y = x_y_tile.y+i_src_edge.dy;
+      uint16_t tile_idx = i_src_edge.tile_idx;
+      RRNodeId opin_rr_node = tile_to_node_[x][y][tile_idx];
+      if (node_type_[opin_rr_node] != OPIN) continue;
+
+      const auto& folded_edges_2 = shared_edges_[node_to_pattern_idx_[opin_rr_node]];
+      for (const auto& i_opin_edge : folded_edges_2){
+        uint16_t x_2 = x + i_opin_edge.dx;
+        uint16_t y_2 = y + i_opin_edge.dy;
+        uint16_t tile_idx_2 = i_opin_edge.tile_idx;
+        RRNodeId ipin_rr_node = tile_to_node_[x_2][y_2][tile_idx_2];
+        if (node_type_[ipin_rr_node] != IPIN) continue;
+
+        const auto& folded_edges_3 = shared_edges_[node_to_pattern_idx_[ipin_rr_node]];
+        for (const auto& i_ipin_edge : folded_edges_3){
+          uint16_t x_3 = x_2 + i_ipin_edge.dx;
+          uint16_t y_3 = y_2 + i_ipin_edge.dy;
+          uint16_t tile_idx_3 = i_ipin_edge.tile_idx;
+          RRNodeId sink_rr_node = tile_to_node_[x_3][y_3][tile_idx_3];
+          if (sink_rr_node == dest_rr_node) return true;
+      }
+    }
+  }
+  return false;
 }
-//     auto folded_edges = shared_edges_[node_to_pattern_idx_[src_rr_node]];
 
-//     auto x_y_tile = node_to_tile_[src_rr_node];
-//     for (auto cur_edge : folded_edges){
-//       auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
-//       uint16_t x = x_y_tile.x+dx_dy.dx_;
-//       uint16_t y = x_y_tile.y+dx_dy.dy_;
-//       uint16_t tile_idx = cur_edge.tile_idx;
-//       RRNodeId opin_rr_node = tile_to_node_[x][y][tile_idx];
-//       if (node_type_[opin_rr_node] != OPIN) continue;
+// if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+//         for (auto i_src_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(src_rr_node))) { // iterate over every edge of src_rr_node
+//             int opin_rr_node = size_t(i_src_edge_dest);
 
-//       auto folded_edges_2 = shared_edges_[node_to_pattern_idx_[opin_rr_node]];
-//       for (auto cur_edge_2 : folded_edges_2){
-//         auto dx_dy_2 = dx_dy_[cur_edge_2.dx_dy_idx];
-//         uint16_t x_2 = x + dx_dy_2.dx_;
-//         uint16_t y_2 = y + dx_dy_2.dy_;
-//         uint16_t tile_idx_2 = cur_edge_2.tile_idx;
-//         RRNodeId ipin_rr_node = tile_to_node_[x_2][y_2][tile_idx_2];
-//         if (node_type_[ipin_rr_node] != IPIN) continue;
+//             if (rr_graph.node_type(RRNodeId(opin_rr_node)) != OPIN) continue;
 
-//         auto folded_edges_3 = shared_edges_[node_to_pattern_idx_[ipin_rr_node]];
-//         for (auto cur_edge_3 : folded_edges_3){
-//           auto dx_dy_3 = dx_dy_[cur_edge_3.dx_dy_idx];
-//           uint16_t x_3 = x_2 + dx_dy_3.dx_;
-//           uint16_t y_3 = y_2 + dx_dy_3.dy_;
-//           uint16_t tile_idx_3 = cur_edge_3.tile_idx;
-//           RRNodeId sink_rr_node = tile_to_node_[x_3][y_3][tile_idx_3];
-//           if (sink_rr_node == dest_rr_node) return true;
-//       }
+//             for (auto i_opin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(opin_rr_node)) ) { // iterate over every edge of opin_rr_node
+//                 int ipin_rr_node = size_t(i_opin_edge_dest);
+//                 if (rr_graph.node_type(RRNodeId(ipin_rr_node)) != IPIN) continue;
+
+//                 for (auto i_ipin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(ipin_rr_node))) { // iterate over every edge of ipin_rr_node
+//                     if (sink_rr_node == size_t(i_ipin_edge_dest)) {
+//                         return true;
+//                     }
+//                 }
+//             }
+//         }
 //     }
-//   }
-//   return false;
-// }
+
 
 
 inline std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const{
       // returns a vector of edge structs, which each include src, sink, switch
 
       // NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
-      auto folded_edges = shared_edges_[node_to_pattern_idx_[node]];
+      const auto& folded_edges = shared_edges_[node_to_pattern_idx_[node]];
 
       std::vector<t_dest_switch> return_edges; // initialize return vector
       return_edges.reserve(folded_edges.size());
-      auto x_y_tile = node_to_tile_[node];
-      for (auto cur_edge : folded_edges){
-        // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
-        // t_dest_switch add_edge = {
-        //   tile_to_node_[x_y_tile.x+cur_edge.dx][x_y_tile.y+cur_edge.dy][cur_edge.tile_idx], // dest
-        //   cur_edge.switch_id // switch
-        // };
+
+      const auto& x_y_tile = node_to_tile_[node];
+
+
+      for (const auto& cur_edge : folded_edges){
         return_edges.push_back({
           tile_to_node_[x_y_tile.x+cur_edge.dx][x_y_tile.y+cur_edge.dy][cur_edge.tile_idx], // dest
           cur_edge.switch_id // switch
         });
       }
+
+      // std::transform (folded_edges.begin(), folded_edges.end(), folded_edges.begin(), folded_edges.begin(), [](auto i, auto j) { return  {
+      //     tile_to_node_[x_y_tile.x+i.dx][x_y_tile.y+i.dy][i.tile_idx], // dest
+      //     cur_edge.switch_id // switch
+      //   }; });
       return return_edges;
 }
 
@@ -473,12 +483,12 @@ inline std::vector<t_edge_struct> edge_range_src(RRNodeId node) const{
       // returns a vector of edge structs, which each include src, sink, switch
 
       NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
-      auto folded_edges = shared_edges_[pattern_idx];
+      const auto& folded_edges = shared_edges_[pattern_idx];
 
       std::vector<t_edge_struct> return_edges; // initialize return vector
       return_edges.reserve(folded_edges.size());
-      auto x_y_tile = node_to_tile_[node];
-      for (auto cur_edge : folded_edges){
+      const auto& x_y_tile = node_to_tile_[node];
+      for (const auto& cur_edge : folded_edges){
         // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
         t_edge_struct add_edge = {
           node, // src
@@ -494,11 +504,11 @@ inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId no
       // returns a vector of only non-configurable edge structs, which each include src, sink, switch
 
       NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
-      auto folded_edges = shared_edges_[pattern_idx];
+      const auto& folded_edges = shared_edges_[pattern_idx];
 
       std::vector<t_edge_struct> return_edges; // initialize return vector
-      auto x_y_tile = node_to_tile_[node];
-      for (auto cur_edge : folded_edges){
+      const auto& x_y_tile = node_to_tile_[node];
+      for (const auto& cur_edge : folded_edges){
         if (!node_storage_.switch_is_configurable(cur_edge.switch_id)) { // only add if edge is non_configurable
         // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
           t_edge_struct add_edge = {
@@ -516,13 +526,13 @@ inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RR
       // returns a vector of only non-configurable edge structs, which each include src, sink, switch
 
       NodePatternIdx pattern_idx = node_to_pattern_idx_[node];
-      auto folded_edges = shared_edges_[pattern_idx];
+      const auto& folded_edges = shared_edges_[pattern_idx];
 
       std::vector<t_edge_with_id> return_edges; // initialize return vector
       size_t k = 0; //kth edge
       size_t first = (size_t)first_edge(node);
       auto x_y_tile = node_to_tile_[node];
-      for (auto cur_edge : folded_edges){
+      for (const auto& cur_edge : folded_edges){
         if (!node_storage_.switch_is_configurable(cur_edge.switch_id)) { // only add if edge is non_configurable
           RREdgeId cur_edge_id = RREdgeId(first+k);
         // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
@@ -574,7 +584,7 @@ inline t_edge_struct get_t_edge_struct(RREdgeId edge_id) const {
 inline t_edge_struct legacy_get_t_edge_struct(RREdgeId edge_id) const {
   // optimize this to be a binary search
    size_t edge_id_size = size_t(edge_id);
-   for (size_t i=0; i<node_count(); i++){ //  for each node
+   for (size_t i=0; i< size_; i++){ //  for each node
       RRNodeId node = RRNodeId(i);
       size_t first = (size_t)first_edge(node);
       size_t last = (size_t)last_edge(node);
@@ -621,18 +631,18 @@ inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) c
 
 // Call the `apply` function with the edge id, source, and sink nodes of every edge.
     void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
-        for (size_t i = 0; i < edge_count(); i++) {
+        for (size_t i = 0; i < edge_count_; i++) {
             RREdgeId edge(i);
-            apply(edge, edge_src_node(edge), edge_sink_node(edge));
+            apply(RREdgeId(i), edge_src_node(edge), edge_sink_node(edge));
         }
     }
 // Call the `apply` function with the edge id, source, and sink nodes of every edge.
 inline void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId, short)> apply) const {
-    for (size_t i = 0; i < node_count(); i++){
+    for (size_t i = 0; i < size_; i++){
       int k = 0;
       RRNodeId node = RRNodeId(i);
       size_t first = (size_t)first_edge(node);
-      for (auto edge : edge_range_src(node)){
+      for (const auto& edge : edge_range_src(node)){
         apply(RREdgeId(first+k), node, edge.dest, edge.switch_id);
         k++;
       }
@@ -640,8 +650,20 @@ inline void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId
 }
 
 // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+inline void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const {
+    for (size_t i = 0; i < size_; i++){
+      RRNodeId node = RRNodeId(i);
+      size_t first = (size_t)first_edge(node);
+      size_t k = 0;
+      for (const auto& edge : edge_range_src(node)){
+        apply(RREdgeId(k+first), edge.dest);
+      }
+    }
+}
+
+// Call the `apply` function with the edge id, source, and sink nodes of every edge.
 inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) const {
-    for (size_t i = 0; i < edge_count(); i++) {
+    for (size_t i = 0; i < edge_count_; i++) {
         RREdgeId edge(i);
         apply(edge, edge_sink_node(edge));
     }
@@ -675,9 +697,11 @@ short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
   /* OTHER METHODS */
 
   // This prefetechs hot RR node data required for optimization.
-  // Note: This is optional, but may lower time spent on memory stalls in some circumstances.
+  //
+  // Note: This is optional, but may lower time spent on memory stalls in
+  // some circumstances.
   inline void prefetch_node(RRNodeId id) const {
-    (void) id;
+      VTR_PREFETCH(&node_to_tile_[id], 0, 0);
   }
 
 
@@ -717,23 +741,23 @@ short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
       } dir_side_; // 1 Byte
     };
 
-    struct t_folded_dir_side {
+    struct t_folded_node_dir_side {
       union {
-          Direction direction_; //Valid only for CHANX/CHANY
-          unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
-      } dir_side_; // 1 Byte
+          Direction direction; //Valid only for CHANX/CHANY
+          unsigned char sides = 0x0; //Valid only for IPINs/OPINs
+      } dir_side; // 1 Byte
     };
 
-    struct t_folded_node {
-      int16_t cost_index_; // 2 Bytes
-      int16_t rc_index_; // 2 Bytes
-      int16_t length_; // 2 Bytes
-      uint16_t capacity_; // 2 Bytes
+    struct t_folded_node_rc {
+      int16_t rc_index; // 2 Bytes
+      uint16_t capacity; // 2 Bytes
     };
 
-    struct t_folded_xy {
+    struct t_folded_node_xy {
       uint16_t x;
       uint16_t y;
+      int16_t length; // 2 Bytes
+      int16_t cost_index; // 2 Bytes
     };
 
 
@@ -754,23 +778,6 @@ short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
       t_folded_node_data node_;
       std::vector<t_folded_edge_data> edges_; 
     };
-
-  /* Pattern of data about a node. Many nodes will share the data within this struct and thus will have the same FoldedNodePattern */
-    struct FoldedNodePattern { // 12 + 5*edges_.size() Bytes total
-          int16_t cost_index_; // 2 Bytes
-          int16_t rc_index_; // 2 Bytes
-
-          int16_t dx_; // 2 Bytes
-          int16_t dy_; // 2 Bytes
-
-          uint16_t capacity_; // 2 Bytes
-
-          union {
-              Direction direction_; //Valid only for CHANX/CHANY
-              unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
-          } dir_side_; // 1 Byte
-
-      };
 
     struct DxDy {
       int16_t dx_;
@@ -881,9 +888,9 @@ short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
     */
 
 
-    vtr::vector<RRNodeId, t_folded_xy> node_to_tile_; // goes from RRNodeId to array of [x, y]
-    // vtr::vector<RRNodeId, std::array<TileIdx, 3>> node_to_tile_; // goes from RRNodeId to array of [x, y, tile_idx]
-
+    vtr::vector<RRNodeId, t_folded_node_xy> node_to_tile_; // goes from RRNodeId to struct of x, y, length, cost_index
+    vtr::vector<RRNodeId, t_folded_node_rc> node_to_rc_; // goes from RRNodeId to array of rc_index, capacity
+    vtr::vector<RRNodeId, t_folded_node_dir_side> node_to_dir_side_; // goes from RRNodeId to struct of direction, side
     vtr::vector<RRNodeId, t_rr_type> node_type_; // goes from RRNodeId to node type
 
     std::vector< std::vector< std::vector<RRNodeId>>> tile_to_node_; // goes from [x, y, tile_idx] to RRNodeId
@@ -893,10 +900,11 @@ short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
 
     // std::vector<DxDy> dx_dy_; // goes from DxDyIdx to dx, dy
 
-    std::vector<SharedNodeDataIdx> shared_node_; // goes from NodePatternIdx to shared_node_data_idx
+    // std::vector<SharedNodeDataIdx> shared_node_; // goes from NodePatternIdx to shared_node_data_idx
     // std::vector<t_folded_node_data> shared_node_data_; // goes from SharedNodeDataIdx to node_data
-    std::vector<t_folded_dir_side> shared_node_dir_side_; // goes from SharedNodeDataIdx to node_data
-    std::vector<t_folded_node> shared_node_data_; // goes from SharedNodeDataIdx to node_data
+
+    // std::vector<t_folded_dir_side> shared_node_dir_side_; // goes from SharedNodeDataIdx to node_data
+    // std::vector<t_folded_node> shared_node_data_; // goes from SharedNodeDataIdx to node_data
 
 
     size_t size_;

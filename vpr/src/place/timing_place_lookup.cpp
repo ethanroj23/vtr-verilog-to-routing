@@ -1173,23 +1173,23 @@ bool directconnect_exists(int src_rr_node, int sink_rr_node) {
 
 
     if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
-        // return rr_graph.directconnect_exists(RRNodeId(src_rr_node), RRNodeId(sink_rr_node));
-        for (auto i_src_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(src_rr_node))) { // iterate over every edge of src_rr_node
-            int opin_rr_node = size_t(i_src_edge_dest);
+        return rr_graph.directconnect_exists(RRNodeId(src_rr_node), RRNodeId(sink_rr_node));
+        // for (auto i_src_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(src_rr_node))) { // iterate over every edge of src_rr_node
+        //     int opin_rr_node = size_t(i_src_edge_dest);
 
-            if (rr_graph.node_type(RRNodeId(opin_rr_node)) != OPIN) continue;
+        //     if (rr_graph.node_type(RRNodeId(opin_rr_node)) != OPIN) continue;
 
-            for (auto i_opin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(opin_rr_node)) ) { // iterate over every edge of opin_rr_node
-                int ipin_rr_node = size_t(i_opin_edge_dest);
-                if (rr_graph.node_type(RRNodeId(ipin_rr_node)) != IPIN) continue;
+        //     for (auto i_opin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(opin_rr_node)) ) { // iterate over every edge of opin_rr_node
+        //         int ipin_rr_node = size_t(i_opin_edge_dest);
+        //         if (rr_graph.node_type(RRNodeId(ipin_rr_node)) != IPIN) continue;
 
-                for (auto i_ipin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(ipin_rr_node))) { // iterate over every edge of ipin_rr_node
-                    if (sink_rr_node == size_t(i_ipin_edge_dest)) {
-                        return true;
-                    }
-                }
-            }
-        }
+        //         for (auto i_ipin_edge_dest : rr_graph.edge_range_dest_direct(RRNodeId(ipin_rr_node))) { // iterate over every edge of ipin_rr_node
+        //             if (sink_rr_node == size_t(i_ipin_edge_dest)) {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        // }
     }
     else{
         //TODO: This is a constant depth search, but still may be too slow

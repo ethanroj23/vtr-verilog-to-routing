@@ -48,6 +48,9 @@ void FoldedPerTileRRGraph::build_graph(){
     // Clear all data structures of any previous data
     tile_to_node_.clear();
     node_type_.clear();
+    node_to_tile_.clear();
+    node_to_rc_.clear();
+    node_to_dir_side_.clear();
     edge_count_ = node_storage_.edge_count();
 
 
@@ -63,12 +66,18 @@ void FoldedPerTileRRGraph::build_graph(){
 
     // vvv CREATE ORDERED NODES IN TILES
     size_ = node_storage_.size();
+    node_to_tile_.reserve(size_);
+    node_to_rc_.reserve(size_);
+    node_to_dir_side_.reserve(size_);
+    node_type_.reserve(size_);
+    
+
+
     // node_to_tile_.resize(size_);
     vtr::vector<RRNodeId, std::array<TileIdx, 3>> temp_node_to_tile; // goes from RRNodeId to array of [x, y]
     temp_node_to_tile.resize(size_);
-    node_to_tile_.resize(size_);
 
-    node_to_pattern_idx_.resize(size_);
+    node_to_pattern_idx_.reserve(size_);
     for (int i=0; i<size_; i++){ // for each NODE
         RRNodeId node_id = RRNodeId(i);
         int x_low = node_storage_.node_xlow(node_id);
@@ -127,7 +136,7 @@ void FoldedPerTileRRGraph::build_graph(){
         for (int y = 0; y < tile_to_node_[x].size(); y++){
             for (int idx = 0; idx < tile_to_node_[x][y].size(); idx++){
                 temp_node_to_tile[tile_to_node_[x][y][idx]] = {x, y, idx};
-                node_to_tile_[tile_to_node_[x][y][idx]] = {x, y};
+                // node_to_tile_[tile_to_node_[x][y][idx]] = {x, y};
                 nodes_processed += 1;
             }
         }
@@ -139,8 +148,8 @@ void FoldedPerTileRRGraph::build_graph(){
     // vvv FOR EACH NODE
     for (int i=0; i<size_; i++){
         RRNodeId node_id = RRNodeId(i);
-        int x_low = node_storage_.node_xlow(node_id);
-        int y_low = node_storage_.node_ylow(node_id);
+        uint16_t x_low = node_storage_.node_xlow(node_id);
+        uint16_t y_low = node_storage_.node_ylow(node_id);
         t_rr_type current_type = node_storage_.node_type(node_id);
         node_type_.push_back(current_type);
 
@@ -152,30 +161,38 @@ void FoldedPerTileRRGraph::build_graph(){
             // current_type, // remove type for now
             {Direction::NUM_DIRECTIONS}
         };
-        t_folded_node node_pattern_node = {
-            node_storage_.node_cost_index(node_id),
-            node_storage_.node_rc_index(node_id),
-            node_length(node_id),
-            node_storage_.node_capacity(node_id)
-        };
-        t_folded_dir_side node_pattern_dir_side = {
+        
+        
+
+
+        // t_folded_node node_pattern_node = {
+        //     node_storage_.node_cost_index(node_id),
+        //     node_storage_.node_rc_index(node_id),
+        //     node_length(node_id),
+        //     node_storage_.node_capacity(node_id)
+        // };
+        t_folded_node_dir_side node_pattern_dir_side = {
             {Direction::NUM_DIRECTIONS}
         };
 
         // set direction if using CHANX or CHANY
         if (current_type == CHANX || current_type == CHANY){
                     node_pattern.dir_side_.direction_ = node_storage_.node_direction(node_id);    
-                    node_pattern_dir_side.dir_side_.direction_ = node_storage_.node_direction(node_id);    
+                    node_pattern_dir_side.dir_side.direction = node_storage_.node_direction(node_id);    
         }
         // set sides if using IPIN or OPIN
         if (current_type== IPIN || current_type == OPIN){
             for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
                 if (strcmp(SIDE_STRING[side], node_storage_.node_side_string(node_id))==0){
                     node_pattern.dir_side_.sides_ = side;
-                    node_pattern_dir_side.dir_side_.sides_ = side;
+                    node_pattern_dir_side.dir_side.sides = side;
                 }
             }
         }
+        node_to_tile_.push_back({x_low, y_low, node_pattern.length_, node_pattern.cost_index_});
+        node_to_rc_.push_back({node_pattern.rc_index_, node_pattern.capacity_});
+        node_to_dir_side_.push_back(node_pattern_dir_side);
+
 
         // vvv FOR EACH EDGE
         std::vector<t_folded_edge_data> edges; //  used for edge pattern
@@ -230,21 +247,67 @@ void FoldedPerTileRRGraph::build_graph(){
         if (!(temp_node_patterns.count(node_edge_pattern)>0)){ // node_edge pattern has not been found before
             temp_node_patterns[node_edge_pattern] = node_pattern_idx;
             shared_edges_.push_back(edges);
-            if (!(temp_shared_node_data.count(node_pattern)>0)) { // not in shared node data yet
-                temp_shared_node_data[node_pattern] = shared_node_data_idx;
-                shared_node_data_.push_back(node_pattern_node);
-                shared_node_dir_side_.push_back(node_pattern_dir_side);
-                shared_node_data_idx++;
-            }
-            shared_node_.push_back(temp_shared_node_data[node_pattern]);
-
+            // temp_shared_edges.push_back(edges);
+            // if (!(temp_shared_node_data.count(node_pattern)>0)) { // not in shared node data yet
+            //     temp_shared_node_data[node_pattern] = shared_node_data_idx;
+            //     shared_node_data_.push_back(node_pattern_node);
+            //     shared_node_dir_side_.push_back(node_pattern_dir_side);
+            //     shared_node_data_idx++;
+            // }
+            // shared_node_.push_back(temp_shared_node_data[node_pattern]);
 
             node_pattern_idx++;
         }
 
         NodePatternIdx cur_pattern_idx = temp_node_patterns[node_edge_pattern];
-        node_to_pattern_idx_[node_id] = cur_pattern_idx;
+        // node_to_pattern_idx_[node_id] = cur_pattern_idx;
+        node_to_pattern_idx_.push_back(cur_pattern_idx);
     }
+    // ^^^ for each node
+    std::vector<int> pattern_idx_count(node_pattern_idx, 0);
+    for (auto pattern_idx : node_to_pattern_idx_){
+        pattern_idx_count[pattern_idx]++;
+    }
+    VTR_LOG("Total patterns: %d of %d nodes %.2f\n", pattern_idx_count.size(), size_, (float)pattern_idx_count.size()/size_);
+
+
+    // vvv Used for sorting edges. This did not bring a speedup, so it is being removed.
+    // std::vector<int> indices(pattern_idx_count.size()); 
+    // std::iota(indices.begin(), indices.end(), 0);
+    // std::sort(indices.begin(), indices.end(),
+    //         [&](int A, int B) -> bool {
+    //                 if (pattern_idx_count[A] > pattern_idx_count[B]){ // length
+    //                     return true; // A is smaller
+    //                 }
+    //                 return false;
+    //             });
+
+    // node_to_pattern_idx_.reserve(size_);
+    // shared_edges_.reserve(size_);
+
+    // std::vector<int> indices_reverse(pattern_idx_count.size()); 
+    // for (int i=0; i < indices.size(); i++){
+    //     int idx = indices[i];
+    //     shared_edges_.push_back(temp_shared_edges[idx]);
+    //     indices_reverse[indices[i]] = i;
+
+    // }
+
+    // for (int i=0; i< size_; i++){
+    //     node_to_pattern_idx_.push_back(indices_reverse[temp_node_to_pattern_idx[RRNodeId(i)]]);
+    // }
+
+    // std::vector<int> pattern_idx_count2(node_pattern_idx, 0);
+    // for (auto pattern_idx : node_to_pattern_idx_){
+    //     pattern_idx_count2[pattern_idx]++;
+    // }
+
+    // std::sort(pattern_idx_count.begin(), pattern_idx_count.end());
+    // for (size_t i=0; i<pattern_idx_count2.size(); i++){
+    //     VTR_LOG("%d num patterns: %d\n", i, pattern_idx_count2[i]);
+    // }
+
+
     // ^^^ FOR EACH NODE
 
     // VERIFY Folded Graph
@@ -281,25 +344,25 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
             if (tile_to_node_[x][y].size() > max_TileIdx) max_TileIdx = tile_to_node_[x][y].size(); // TileIdx
         }
     }
-    int max_NodePatternIdx = shared_node_.size();
+    // int max_NodePatternIdx = shared_node_.size();
     // int max_DxDyIdx = dx_dy_.size();
-    int max_SharedNodeDataIdx = shared_node_data_.size();
+    // int max_SharedNodeDataIdx = shared_node_data_.size();
 
     printf("The Following numbers should not exceed 65,536 since they only have 2 Bytes allotted to them\n"
            "x -> %d\n"
            "y -> %d\n"
-           "TileIdx -> %d\n"
-           "NodePatternIdx -> %d\n"
+           "TileIdx -> %d\n",
+        //    "NodePatternIdx -> %d\n"
         //    "DxDyIdx -> %d\n"
-           "SharedNodeDataIdx -> %d\n",
+        //    "SharedNodeDataIdx -> %d\n",
            max_x,
            max_y,
-           max_TileIdx,
-           max_NodePatternIdx,
+           max_TileIdx
+        //    max_NodePatternIdx,
         //    max_DxDyIdx,
-           max_SharedNodeDataIdx
+        //    max_SharedNodeDataIdx
     );
-    return;
+    // return;
 
 
         VTR_ASSERT(node_storage_.size() == size());

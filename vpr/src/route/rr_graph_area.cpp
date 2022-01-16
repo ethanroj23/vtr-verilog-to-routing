@@ -361,7 +361,6 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
-                num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
                 if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
                     for (auto edge : rr_graph.edge_range_direct(RRNodeId(from_node))) {
@@ -444,6 +443,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                     }
                 }
                 else{ // Using flat RRGraph
+                    num_edges = rr_graph.num_edges(RRNodeId(from_node));
                     /* Increment number of inputs per cblock if IPIN */
                     for (iedge = 0; iedge < num_edges; iedge++) {
                         to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
