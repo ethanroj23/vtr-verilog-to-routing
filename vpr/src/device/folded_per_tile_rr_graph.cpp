@@ -59,7 +59,6 @@ void FoldedPerTileRRGraph::build_graph(){
     vtr::vector<RRNodeId, std::array<TileIdx, 3>> temp_node_to_tile; // goes from RRNodeId to array of [x, y]
     temp_node_to_tile.resize(size_);
 
-    node_to_pattern_idx_.reserve(size_);
     for (int i=0; i<size_; i++){ // for each NODE
         RRNodeId node_id = RRNodeId(i);
         int x_low = node_storage_.node_xlow(node_id);
@@ -165,7 +164,6 @@ void FoldedPerTileRRGraph::build_graph(){
                 }
             }
         }
-        node_coords_.push_back({x_low, y_low});
         node_to_rc_.push_back({x_high, y_high, node_pattern.cost_index_, node_pattern.rc_index_});
         node_to_dir_side_.push_back(node_folded_dir_side);
 
@@ -214,7 +212,7 @@ void FoldedPerTileRRGraph::build_graph(){
         }
 
         NodePatternIdx cur_pattern_idx = temp_node_patterns[node_edge_pattern];
-        node_to_pattern_idx_.push_back(cur_pattern_idx);
+        node_coords_.push_back({x_low, y_low, cur_pattern_idx});
     }
     // ^^^ for each node
 

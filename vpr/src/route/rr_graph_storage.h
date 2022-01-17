@@ -395,15 +395,17 @@ class t_rr_graph_storage : public RRGraphViewInterface {
         }
     }
           
-    inline std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const {
+    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const {
         (void) node;
-        std::vector<t_dest_switch> empty;
-        return empty;
+        (void) return_edges;
+        // std::vector<t_dest_switch> empty;
+        // return empty;
     }
-    inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const {
+    inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const {
         (void) node;
-        std::vector<t_edge_with_id> empty;
-        return empty;
+        (void) return_edges;
+        // std::vector<t_edge_with_id> empty;
+        // return empty;
     }
 
     inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const {

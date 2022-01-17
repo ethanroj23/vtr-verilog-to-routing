@@ -297,12 +297,12 @@ class RRGraphView : public RRGraphViewInterface {
         return primary_rr_graph_->edge_range(node);
     }
 
-    inline std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const {
-        return primary_rr_graph_->edge_range_direct(node);
+    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const {
+        primary_rr_graph_->edge_range_direct(node, return_edges);
     }
 
-    inline std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const {
-        return primary_rr_graph_->edge_range_with_id_direct(node);
+    inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const {
+        primary_rr_graph_->edge_range_with_id_direct(node, return_edges);
     }
 
     inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const {

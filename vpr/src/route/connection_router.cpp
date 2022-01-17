@@ -426,7 +426,9 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
             target_bb.xmax = rr_graph_->node_xhigh(RRNodeId(target_node));
             target_bb.ymax = rr_graph_->node_yhigh(RRNodeId(target_node));
         }
-        for (t_edge_with_id from_edge : rr_graph_->edge_range_with_id_direct(from_node)) {//ESR_EDGE iterate over edges
+        std::vector<t_edge_with_id> edges;
+        rr_graph_->edge_range_with_id_direct(from_node, edges);
+        for (t_edge_with_id from_edge : edges) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
             timing_driven_expand_neighbour(current,
                                         from_node_int,

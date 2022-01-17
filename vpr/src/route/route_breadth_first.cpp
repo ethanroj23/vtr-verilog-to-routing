@@ -388,7 +388,9 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     auto& route_ctx = g_vpr_ctx.routing();
 
     if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESRworks
-        for (t_edge_with_id from_edge : rr_graph.edge_range_with_id_direct(RRNodeId(inode))) {//ESR_EDGE iterate over edges
+        std::vector<t_edge_with_id> edges;
+        rr_graph.edge_range_with_id_direct(RRNodeId(inode), edges);
+        for (t_edge_with_id from_edge : edges) {//ESR_EDGE iterate over edges
             RRNodeId to_node = from_edge.dest;
 
             if (rr_graph.node_xhigh(to_node) < route_ctx.route_bb[net_id].xmin

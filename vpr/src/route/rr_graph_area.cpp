@@ -363,7 +363,9 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
             case CHANY:
 
                 if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
-                    for (auto edge : rr_graph.edge_range_direct(RRNodeId(from_node))) {
+                    std::vector<t_dest_switch> edges;
+                    rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+                    for (auto edge : edges) {
                         to_node = (size_t) edge.dest;
                         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 

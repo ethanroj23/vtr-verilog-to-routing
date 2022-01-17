@@ -47,7 +47,7 @@ class RRGraphViewInterface {
       virtual void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId, short)> apply) const=0;
       virtual void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const=0;
 
-      virtual std::vector<t_edge_with_id> edge_range_with_id_direct(RRNodeId node) const=0;
+      virtual void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const=0;
       virtual std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId node) const=0;
       virtual std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RRNodeId node) const=0;
       virtual std::vector<RRNodeId> edge_range_dest_direct(RRNodeId node) const=0;
@@ -66,7 +66,8 @@ class RRGraphViewInterface {
       virtual RREdgeId last_edge(const RRNodeId& node) const=0;
 
       virtual vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId node) const=0;
-      virtual std::vector<t_dest_switch> edge_range_direct(RRNodeId node) const=0;
+      virtual void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const=0;
+
 
       virtual RRNodeId edge_sink_node(const RREdgeId& edge) const=0;
       virtual RRNodeId edge_sink_node(const RRNodeId& node, t_edge_size iedge) const=0;

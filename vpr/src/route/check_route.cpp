@@ -310,7 +310,9 @@ static bool check_adjacent(int from_node, int to_node) {
     reached = false;
 
     if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
-        for (auto edge : rr_graph.edge_range_direct(RRNodeId(from_node))) {
+        std::vector<t_dest_switch> edges;
+        rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+        for (auto edge : edges) {
             if ((size_t) edge.dest == to_node) {
                 reached = true;
                 break;

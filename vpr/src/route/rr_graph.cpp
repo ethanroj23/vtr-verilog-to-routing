@@ -404,8 +404,11 @@ void print_rr_graph_stats() {
     const auto& rr_graph = device_ctx.rr_graph;
 
     size_t num_rr_edges = 0;
+    
     for (size_t rr_node=0; rr_node < rr_graph.size(); rr_node++) {
-        num_rr_edges += rr_graph.edge_range_direct(RRNodeId(rr_node)).size();
+        std::vector<t_dest_switch> edges;
+        rr_graph.edge_range_direct(RRNodeId(rr_node), edges);
+        num_rr_edges += edges.size();
     }
 
     device_ctx.rr_graph.print_memory_used();
