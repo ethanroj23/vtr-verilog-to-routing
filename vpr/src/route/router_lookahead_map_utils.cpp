@@ -546,7 +546,6 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
 static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& chan_ipins_delays) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph; //TODO rename to rr_graph once the variable on the next line is unneeded
-    auto& rr_nodes = device_ctx.rr_nodes;
 
     struct t_pq_entry {
         float delay;

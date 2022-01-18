@@ -511,6 +511,7 @@ inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RR
       return return_edges;
 }
 
+
 inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
   return edge_range_src(node)[k];
 }

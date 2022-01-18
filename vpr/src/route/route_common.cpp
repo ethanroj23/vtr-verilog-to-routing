@@ -633,7 +633,8 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
 
     if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
         for (auto edge : rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(node))) {
-            VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
+            // VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
+            // Above assertion happens inside non_configurable_edge_with_id_range_direct
 
             int to_node = (size_t) edge.dest;
 

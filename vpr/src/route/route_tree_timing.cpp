@@ -429,7 +429,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
         if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
             for (auto edge : rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(rr_node))) {
                 //Recursive case: expand children
-                VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable((size_t)edge.edge_id));
+                // VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable((size_t)edge.edge_id));
 
                 int to_rr_node = (size_t) edge.dest;
 

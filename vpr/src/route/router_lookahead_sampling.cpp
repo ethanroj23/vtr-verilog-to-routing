@@ -24,7 +24,7 @@ static int manhattan_distance(const vtr::Point<int>& a, const vtr::Point<int>& b
 // This builds a rectangle from (x, y) to (x+1, y+1)
 static vtr::Rect<int> bounding_box_for_node(RRNodeId node) {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
     int x = rr_graph.node_xlow(node);
     int y = rr_graph.node_ylow(node);
 

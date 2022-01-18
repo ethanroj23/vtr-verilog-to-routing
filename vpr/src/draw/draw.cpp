@@ -1575,6 +1575,7 @@ static void draw_rr_edges(int inode, ezgl::renderer* g) {
     }
 
     from_ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    int pin_num = rr_graph.node_ptc_num(RRNodeId(inode));
 
     for (t_edge_size iedge = 0, l = rr_graph.num_edges(RRNodeId(inode)); iedge < l; iedge++) {
         to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); // ESR TODO DIRECT

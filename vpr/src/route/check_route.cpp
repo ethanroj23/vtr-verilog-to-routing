@@ -214,7 +214,7 @@ static void check_source(int inode, ClusterNetId net_id) {
     int i = rr_graph.node_xlow(RRNodeId(inode));
     int j = rr_graph.node_ylow(RRNodeId(inode));
     /* for sinks and sources, ptc_num is class */
-    int ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    int ptc_num = rr_graph.node_ptc_num(RRNodeId(inode));
     /* First node_block for net is the source */
     ClusterBlockId blk_id = cluster_ctx.clb_nlist.net_driver_block(net_id);
     auto type = device_ctx.grid[i][j].type;
@@ -342,13 +342,13 @@ static bool check_adjacent(int from_node, int to_node) {
     from_ylow = rr_graph.node_ylow(RRNodeId(from_node));
     from_xhigh = rr_graph.node_xhigh(RRNodeId(from_node));
     from_yhigh = rr_graph.node_yhigh(RRNodeId(from_node));
-    from_ptc = device_ctx.rr_nodes[from_node].ptc_num();
+    from_ptc = rr_graph.node_ptc_num(RRNodeId(from_node));
     to_type = rr_graph.node_type(RRNodeId(to_node));
     to_xlow = rr_graph.node_xlow(RRNodeId(to_node));
     to_ylow = rr_graph.node_ylow(RRNodeId(to_node));
     to_xhigh = rr_graph.node_xhigh(RRNodeId(to_node));
     to_yhigh = rr_graph.node_yhigh(RRNodeId(to_node));
-    to_ptc = device_ctx.rr_nodes[to_node].ptc_num();
+    to_ptc = rr_graph.node_ptc_num(RRNodeId(to_node));
 
     switch (from_type) {
         case SOURCE:
@@ -597,7 +597,7 @@ static void check_locally_used_clb_opins(const t_clb_opins_used& clb_opins_used_
                                     size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, inode, rr_type);
                 }
 
-                ipin = device_ctx.rr_nodes[inode].ptc_num();
+                ipin = rr_graph.node_ptc_num(RRNodeId(inode));
                 if (physical_tile_type(blk_id)->pin_class[ipin] != iclass) {
                     VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                     "in check_locally_used_opins: block #%lu (%s):\n"

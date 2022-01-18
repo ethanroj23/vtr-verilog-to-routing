@@ -338,6 +338,22 @@ void create_rr_graph(const t_graph_type graph_type,
                          router_opts.do_check_rr_graph);
 
             reorder_rr_graph_nodes(router_opts);
+
+
+        // if (det_routing_arch->primary_rr_graph == "FoldedPerTileRRGraph"){
+        //     VTR_LOG("Folding RRGraph...\n");
+        //     // build the folded representation
+        //     g_vpr_ctx.mutable_device().folded_per_tile_rr_graph.build_graph();
+        //     // Set primary rr_graph to the FoldedRRGraph
+        //     g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_per_tile_rr_graph);
+
+        //     // remove unused data from node_storage
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage(); // ESRworks
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_node();
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_edge_dest_node();
+        //     g_vpr_ctx.mutable_device().rr_nodes.clear_edge_switch();
+        // }
+
         }
     } else {
         // Set primary rr_graph to be the rr_graph_storage version

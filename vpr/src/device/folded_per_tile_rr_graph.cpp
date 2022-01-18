@@ -197,7 +197,7 @@ void FoldedPerTileRRGraph::build_graph(){
         }
         // ^^^ FOR EACH EDGE
     
-        std::sort(temp_edges.begin(), temp_edges.end());
+        // std::sort(temp_edges.begin(), temp_edges.end());
 
 
         t_folded_node_edge_pattern node_edge_pattern = {
@@ -217,7 +217,7 @@ void FoldedPerTileRRGraph::build_graph(){
     // ^^^ for each node
 
     VTR_LOG("Total patterns: %d of %d nodes %.2f\n", node_pattern_idx, size_, (float)node_pattern_idx/size_);
-    // verify_folded_rr_graph();
+    verify_folded_rr_graph();
 }
 
 
@@ -320,6 +320,10 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
 
 
         for (int k = 0; k < num_edges(id); k++){
+            if (node_storage_.edge_sink_node(id, k) != edge_sink_node(id, k)){
+                VTR_LOG("edge_sink_node(id, k) does not match. orig: %d fold: %d\n", 
+                (size_t)node_storage_.edge_sink_node(id, k), (size_t)edge_sink_node(id, k));
+            }
             VTR_ASSERT(node_storage_.edge_sink_node(id, k) == edge_sink_node(id, k));
             VTR_ASSERT(node_storage_.edge_switch(id, k) == edge_switch(id, k));
         }
