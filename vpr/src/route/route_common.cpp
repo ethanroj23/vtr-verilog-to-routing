@@ -631,7 +631,7 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1 //ESR HERE
         for (auto edge : rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(node))) {
             // VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
             // Above assertion happens inside non_configurable_edge_with_id_range_direct
@@ -670,6 +670,7 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
         }
 
     } else {
+        // ESR HERE this is the place where the Segmentation Fault is happening
         //Recursive case: intermediate node with non-configurable edges
         for (auto iedge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
             int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge);

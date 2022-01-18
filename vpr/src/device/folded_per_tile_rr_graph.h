@@ -363,7 +363,7 @@ inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>
       // std::vector<t_edge_with_id> return_edges; // initialize return vector
       return_edges.reserve(folded_edges.size());
       size_t k = 0; // kth edge
-      size_t first = (size_t)first_edge(node);
+      size_t first = (size_t)node_storage_.first_edge(node);
       for (auto cur_edge : folded_edges){
         // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
         t_edge_with_id add_edge = {
@@ -489,12 +489,12 @@ inline std::vector<t_edge_struct> non_configurable_edge_range_direct(RRNodeId no
 inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RRNodeId node) const{
       // returns a vector of only non-configurable edge structs, which each include src, sink, switch
 
-      const auto& x_y_idx = node_coords_[node];
-      const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+      const auto& x_y_idx = node_coords_[node]; // 629451 is the problem node
+      const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx]; // ESR HERE segmentation fault
 
       std::vector<t_edge_with_id> return_edges; // initialize return vector
       size_t k = 0; //kth edge
-      size_t first = (size_t)first_edge(node);
+      size_t first = (size_t)node_storage_.first_edge(node);
       for (const auto& cur_edge : folded_edges){
         if (!node_storage_.switch_is_configurable(cur_edge.switch_id)) { // only add if edge is non_configurable
           RREdgeId cur_edge_id = RREdgeId(first+k);
@@ -508,6 +508,12 @@ inline std::vector<t_edge_with_id> non_configurable_edge_with_id_range_direct(RR
         }
         k++;
       }
+      if ((size_t) node == 629451){
+        VTR_LOG("node %lu first_edge: %lu\n", (size_t)node, first);
+        for (auto edge : return_edges){
+          VTR_LOG("edge: %lu dest: %lu switch: %lu\n", (size_t) edge.edge_id, (size_t) edge.dest, edge.switch_id);
+        }
+      }
       return return_edges;
 }
 
@@ -517,7 +523,7 @@ inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
 }
 
 inline t_edge_struct get_t_edge_struct_in_node(RRNodeId node, RREdgeId edge_id) const {
-    size_t first = (size_t)first_edge(node);
+    size_t first = (size_t)node_storage_.first_edge(node);
     size_t k = (size_t)edge_id - first;
     return kth_edge_for_node(node, k);
 }
@@ -530,8 +536,8 @@ inline t_edge_struct get_t_edge_struct(RREdgeId edge_id) const {
     while (r >= l){
         int mid = l + (r - l) / 2; //  mid is node id
         RRNodeId node = RRNodeId(mid);
-        size_t first = (size_t)first_edge(node);
-        size_t last = (size_t)last_edge(node);
+        size_t first = (size_t)node_storage_.first_edge(node);
+        size_t last = (size_t)node_storage_.last_edge(node);
 
         if (edge_id_size < first) // try again with left half of nodes
           r = mid - 1;
@@ -550,8 +556,8 @@ inline t_edge_struct legacy_get_t_edge_struct(RREdgeId edge_id) const {
    size_t edge_id_size = size_t(edge_id);
    for (size_t i=0; i< size_; i++){ //  for each node
       RRNodeId node = RRNodeId(i);
-      size_t first = (size_t)first_edge(node);
-      size_t last = (size_t)last_edge(node);
+      size_t first = (size_t)node_storage_.first_edge(node);
+      size_t last = (size_t)node_storage_.last_edge(node);
       if (edge_id_size >= first &&
           edge_id_size < last && 
           first != last){ // edge is a part of this node
@@ -605,7 +611,7 @@ inline void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId
     for (size_t i = 0; i < size_; i++){
       int k = 0;
       RRNodeId node = RRNodeId(i);
-      size_t first = (size_t)first_edge(node);
+      size_t first = (size_t)node_storage_.first_edge(node);
       for (const auto& edge : edge_range_src(node)){
         apply(RREdgeId(first+k), node, edge.dest, edge.switch_id);
         k++;
@@ -617,7 +623,7 @@ inline void for_each_edge_direct(std::function<void(RREdgeId, RRNodeId, RRNodeId
 inline void for_each_edge_sink_direct(std::function<void(RREdgeId, RRNodeId)> apply) const {
     for (size_t i = 0; i < size_; i++){
       RRNodeId node = RRNodeId(i);
-      size_t first = (size_t)first_edge(node);
+      size_t first = (size_t)node_storage_.first_edge(node);
       size_t k = 0;
       for (const auto& edge : edge_range_src(node)){
         apply(RREdgeId(k+first), edge.dest);
@@ -634,9 +640,9 @@ inline void for_each_edge_no_src(std::function<void(RREdgeId, RRNodeId)> apply) 
 }
 
 inline RREdgeId edge_id(const RRNodeId& id, t_edge_size iedge) const {
-        RREdgeId first = first_edge(id);
+        RREdgeId first = node_storage_.first_edge(id);
         RREdgeId ret(size_t(first) + iedge);
-        VTR_ASSERT_SAFE(ret < last_edge(id));
+        VTR_ASSERT_SAFE(ret < node_storage_.last_edge(id));
         return ret;
     }
 

@@ -125,22 +125,22 @@ static uint64_t interleave(uint32_t x) {
 
 // Used to get a valid segment index given an input rr_node.
 // If the node is not interesting an invalid value is returned.
-static std::tuple<int, int, int> get_node_info(const t_rr_node& node, int num_segments) {
+static std::tuple<int, int, int> get_node_info(RRNodeId node, int num_segments) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    if (rr_graph.node_type(node.id()) != CHANX && rr_graph.node_type(node.id()) != CHANY) {
+    if (rr_graph.node_type(node) != CHANX && rr_graph.node_type(node) != CHANY) {
         return std::tuple<int, int, int>(OPEN, OPEN, OPEN);
     }
 
-    if (rr_graph.node_capacity(node.id()) == 0 || rr_graph.num_edges(node.id()) == 0) {
+    if (rr_graph.node_capacity(node) == 0 || rr_graph.num_edges(node) == 0) {
         return std::tuple<int, int, int>(OPEN, OPEN, OPEN);
     }
 
-    int x = rr_graph.node_xlow(node.id());
-    int y = rr_graph.node_ylow(node.id());
+    int x = rr_graph.node_xlow(node);
+    int y = rr_graph.node_ylow(node);
 
-    int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index(node.id())].seg_index;
+    int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index(node)].seg_index;
 
     VTR_ASSERT(seg_index != OPEN);
     VTR_ASSERT(seg_index < num_segments);
@@ -197,20 +197,20 @@ std::vector<SampleRegion> find_sample_regions(int num_segments) {
     std::vector<SampleRegion> sample_regions;
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    auto& rr_nodes = device_ctx.rr_nodes;
     std::vector<vtr::Matrix<int>> segment_counts(num_segments);
 
     // compute bounding boxes for each segment type
     std::vector<vtr::Rect<int>> bounding_box_for_segment(num_segments, vtr::Rect<int>());
-    for (auto& node : rr_nodes) {
-        if (rr_graph.node_type(node.id()) != CHANX && rr_graph.node_type(node.id()) != CHANY) continue;
-        if (rr_graph.node_capacity(node.id()) == 0 || rr_graph.num_edges(node.id()) == 0) continue;
-        int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index(node.id())].seg_index;
+    for (int inode=0; inode < rr_graph.size(); inode++){
+        RRNodeId node = RRNodeId(inode);
+        if (rr_graph.node_type(node) != CHANX && rr_graph.node_type(node) != CHANY) continue;
+        if (rr_graph.node_capacity(node) == 0 || rr_graph.num_edges(node) == 0) continue;
+        int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index(node)].seg_index;
 
         VTR_ASSERT(seg_index != OPEN);
         VTR_ASSERT(seg_index < num_segments);
 
-        bounding_box_for_segment[seg_index].expand_bounding_box(bounding_box_for_node(node.id()));
+        bounding_box_for_segment[seg_index].expand_bounding_box(bounding_box_for_node(node));
     }
 
     // initialize counts
@@ -220,7 +220,8 @@ std::vector<SampleRegion> find_sample_regions(int num_segments) {
     }
 
     // count sample points
-    for (const auto& node : rr_nodes) {
+    for (int inode=0; inode < rr_graph.size(); inode++){
+        RRNodeId node = RRNodeId(inode);
         int seg_index, x, y;
         std::tie(seg_index, x, y) = get_node_info(node, num_segments);
 
@@ -246,7 +247,8 @@ std::vector<SampleRegion> find_sample_regions(int num_segments) {
     }
 
     // collect the node indices for each segment type at the selected sample points
-    for (const auto& node : rr_nodes) {
+    for (int inode=0; inode < rr_graph.size(); inode++){
+        RRNodeId node = RRNodeId(inode);
         int seg_index, x, y;
         std::tie(seg_index, x, y) = get_node_info(node, num_segments);
 
@@ -254,7 +256,7 @@ std::vector<SampleRegion> find_sample_regions(int num_segments) {
 
         auto point = sample_point_index.find(std::make_tuple(seg_index, x, y));
         if (point != sample_point_index.end()) {
-            point->second->nodes.push_back(node.id());
+            point->second->nodes.push_back(node);
         }
     }
 
