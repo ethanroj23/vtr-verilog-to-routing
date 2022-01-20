@@ -359,28 +359,20 @@ bool try_timing_driven_route_tmpl(const t_router_opts& router_opts,
     {
         vtr::ScopedStartFinishTimer init_timing_timer("Initializing router criticalities");
         if (timing_info) {
-        VTR_LOG("1\n");
             if (router_opts.initial_timing == e_router_initial_timing::ALL_CRITICAL) {
-                 VTR_LOG("2\n");
                 //First routing iteration, make all nets critical for a min-delay routing
                 route_timing_info = make_constant_timing_info(1.);
             } else {
-                VTR_LOG("3\n");
                 VTR_ASSERT(router_opts.initial_timing == e_router_initial_timing::LOOKAHEAD);
-                VTR_LOG("4\n");
                 {
-                    VTR_LOG("5\n");
                     //Estimate initial connection delays from the router lookahead
                     init_net_delay_from_lookahead(*router_lookahead, net_delay);
-                    VTR_LOG("6\n");
                     //Run STA to get estimated criticalities
                     timing_info->update();
                 }
-                VTR_LOG("7\n");
                 route_timing_info = timing_info;
             }
         } else {
-            VTR_LOG("8\n");
             //Not timing driven, force criticality to zero for a routability-driven routing
             route_timing_info = make_constant_timing_info(0.);
         }
@@ -2156,7 +2148,6 @@ static void init_net_delay_from_lookahead(const RouterLookahead& router_lookahea
 
         for (size_t ipin = 1; ipin < cluster_ctx.clb_nlist.net_pins(net_id).size(); ++ipin) {
             int sink_rr = route_ctx.net_rr_terminals[net_id][ipin];
-            VTR_LOG("5.1\n");
             float est_delay = router_lookahead.get_expected_cost(RRNodeId(source_rr), RRNodeId(sink_rr), cost_params, /*R_upstream=*/0.);
             VTR_ASSERT(std::isfinite(est_delay) && est_delay < std::numeric_limits<float>::max());
 

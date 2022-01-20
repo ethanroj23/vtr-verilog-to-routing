@@ -245,7 +245,7 @@ class FoldedPerTileRRGraph : public RRGraphViewInterface{
     for (auto edges : shared_edges_){
       edge_count += edges.size();
     }
-    printf("There are %d edges represented out of %lu total edges\n", edge_count, node_storage_.edge_count());
+    VTR_LOG("There are %d edges represented out of %lu total edges\n", edge_count, node_storage_.edge_count());
 
     int node_coords_bytes = node_count * (2 + 2 + 2); // x, y, tile_idx, try node_type EACH
     int tile_to_node_bytes = node_count * (4); // node_id EACH

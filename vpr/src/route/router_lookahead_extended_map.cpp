@@ -173,17 +173,13 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
     if (from_node == to_node) {
         return std::make_pair(0., 0.);
     }
-    VTR_LOG("5.4\n");
     auto& device_ctx = g_vpr_ctx.device();
     const auto& temp_rr_graph = device_ctx.rr_graph; //TODO Once the uses of rr_graph in the next line are removed, this will be renamed to rr_graph from temp_rr_graph
 
-    VTR_LOG("5.5\n");
     int from_x = temp_rr_graph.node_xlow(from_node);
     int from_y = temp_rr_graph.node_ylow(from_node);
-    VTR_LOG("5.6\n");
     int to_x = temp_rr_graph.node_xlow(to_node);
     int to_y = temp_rr_graph.node_ylow(to_node);
-    VTR_LOG("5.7\n");
     int dx, dy;
     dx = to_x - from_x;
     dy = to_y - from_y;
@@ -194,7 +190,6 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
     } else if (from_type == IPIN) {
         return std::make_pair(0., 0.);
     }
-    VTR_LOG("5.8\n");
     int from_seg_index = cost_map_.node_to_segment(size_t(from_node));
     util::Cost_Entry cost_entry = cost_map_.find_cost(from_seg_index, dx, dy);
 
@@ -207,7 +202,6 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
         float infinity = std::numeric_limits<float>::infinity();
         return std::make_pair(infinity, infinity);
     }
-    VTR_LOG("5.9\n");
     float expected_delay = cost_entry.delay;
     float expected_congestion = cost_entry.congestion;
 
@@ -223,7 +217,6 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
     //       realistic excpected cost returned.
     float site_pin_delay = this->get_chan_ipin_delays(to_node);
     expected_delay += site_pin_delay;
-    VTR_LOG("5.10\n");
     float expected_delay_cost = params.criticality * expected_delay;
     float expected_cong_cost = (1.0 - params.criticality) * expected_congestion;
 
@@ -578,7 +571,6 @@ float ExtendedMapLookahead::get_expected_cost(
 
     if (rr_type == CHANX || rr_type == CHANY || rr_type == SOURCE || rr_type == OPIN) {
         float delay_cost, cong_cost;
-        VTR_LOG("5.2\n");
         // Get the total cost using the combined delay and congestion costs
         std::tie(delay_cost, cong_cost) = get_expected_delay_and_cong(current_node, target_node, params, R_upstream);
         return delay_cost + cong_cost;

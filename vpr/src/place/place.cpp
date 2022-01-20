@@ -465,18 +465,18 @@ void try_place(const t_placer_opts& placer_opts,
     num_swap_aborted = 0;
     num_ts_called = 0;
 
-    // load folded graph here...
-    VTR_LOG("Folding RRGraph...\n");
-    // build the folded representation
-    g_vpr_ctx.mutable_device().folded_per_tile_rr_graph.build_graph();
-    // Set primary rr_graph to the FoldedRRGraph
-    g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_per_tile_rr_graph);
+    // // load folded graph here... this one works for now
+    // VTR_LOG("Folding RRGraph...\n");
+    // // build the folded representation
+    // g_vpr_ctx.mutable_device().folded_per_tile_rr_graph.build_graph();
+    // // Set primary rr_graph to the FoldedRRGraph
+    // g_vpr_ctx.mutable_device().rr_graph.set_primary_rr_graph(&g_vpr_ctx.mutable_device().folded_per_tile_rr_graph);
 
-    // remove unused data from node_storage
-    g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage(); // ESRworks
-    g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_node();
-    g_vpr_ctx.mutable_device().rr_nodes.clear_edge_dest_node();
-    g_vpr_ctx.mutable_device().rr_nodes.clear_edge_switch();
+    // // remove unused data from node_storage
+    // g_vpr_ctx.mutable_device().rr_nodes.clear_node_storage(); // ESRworks
+    // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_src_node();
+    // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_dest_node();
+    // g_vpr_ctx.mutable_device().rr_nodes.clear_edge_switch();
 
     if (placer_opts.place_algorithm.is_timing_driven()) {
         /*do this before the initial placement to avoid messing up the initial placement */

@@ -673,8 +673,8 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
         // ESR HERE this is the place where the Segmentation Fault is happening
         //Recursive case: intermediate node with non-configurable edges
         for (auto iedge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
-            int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), iedge);
-            int iswitch = rr_graph.edge_switch(RRNodeId(node), iedge);
+            int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
+            int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
 
             VTR_ASSERT(!trace_nodes.count(to_node));
             trace_nodes.insert(node);
