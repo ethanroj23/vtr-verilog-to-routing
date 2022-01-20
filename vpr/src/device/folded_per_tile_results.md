@@ -21,6 +21,16 @@ To access a given RRNode's edges:
           cur_edge.switch_id // switch
         });
       }
+
+<br/><br/>
+The following names are used in reporting results for convenience
+
+| category |vtr1|vtr3|vtr4|vtr6|vtr5|
+|---|---|---|---|---|---|
+| architecture         |EArch.xml|k6_frac_N10_frac_chain_mem32K_40nm.xml|k6_frac_N10_frac_chain_mem32K_40nm.xml|stratixiv_arch.timing.xml|stratixiv_arch.timing.xml|
+| circuit |tseng.blif|arm_core.pre-vpr.blif| LU32PEEng.pre-vpr.blif|cholesky_mc_stratixiv_arch_timing.pre-vpr.blif|des90_stratixiv_arch_timing.pre-vpr.blif|
+
+
 <br/><br/>
 ## Runtime in the form original / folded
 | category |vtr1|vtr3|vtr4|vtr6|vtr5|
