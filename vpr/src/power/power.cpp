@@ -820,32 +820,67 @@ static void power_usage_routing(t_power_usage* power_usage,
                 continue;
             }
 
-            for (t_edge_size edge_idx = 0; edge_idx < rr_graph.num_edges(RRNodeId(trace->index)); edge_idx++) { // ESR TODO DIRECT
-                const auto& next_node_id = (size_t) rr_graph.edge_sink_node(RRNodeId(trace->index), edge_idx);
-                if (next_node_id != OPEN) {
-                    t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(trace->index), edges);
+                for (auto edge : edges){
+                    const auto& next_node_id = (size_t)edge.dest;
+                    if (next_node_id != OPEN) {
+                        t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
 
-                    switch (rr_graph.node_type(RRNodeId(next_node_id))) {
-                        case CHANX:
-                        case CHANY:
-                        case IPIN: {
-                            if (next_node_power->net_num == node_power->net_num) {
-                                next_node_power->selected_input = next_node_power->num_inputs;
-                            }
-                            next_node_power->in_dens[next_node_power->num_inputs] = clb_net_density(node_power->net_num);
-                            next_node_power->in_prob[next_node_power->num_inputs] = clb_net_prob(node_power->net_num);
-                            next_node_power->num_inputs++;
-                            const t_edge_size next_node_fan_in = rr_graph.node_fan_in(RRNodeId(next_node_id));
-                            if (next_node_power->num_inputs > next_node_fan_in) {
-                                VTR_LOG("%d %d\n", next_node_power->num_inputs,
-                                        next_node_fan_in);
-                                fflush(nullptr);
-                                VTR_ASSERT(0);
-                            }
-                        } break;
-                        default:
-                            /* Do nothing */
-                            break;
+                        switch (rr_graph.node_type(RRNodeId(next_node_id))) {
+                            case CHANX:
+                            case CHANY:
+                            case IPIN: {
+                                if (next_node_power->net_num == node_power->net_num) {
+                                    next_node_power->selected_input = next_node_power->num_inputs;
+                                }
+                                next_node_power->in_dens[next_node_power->num_inputs] = clb_net_density(node_power->net_num);
+                                next_node_power->in_prob[next_node_power->num_inputs] = clb_net_prob(node_power->net_num);
+                                next_node_power->num_inputs++;
+                                const t_edge_size next_node_fan_in = rr_graph.node_fan_in(RRNodeId(next_node_id));
+                                if (next_node_power->num_inputs > next_node_fan_in) {
+                                    VTR_LOG("%d %d\n", next_node_power->num_inputs,
+                                            next_node_fan_in);
+                                    fflush(nullptr);
+                                    VTR_ASSERT(0);
+                                }
+                            } break;
+                            default:
+                                /* Do nothing */
+                                break;
+                        }
+                    }
+                }
+            }
+            else{
+                for (t_edge_size edge_idx = 0; edge_idx < rr_graph.num_edges(RRNodeId(trace->index)); edge_idx++) {
+                    const auto& next_node_id = (size_t) rr_graph.edge_sink_node(RRNodeId(trace->index), edge_idx);
+                    if (next_node_id != OPEN) {
+                        t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
+
+                        switch (rr_graph.node_type(RRNodeId(next_node_id))) {
+                            case CHANX:
+                            case CHANY:
+                            case IPIN: {
+                                if (next_node_power->net_num == node_power->net_num) {
+                                    next_node_power->selected_input = next_node_power->num_inputs;
+                                }
+                                next_node_power->in_dens[next_node_power->num_inputs] = clb_net_density(node_power->net_num);
+                                next_node_power->in_prob[next_node_power->num_inputs] = clb_net_prob(node_power->net_num);
+                                next_node_power->num_inputs++;
+                                const t_edge_size next_node_fan_in = rr_graph.node_fan_in(RRNodeId(next_node_id));
+                                if (next_node_power->num_inputs > next_node_fan_in) {
+                                    VTR_LOG("%d %d\n", next_node_power->num_inputs,
+                                            next_node_fan_in);
+                                    fflush(nullptr);
+                                    VTR_ASSERT(0);
+                                }
+                            } break;
+                            default:
+                                /* Do nothing */
+                                break;
+                        }
                     }
                 }
             }
@@ -1253,13 +1288,31 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
 #endif
 
     /* Populate driver switch type */
-    for (size_t rr_node_idx = 0; rr_node_idx < device_ctx.rr_graph.size(); rr_node_idx++) {
-        for (t_edge_size edge_idx = 0; edge_idx < rr_graph.num_edges(RRNodeId(rr_node_idx)); edge_idx++) { // ESR TODO DIRECT
-            if ((size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx) != OPEN) {
-                if (rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type == OPEN) {
-                    rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type = rr_graph.edge_switch(RRNodeId(rr_node_idx), edge_idx);
-                } else {
-                    VTR_ASSERT(rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type == rr_graph.edge_switch(RRNodeId(rr_node_idx), edge_idx));
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+                
+                for (size_t rr_node_idx = 0; rr_node_idx < device_ctx.rr_graph.size(); rr_node_idx++) {
+                    std::vector<t_dest_switch> edges;
+                    rr_graph.edge_range_direct(RRNodeId(rr_node_idx), edges);
+                    for (auto edge : edges){
+                        if ((size_t) edge.dest != OPEN) {
+                            if (rr_node_power[(size_t) edge.dest].driver_switch_type == OPEN) {
+                                rr_node_power[(size_t) edge.dest].driver_switch_type = edge.switch_id;
+                            } else {
+                                VTR_ASSERT(rr_node_power[(size_t) edge.dest].driver_switch_type == edge.switch_id);
+                            }
+                        }
+                    }
+                }
+    }
+    else{
+        for (size_t rr_node_idx = 0; rr_node_idx < device_ctx.rr_graph.size(); rr_node_idx++) {
+            for (t_edge_size edge_idx = 0; edge_idx < rr_graph.num_edges(RRNodeId(rr_node_idx)); edge_idx++) { // ESR TODO DIRECT
+                if ((size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx) != OPEN) {
+                    if (rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type == OPEN) {
+                        rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type = rr_graph.edge_switch(RRNodeId(rr_node_idx), edge_idx);
+                    } else {
+                        VTR_ASSERT(rr_node_power[(size_t) rr_graph.edge_sink_node(RRNodeId(rr_node_idx), edge_idx)].driver_switch_type == rr_graph.edge_switch(RRNodeId(rr_node_idx), edge_idx));
+                    }
                 }
             }
         }
