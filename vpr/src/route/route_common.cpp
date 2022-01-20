@@ -627,23 +627,79 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
     t_trace* tail = nullptr;
 
     //Record the non-configurable out-going edges
-    std::vector<t_edge_size> unvisited_non_configurable_edges;
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
     if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1 //ESR HERE
-        for (auto edge : rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(node))) {
+        std::vector<t_edge_struct> unvisited_non_configurable_edges;
+        for (auto edge : rr_graph.non_configurable_edge_range_direct(RRNodeId(node))) {
             // VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
             // Above assertion happens inside non_configurable_edge_with_id_range_direct
 
             int to_node = (size_t) edge.dest;
+            // int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(node), (size_t)edge.edge_id);
 
             if (!trace_nodes.count(to_node)) {
-                unvisited_non_configurable_edges.push_back((size_t)edge.edge_id);
+                unvisited_non_configurable_edges.push_back(edge);
+            }
+        }
+        if (unvisited_non_configurable_edges.size() == 0) {
+            //Base case: leaf node with no non-configurable edges
+            if (depth > 0) { //Arrived via non-configurable edge
+                VTR_ASSERT(!trace_nodes.count(node));
+                head = alloc_trace_data();
+                head->index = node;
+                head->iswitch = -1;
+                head->next = nullptr;
+                tail = head;
+
+                trace_nodes.insert(node);
+            }
+
+        } else {
+            // ESR HERE this is the place where the Segmentation Fault is happening
+            //Recursive case: intermediate node with non-configurable edges
+            for (auto edge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
+                // int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
+                int to_node = (size_t)edge.dest;
+                // int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
+                int iswitch = edge.switch_id;
+
+                VTR_ASSERT(!trace_nodes.count(to_node));
+                trace_nodes.insert(node);
+
+                //Recurse
+                t_trace* subtree_head = nullptr;
+                t_trace* subtree_tail = nullptr;
+                std::tie(subtree_head, subtree_tail) = add_trace_non_configurable_recurr(to_node, trace_nodes, depth + 1);
+
+                if (subtree_head && subtree_tail) {
+                    //Add the non-empty sub-tree
+
+                    //Duplicate the original head as the new tail (for the new branch)
+                    t_trace* intermediate_head = alloc_trace_data();
+                    intermediate_head->index = node;
+                    intermediate_head->iswitch = iswitch;
+                    intermediate_head->next = nullptr;
+
+                    intermediate_head->next = subtree_head;
+
+                    if (!head) { //First subtree becomes head
+                        head = intermediate_head;
+                    } else { //Later subtrees added to tail
+                        VTR_ASSERT(tail);
+                        tail->next = intermediate_head;
+                    }
+
+                    tail = subtree_tail;
+                } else {
+                    VTR_ASSERT(subtree_head == nullptr && subtree_tail == nullptr);
+                }
             }
         }
     }
-    else{
+    else{ // Original version
+        std::vector<t_edge_size> unvisited_non_configurable_edges;
         for (auto iedge : rr_graph.non_configurable_edges(RRNodeId(node))) {
             VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable(iedge));
 
@@ -653,58 +709,59 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
                 unvisited_non_configurable_edges.push_back(iedge);
             }
         }
-    }
+    
+        if (unvisited_non_configurable_edges.size() == 0) {
+            //Base case: leaf node with no non-configurable edges
+            if (depth > 0) { //Arrived via non-configurable edge
+                VTR_ASSERT(!trace_nodes.count(node));
+                head = alloc_trace_data();
+                head->index = node;
+                head->iswitch = -1;
+                head->next = nullptr;
+                tail = head;
 
+                trace_nodes.insert(node);
+            }
 
-    if (unvisited_non_configurable_edges.size() == 0) {
-        //Base case: leaf node with no non-configurable edges
-        if (depth > 0) { //Arrived via non-configurable edge
-            VTR_ASSERT(!trace_nodes.count(node));
-            head = alloc_trace_data();
-            head->index = node;
-            head->iswitch = -1;
-            head->next = nullptr;
-            tail = head;
+        } else {
+            // ESR HERE this is the place where the Segmentation Fault is happening
+            //Recursive case: intermediate node with non-configurable edges
+            for (auto iedge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
+                // int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
+                int to_node = size_t(rr_graph.edge_sink_node(RRNodeId(node), iedge));
+                // int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
+                int iswitch = rr_graph.edge_switch(RRNodeId(node), iedge);
 
-            trace_nodes.insert(node);
-        }
+                VTR_ASSERT(!trace_nodes.count(to_node));
+                trace_nodes.insert(node);
 
-    } else {
-        // ESR HERE this is the place where the Segmentation Fault is happening
-        //Recursive case: intermediate node with non-configurable edges
-        for (auto iedge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
-            int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
-            int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
+                //Recurse
+                t_trace* subtree_head = nullptr;
+                t_trace* subtree_tail = nullptr;
+                std::tie(subtree_head, subtree_tail) = add_trace_non_configurable_recurr(to_node, trace_nodes, depth + 1);
 
-            VTR_ASSERT(!trace_nodes.count(to_node));
-            trace_nodes.insert(node);
+                if (subtree_head && subtree_tail) {
+                    //Add the non-empty sub-tree
 
-            //Recurse
-            t_trace* subtree_head = nullptr;
-            t_trace* subtree_tail = nullptr;
-            std::tie(subtree_head, subtree_tail) = add_trace_non_configurable_recurr(to_node, trace_nodes, depth + 1);
+                    //Duplicate the original head as the new tail (for the new branch)
+                    t_trace* intermediate_head = alloc_trace_data();
+                    intermediate_head->index = node;
+                    intermediate_head->iswitch = iswitch;
+                    intermediate_head->next = nullptr;
 
-            if (subtree_head && subtree_tail) {
-                //Add the non-empty sub-tree
+                    intermediate_head->next = subtree_head;
 
-                //Duplicate the original head as the new tail (for the new branch)
-                t_trace* intermediate_head = alloc_trace_data();
-                intermediate_head->index = node;
-                intermediate_head->iswitch = iswitch;
-                intermediate_head->next = nullptr;
+                    if (!head) { //First subtree becomes head
+                        head = intermediate_head;
+                    } else { //Later subtrees added to tail
+                        VTR_ASSERT(tail);
+                        tail->next = intermediate_head;
+                    }
 
-                intermediate_head->next = subtree_head;
-
-                if (!head) { //First subtree becomes head
-                    head = intermediate_head;
-                } else { //Later subtrees added to tail
-                    VTR_ASSERT(tail);
-                    tail->next = intermediate_head;
+                    tail = subtree_tail;
+                } else {
+                    VTR_ASSERT(subtree_head == nullptr && subtree_tail == nullptr);
                 }
-
-                tail = subtree_tail;
-            } else {
-                VTR_ASSERT(subtree_head == nullptr && subtree_tail == nullptr);
             }
         }
     }

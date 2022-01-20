@@ -304,10 +304,11 @@ class t_rr_graph_storage : public RRGraphViewInterface {
     edge_idx_range edges(const RRNodeId& id) const {
         return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id)));
     }
-
+    // returns relative edge ids of configurable edges in range
     edge_idx_range configurable_edges(const RRNodeId& id) const { // ESR used 1 time
         return vtr::make_range(edge_idx_iterator(0), edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)));
     }
+    // returns relative edge ids of non_configurable edges in range
     edge_idx_range non_configurable_edges(const RRNodeId& id) const { // ESR used 3 times
         return vtr::make_range(edge_idx_iterator(num_edges(id) - num_non_configurable_edges(id)), edge_idx_iterator(num_edges(id)));
     }

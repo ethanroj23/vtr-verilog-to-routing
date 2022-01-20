@@ -268,7 +268,7 @@ void FoldedPerTileRRGraph::verify_folded_rr_graph(){
         //    max_DxDyIdx,
         //    max_SharedNodeDataIdx
     );
-    // return;
+    return;
 
 
         VTR_ASSERT(node_storage_.size() == size());
