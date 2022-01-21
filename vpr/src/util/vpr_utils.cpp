@@ -1803,17 +1803,31 @@ void print_switch_usage() {
     std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_graph.size()];
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         RRNodeId from_node = RRNodeId(inode);
-        int num_edges = rr_graph.num_edges(RRNodeId(inode));
-        for (int iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
-            int switch_index = rr_graph.edge_switch(from_node, iedge);
-            int to_node_index = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
-            // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).
-            //             physically, the switch driving from point 1 & 3 should be the same. But we will assign then different switch
-            //             index; or there is no way to differentiate them after abstracting a 2D wire into a 1D node
-            if (inward_switch_inf[to_node_index].count(switch_index) == 0)
-                inward_switch_inf[to_node_index][switch_index] = 0;
-            //VTR_ASSERT(from_node.type != OPIN);
-            inward_switch_inf[to_node_index][switch_index]++;
+        if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(RRNodeId(inode), edges);
+            for (auto edge : edges){
+                int switch_index = edge.switch_id;
+                int to_node_index = (size_t) edge.dest;
+                if (inward_switch_inf[to_node_index].count(switch_index) == 0)
+                    inward_switch_inf[to_node_index][switch_index] = 0;
+                //VTR_ASSERT(from_node.type != OPIN);
+                inward_switch_inf[to_node_index][switch_index]++;
+            }
+        }
+        else{
+            int num_edges = rr_graph.num_edges(RRNodeId(inode));
+            for (int iedge = 0; iedge < num_edges; iedge++) {
+                int switch_index = rr_graph.edge_switch(from_node, iedge);
+                int to_node_index = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).
+                //             physically, the switch driving from point 1 & 3 should be the same. But we will assign then different switch
+                //             index; or there is no way to differentiate them after abstracting a 2D wire into a 1D node
+                if (inward_switch_inf[to_node_index].count(switch_index) == 0)
+                    inward_switch_inf[to_node_index][switch_index] = 0;
+                //VTR_ASSERT(from_node.type != OPIN);
+                inward_switch_inf[to_node_index][switch_index]++;
+            }
         }
     }
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {

@@ -253,25 +253,54 @@ TEST_CASE("fasm_integration_test", "[fasm]") {
 
         auto &device_ctx = g_vpr_ctx.mutable_device();
         const auto& rr_graph = device_ctx.rr_graph;
-        for(size_t inode = 0; inode < device_ctx.rr_graph.size(); ++inode) {
-            for(t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); ++iedge) {
-                auto sink_inode = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); // ESR TODO DIRECT
-                auto switch_id = rr_graph.edge_switch(RRNodeId(inode), iedge);
-                auto value = vtr::string_fmt("%d_%d_%zu",
-                            inode, sink_inode, switch_id);
 
-                // Add additional features to edges that go to CLB.I[11:0] pins
-                // to correlate them with features of CLB input mux later.
-                auto sink_type = rr_graph.node_type(RRNodeId(sink_inode));
-                if (sink_type == IPIN) {            
-                    auto pin_feature = get_pin_feature(sink_inode);
-                    value = value + "\n" + pin_feature;
+        if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ // ESR1
+            for(size_t inode = 0; inode < device_ctx.rr_graph.size(); ++inode) {
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(inode), edges);
+                for(auto edge : edges) {
+                    auto sink_inode = (size_t) edge.dest;
+                    auto switch_id = edge.switch_id;
+                    auto value = vtr::string_fmt("%d_%d_%zu",
+                                inode, sink_inode, switch_id);
+
+                    // Add additional features to edges that go to CLB.I[11:0] pins
+                    // to correlate them with features of CLB input mux later.
+                    auto sink_type = rr_graph.node_type(RRNodeId(sink_inode));
+                    if (sink_type == IPIN) {            
+                        auto pin_feature = get_pin_feature(sink_inode);
+                        value = value + "\n" + pin_feature;
+                    }
+
+                    vpr::add_rr_edge_metadata(inode, sink_inode, switch_id,
+                            vtr::string_view("fasm_features"), vtr::string_view(value.data(), value.size()));
                 }
-
-                vpr::add_rr_edge_metadata(inode, sink_inode, switch_id,
-                        vtr::string_view("fasm_features"), vtr::string_view(value.data(), value.size()));
             }
         }
+        else{
+            for(size_t inode = 0; inode < device_ctx.rr_graph.size(); ++inode) {
+                for(t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); ++iedge) {
+                    auto sink_inode = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                    auto switch_id = rr_graph.edge_switch(RRNodeId(inode), iedge);
+                    auto value = vtr::string_fmt("%d_%d_%zu",
+                                inode, sink_inode, switch_id);
+
+                    // Add additional features to edges that go to CLB.I[11:0] pins
+                    // to correlate them with features of CLB input mux later.
+                    auto sink_type = rr_graph.node_type(RRNodeId(sink_inode));
+                    if (sink_type == IPIN) {            
+                        auto pin_feature = get_pin_feature(sink_inode);
+                        value = value + "\n" + pin_feature;
+                    }
+
+                    vpr::add_rr_edge_metadata(inode, sink_inode, switch_id,
+                            vtr::string_view("fasm_features"), vtr::string_view(value.data(), value.size()));
+                }
+            }
+
+        }
+
+        
 
         write_rr_graph(kRrGraphFile);
         vpr_free_all(arch, vpr_setup);

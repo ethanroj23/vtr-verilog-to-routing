@@ -54,67 +54,120 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         from_rr_type = rr_graph.node_type(RRNodeId(inode));
 
         if (from_rr_type == CHANX || from_rr_type == CHANY) {
-            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) { // ESR TODO DIRECT
-                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
-                to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(inode), edges);
+                for (auto edge : edges){
+                    to_node = (size_t) edge.dest;
+                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                if (to_rr_type == CHANX || to_rr_type == CHANY) {
-                    switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
-                    Cin = device_ctx.rr_switch_inf[switch_index].Cin;
-                    Cout = device_ctx.rr_switch_inf[switch_index].Cout;
-                    buffered = device_ctx.rr_switch_inf[switch_index].buffered();
+                    if (to_rr_type == CHANX || to_rr_type == CHANY) {
+                        switch_index = edge.switch_id;
+                        Cin = device_ctx.rr_switch_inf[switch_index].Cin;
+                        Cout = device_ctx.rr_switch_inf[switch_index].Cout;
+                        buffered = device_ctx.rr_switch_inf[switch_index].buffered();
 
-                    /* If both the switch from inode to to_node and the switch from *
-                     * to_node back to inode use bidirectional switches (i.e. pass  *
-                     * transistors), there will only be one physical switch for     *
-                     * both edges.  Hence, I only want to count the capacitance of  *
-                     * that switch for one of the two edges.  (Note:  if there is   *
-                     * a pass transistor edge from x to y, I always build the graph *
-                     * so that there is a corresponding edge using the same switch  *
-                     * type from y to x.) So, I arbitrarily choose to add in the    *
-                     * capacitance in that case of a pass transistor only when      *
-                     * processing the lower inode number.                           *
-                     * If an edge uses a buffer I always have to add in the output  *
-                     * capacitance.  I assume that buffers are shared at the same   *
-                     * (i,j) location, so only one input capacitance needs to be    *
-                     * added for all the buffered switches at that location.  If    *
-                     * the buffers at that location have different sizes, I use the *
-                     * input capacitance of the largest one.                        */
-
-                    if (!buffered && inode < to_node) { /* Pass transistor. */
-                        rr_node_C[inode] += Cin;
-                        rr_node_C[to_node] += Cout;
-                    }
-
-                    else if (buffered) {
-                        /* Prevent double counting of capacitance for UDSD */
-                        if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
-                            /* For multiple-driver architectures the output capacitance can
-                             * be added now since each edge is actually a driver */
+                        if (!buffered && inode < to_node) { /* Pass transistor. */
+                            rr_node_C[inode] += Cin;
                             rr_node_C[to_node] += Cout;
                         }
-                        isblock = seg_index_of_sblock(inode, to_node);
-                        buffer_Cin[isblock] = std::max(buffer_Cin[isblock], Cin);
-                    }
 
-                }
-                /* End edge to CHANX or CHANY node. */
-                else if (to_rr_type == IPIN) {
-                    if (INCLUDE_TRACK_BUFFERS) {
-                        /* Implements sharing of the track to connection box buffer.
-                         * Such a buffer exists at every segment of the wire at which
-                         * at least one logic block input connects. */
-                        icblock = seg_index_of_cblock(from_rr_type, to_node);
-                        if (cblock_counted[icblock] == false) {
-                            rr_node_C[inode] += C_ipin_cblock;
-                            cblock_counted[icblock] = true;
+                        else if (buffered) {
+                            /* Prevent double counting of capacitance for UDSD */
+                            if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
+                                /* For multiple-driver architectures the output capacitance can
+                                * be added now since each edge is actually a driver */
+                                rr_node_C[to_node] += Cout;
+                            }
+                            isblock = seg_index_of_sblock(inode, to_node);
+                            buffer_Cin[isblock] = std::max(buffer_Cin[isblock], Cin);
                         }
-                    } else {
-                        /* No track buffer. Simply add the capacitance onto the wire */
-                        rr_node_C[inode] += C_ipin_cblock;
+
                     }
-                }
-            } /* End loop over all edges of a node. */
+                    /* End edge to CHANX or CHANY node. */
+                    else if (to_rr_type == IPIN) {
+                        if (INCLUDE_TRACK_BUFFERS) {
+                            /* Implements sharing of the track to connection box buffer.
+                            * Such a buffer exists at every segment of the wire at which
+                            * at least one logic block input connects. */
+                            icblock = seg_index_of_cblock(from_rr_type, to_node);
+                            if (cblock_counted[icblock] == false) {
+                                rr_node_C[inode] += C_ipin_cblock;
+                                cblock_counted[icblock] = true;
+                            }
+                        } else {
+                            /* No track buffer. Simply add the capacitance onto the wire */
+                            rr_node_C[inode] += C_ipin_cblock;
+                        }
+                    }
+                } /* End loop over all edges of a node. */
+            }
+            else{
+                for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+
+                    if (to_rr_type == CHANX || to_rr_type == CHANY) {
+                        switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
+                        Cin = device_ctx.rr_switch_inf[switch_index].Cin;
+                        Cout = device_ctx.rr_switch_inf[switch_index].Cout;
+                        buffered = device_ctx.rr_switch_inf[switch_index].buffered();
+
+                        /* If both the switch from inode to to_node and the switch from *
+                        * to_node back to inode use bidirectional switches (i.e. pass  *
+                        * transistors), there will only be one physical switch for     *
+                        * both edges.  Hence, I only want to count the capacitance of  *
+                        * that switch for one of the two edges.  (Note:  if there is   *
+                        * a pass transistor edge from x to y, I always build the graph *
+                        * so that there is a corresponding edge using the same switch  *
+                        * type from y to x.) So, I arbitrarily choose to add in the    *
+                        * capacitance in that case of a pass transistor only when      *
+                        * processing the lower inode number.                           *
+                        * If an edge uses a buffer I always have to add in the output  *
+                        * capacitance.  I assume that buffers are shared at the same   *
+                        * (i,j) location, so only one input capacitance needs to be    *
+                        * added for all the buffered switches at that location.  If    *
+                        * the buffers at that location have different sizes, I use the *
+                        * input capacitance of the largest one.                        */
+
+                        if (!buffered && inode < to_node) { /* Pass transistor. */
+                            rr_node_C[inode] += Cin;
+                            rr_node_C[to_node] += Cout;
+                        }
+
+                        else if (buffered) {
+                            /* Prevent double counting of capacitance for UDSD */
+                            if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
+                                /* For multiple-driver architectures the output capacitance can
+                                * be added now since each edge is actually a driver */
+                                rr_node_C[to_node] += Cout;
+                            }
+                            isblock = seg_index_of_sblock(inode, to_node);
+                            buffer_Cin[isblock] = std::max(buffer_Cin[isblock], Cin);
+                        }
+
+                    }
+                    /* End edge to CHANX or CHANY node. */
+                    else if (to_rr_type == IPIN) {
+                        if (INCLUDE_TRACK_BUFFERS) {
+                            /* Implements sharing of the track to connection box buffer.
+                            * Such a buffer exists at every segment of the wire at which
+                            * at least one logic block input connects. */
+                            icblock = seg_index_of_cblock(from_rr_type, to_node);
+                            if (cblock_counted[icblock] == false) {
+                                rr_node_C[inode] += C_ipin_cblock;
+                                cblock_counted[icblock] = true;
+                            }
+                        } else {
+                            /* No track buffer. Simply add the capacitance onto the wire */
+                            rr_node_C[inode] += C_ipin_cblock;
+                        }
+                    }
+                } /* End loop over all edges of a node. */
+            }
+
+
+            
 
             /* Reset the cblock_counted and buffer_Cin arrays, and add buf Cin. */
 
@@ -149,18 +202,38 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         }
         /* End node is CHANX or CHANY */
         else if (from_rr_type == OPIN) {
-            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) { // ESR TODO DIRECT
-                switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
-                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
-                to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(inode), edges);
+                for (auto edge : edges){
+                    switch_index = edge.switch_id;
+                    to_node = (size_t) edge.dest;
+                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                if (to_rr_type != CHANX && to_rr_type != CHANY)
-                    continue;
+                    if (to_rr_type != CHANX && to_rr_type != CHANY)
+                        continue;
 
-                if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
-                    Cout = device_ctx.rr_switch_inf[switch_index].Cout;
-                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); /* Will be CHANX or CHANY */
-                    rr_node_C[to_node] += Cout;
+                    if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
+                        Cout = device_ctx.rr_switch_inf[switch_index].Cout;
+                        to_node = (size_t) edge.dest; /* Will be CHANX or CHANY */
+                        rr_node_C[to_node] += Cout;
+                    }
+                }
+            }
+            else{
+                for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+                    switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
+                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+
+                    if (to_rr_type != CHANX && to_rr_type != CHANY)
+                        continue;
+
+                    if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
+                        Cout = device_ctx.rr_switch_inf[switch_index].Cout;
+                        to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge); /* Will be CHANX or CHANY */
+                        rr_node_C[to_node] += Cout;
+                    }
                 }
             }
         }
@@ -173,17 +246,34 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
      * out what the Cout's should be */
     Couts_to_add = (float*)vtr::calloc(device_ctx.rr_graph.size(), sizeof(float));
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
-        for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) { // ESR TODO DIRECT
-            switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
-            to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
-            to_rr_type = rr_graph.node_type(RRNodeId(to_node));
-            if (to_rr_type == CHANX || to_rr_type == CHANY) {
-                if (rr_graph.node_direction(RRNodeId(to_node)) != Direction::BIDIR) {
-                    /* Cout was not added in these cases */
-                    Couts_to_add[to_node] = std::max(Couts_to_add[to_node], device_ctx.rr_switch_inf[switch_index].Cout);
+        if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(RRNodeId(inode), edges);
+            for (auto edge : edges){
+                switch_index = edge.switch_id;
+                to_node = (size_t) edge.dest;
+                to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+                if (to_rr_type == CHANX || to_rr_type == CHANY) {
+                    if (rr_graph.node_direction(RRNodeId(to_node)) != Direction::BIDIR) {
+                        /* Cout was not added in these cases */
+                        Couts_to_add[to_node] = std::max(Couts_to_add[to_node], device_ctx.rr_switch_inf[switch_index].Cout);
+                    }
                 }
             }
         }
+        else{
+            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(inode)); iedge++) {
+                switch_index = rr_graph.edge_switch(RRNodeId(inode), iedge);
+                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(inode), iedge);
+                to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+                if (to_rr_type == CHANX || to_rr_type == CHANY) {
+                    if (rr_graph.node_direction(RRNodeId(to_node)) != Direction::BIDIR) {
+                        /* Cout was not added in these cases */
+                        Couts_to_add[to_node] = std::max(Couts_to_add[to_node], device_ctx.rr_switch_inf[switch_index].Cout);
+                    }
+                }
+            }
+        } 
     }
     for (size_t inode = 0; inode < device_ctx.rr_graph.size(); inode++) {
         rr_node_C[inode] += Couts_to_add[inode];

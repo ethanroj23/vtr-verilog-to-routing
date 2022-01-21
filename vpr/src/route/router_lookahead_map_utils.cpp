@@ -263,25 +263,52 @@ void expand_dijkstra_neighbours(const t_rr_graph_storage& rr_nodes,
 
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
-    for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) { // ESR TODO DIRECT
-        int child_node_ind = (size_t) rr_graph.edge_sink_node(parent, iedge);
-        int switch_ind = rr_graph.edge_switch(parent, iedge);
+    if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+        std::vector<t_edge_with_id> edges;
+        rr_graph.edge_range_with_id_direct(parent, edges);
+        for (auto edge : edges){
+            int child_node_ind = (size_t) edge.dest;
+            int switch_ind = edge.switch_id;
 
-        /* skip this child if it has already been expanded from */
-        if ((*node_expanded)[child_node_ind]) {
-            continue;
+            /* skip this child if it has already been expanded from */
+            if ((*node_expanded)[child_node_ind]) {
+                continue;
+            }
+
+            Entry child_entry(RRNodeId(child_node_ind), switch_ind, &parent_entry);
+            VTR_ASSERT(child_entry.cost() >= 0);
+
+            /* Create (if it doesn't exist) or update (if the new cost is lower)
+            * to specified node */
+            Search_Path path_entry = {child_entry.cost(), size_t(parent), (size_t)edge.edge_id};
+            auto& path = (*paths)[child_node_ind];
+            if (path_entry.cost < path.cost) {
+                pq->push(child_entry);
+                path = path_entry;
+            }
         }
+    }
+    else{
+        for (int iedge = 0; iedge < rr_graph.num_edges(parent); iedge++) {
+            int child_node_ind = (size_t) rr_graph.edge_sink_node(parent, iedge);
+            int switch_ind = rr_graph.edge_switch(parent, iedge);
 
-        Entry child_entry(RRNodeId(child_node_ind), switch_ind, &parent_entry);
-        VTR_ASSERT(child_entry.cost() >= 0);
+            /* skip this child if it has already been expanded from */
+            if ((*node_expanded)[child_node_ind]) {
+                continue;
+            }
 
-        /* Create (if it doesn't exist) or update (if the new cost is lower)
-         * to specified node */
-        Search_Path path_entry = {child_entry.cost(), size_t(parent), iedge};
-        auto& path = (*paths)[child_node_ind];
-        if (path_entry.cost < path.cost) {
-            pq->push(child_entry);
-            path = path_entry;
+            Entry child_entry(RRNodeId(child_node_ind), switch_ind, &parent_entry);
+            VTR_ASSERT(child_entry.cost() >= 0);
+
+            /* Create (if it doesn't exist) or update (if the new cost is lower)
+            * to specified node */
+            Search_Path path_entry = {child_entry.cost(), size_t(parent), iedge};
+            auto& path = (*paths)[child_node_ind];
+            if (path_entry.cost < path.cost) {
+                pq->push(child_entry);
+                path = path_entry;
+            }
         }
     }
 }

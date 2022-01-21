@@ -659,10 +659,8 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
         } else {
             // ESR HERE this is the place where the Segmentation Fault is happening
             //Recursive case: intermediate node with non-configurable edges
-            for (auto edge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
-                // int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
+            for (auto edge : unvisited_non_configurable_edges) {
                 int to_node = (size_t)edge.dest;
-                // int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
                 int iswitch = edge.switch_id;
 
                 VTR_ASSERT(!trace_nodes.count(to_node));
@@ -726,10 +724,8 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
         } else {
             // ESR HERE this is the place where the Segmentation Fault is happening
             //Recursive case: intermediate node with non-configurable edges
-            for (auto iedge : unvisited_non_configurable_edges) { // ESR TODO DIRECT
-                // int to_node = (size_t) rr_graph.edge_sink_node((RREdgeId)iedge);
+            for (auto iedge : unvisited_non_configurable_edges) {
                 int to_node = size_t(rr_graph.edge_sink_node(RRNodeId(node), iedge));
-                // int iswitch = rr_graph.edge_switch((RREdgeId)iedge);
                 int iswitch = rr_graph.edge_switch(RRNodeId(node), iedge);
 
                 VTR_ASSERT(!trace_nodes.count(to_node));
@@ -1502,18 +1498,39 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             //the reserved OPINs to move out of the way of congestion, by preferring
             //to reserve OPINs with lower congestion costs).
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
-            num_edges = rr_graph.num_edges(RRNodeId(from_node));
-            for (iconn = 0; iconn < num_edges; iconn++) { // ESR TODO DIRECT
-                to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iconn);
+            
 
-                VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+                for (auto edge : edges){
+                    to_node = (size_t) edge.dest;
 
-                //Add the OPIN to the heap according to it's congestion cost
-                cost = get_rr_cong_cost(to_node, pres_fac);
-                add_node_to_heap(heap, route_ctx.rr_node_route_inf,
-                                 to_node, cost, OPEN, RREdgeId::INVALID(),
-                                 0., 0.);
+                    VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
+
+                    //Add the OPIN to the heap according to it's congestion cost
+                    cost = get_rr_cong_cost(to_node, pres_fac);
+                    add_node_to_heap(heap, route_ctx.rr_node_route_inf,
+                                    to_node, cost, OPEN, RREdgeId::INVALID(),
+                                    0., 0.);
+                }
             }
+            else{
+                num_edges = rr_graph.num_edges(RRNodeId(from_node));
+                for (iconn = 0; iconn < num_edges; iconn++) {
+                    to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iconn);
+
+                    VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
+
+                    //Add the OPIN to the heap according to it's congestion cost
+                    cost = get_rr_cong_cost(to_node, pres_fac);
+                    add_node_to_heap(heap, route_ctx.rr_node_route_inf,
+                                    to_node, cost, OPEN, RREdgeId::INVALID(),
+                                    0., 0.);
+                }
+            }
+
+            
 
             for (ipin = 0; ipin < num_local_opin; ipin++) {
                 //Pop the nodes off the heap. We get them from the heap so we
@@ -1642,22 +1659,47 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             const auto& rr_graph = device_ctx.rr_graph;
 
             bool found = false;
-            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(trace->index)); ++iedge) { // ESR TODO DIRECT
-                int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(trace->index), iedge);
 
-                if (to_node == next->index) {
-                    found = true;
+            if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+                std::vector<t_dest_switch> edges;
+                rr_graph.edge_range_direct(RRNodeId(trace->index), edges);
+                for (auto edge : edges){
+                    int to_node = (size_t) edge.dest;
 
-                    //Verify that the switch matches
-                    int rr_iswitch = rr_graph.edge_switch(RRNodeId(trace->index), iedge);
-                    if (trace->iswitch != rr_iswitch) {
-                        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
-                                        trace->iswitch, rr_iswitch,
-                                        trace->index, to_node);
+                    if (to_node == next->index) {
+                        found = true;
+
+                        //Verify that the switch matches
+                        int rr_iswitch = edge.switch_id;
+                        if (trace->iswitch != rr_iswitch) {
+                            VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
+                                            trace->iswitch, rr_iswitch,
+                                            trace->index, to_node);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+            else{
+                for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(trace->index)); ++iedge) {
+                    int to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(trace->index), iedge);
+
+                    if (to_node == next->index) {
+                        found = true;
+
+                        //Verify that the switch matches
+                        int rr_iswitch = rr_graph.edge_switch(RRNodeId(trace->index), iedge);
+                        if (trace->iswitch != rr_iswitch) {
+                            VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
+                                            trace->iswitch, rr_iswitch,
+                                            trace->index, to_node);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            
 
             if (!found) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback no RR edge between RR nodes %d -> %d\n", trace->index, next->index);

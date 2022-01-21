@@ -165,63 +165,130 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
             case CHANY:
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
 
-                for (iedge = 0; iedge < num_edges; iedge++) { // ESR TODO DIRECT
-                    size_t to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
-                    to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+                if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+                    std::vector<t_dest_switch> edges;
+                    rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+                    for (auto edge : edges){
+                        size_t to_node = (size_t) edge.dest;
+                        to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                    /* Ignore any uninitialized rr_graph nodes */
-                    if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
-                        && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
-                        && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
-                        continue;
+                        /* Ignore any uninitialized rr_graph nodes */
+                        if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
+                            && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
+                            && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
+                            continue;
+                        }
+
+                        switch (to_rr_type) {
+                            case CHANX:
+                            case CHANY:
+                                iswitch = edge.switch_id;
+
+                                if (device_ctx.rr_switch_inf[iswitch].buffered()) {
+                                    iseg = seg_index_of_sblock(from_node, to_node);
+                                    shared_buffer_trans[iseg] = std::max(shared_buffer_trans[iseg],
+                                                                        sharable_switch_trans[iswitch]);
+
+                                    ntrans_no_sharing += unsharable_switch_trans[iswitch]
+                                                        + sharable_switch_trans[iswitch];
+                                    ntrans_sharing += unsharable_switch_trans[iswitch];
+                                } else if (from_node < to_node) {
+                                    /* Pass transistor shared by two edges -- only count once.  *
+                                    * Also, no part of a pass transistor is sharable.          */
+
+                                    ntrans_no_sharing += unsharable_switch_trans[iswitch];
+                                    ntrans_sharing += unsharable_switch_trans[iswitch];
+                                }
+                                break;
+
+                            case IPIN:
+                                num_inputs_to_cblock[to_node]++;
+                                max_inputs_to_cblock = std::max(max_inputs_to_cblock,
+                                                                num_inputs_to_cblock[to_node]);
+
+                                iseg = seg_index_of_cblock(from_rr_type, to_node);
+
+                                if (cblock_counted[iseg] == false) {
+                                    cblock_counted[iseg] = true;
+                                    ntrans_sharing += trans_track_to_cblock_buf;
+                                    ntrans_no_sharing += trans_track_to_cblock_buf;
+                                }
+                                break;
+
+                            default:
+                                VPR_ERROR(VPR_ERROR_ROUTE,
+                                        "in count_routing_transistors:\n"
+                                        "\tUnexpected connection from node %d (type %s) to node %d (type %s).\n",
+                                        from_node, rr_node_typename[from_rr_type], to_node, rr_node_typename[to_rr_type]);
+                                break;
+
+                        } /* End switch on to_rr_type. */
                     }
+                }
+                else{ // original version
+                    for (iedge = 0; iedge < num_edges; iedge++) {
+                        size_t to_node = (size_t) rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
+                        to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-                    switch (to_rr_type) {
-                        case CHANX:
-                        case CHANY:
-                            iswitch = rr_graph.edge_switch(RRNodeId(from_node), iedge);
+                        /* Ignore any uninitialized rr_graph nodes */
+                        if ((rr_graph.node_type(RRNodeId(to_node)) == SOURCE)
+                            && (rr_graph.node_xlow(RRNodeId(to_node)) == 0) && (rr_graph.node_ylow(RRNodeId(to_node)) == 0)
+                            && (rr_graph.node_xhigh(RRNodeId(to_node)) == 0) && (rr_graph.node_yhigh(RRNodeId(to_node)) == 0)) {
+                            continue;
+                        }
 
-                            if (device_ctx.rr_switch_inf[iswitch].buffered()) {
-                                iseg = seg_index_of_sblock(from_node, to_node);
-                                shared_buffer_trans[iseg] = std::max(shared_buffer_trans[iseg],
-                                                                     sharable_switch_trans[iswitch]);
+                        switch (to_rr_type) {
+                            case CHANX:
+                            case CHANY:
+                                iswitch = rr_graph.edge_switch(RRNodeId(from_node), iedge);
 
-                                ntrans_no_sharing += unsharable_switch_trans[iswitch]
-                                                     + sharable_switch_trans[iswitch];
-                                ntrans_sharing += unsharable_switch_trans[iswitch];
-                            } else if (from_node < to_node) {
-                                /* Pass transistor shared by two edges -- only count once.  *
-                                 * Also, no part of a pass transistor is sharable.          */
+                                if (device_ctx.rr_switch_inf[iswitch].buffered()) {
+                                    iseg = seg_index_of_sblock(from_node, to_node);
+                                    shared_buffer_trans[iseg] = std::max(shared_buffer_trans[iseg],
+                                                                        sharable_switch_trans[iswitch]);
 
-                                ntrans_no_sharing += unsharable_switch_trans[iswitch];
-                                ntrans_sharing += unsharable_switch_trans[iswitch];
-                            }
-                            break;
+                                    ntrans_no_sharing += unsharable_switch_trans[iswitch]
+                                                        + sharable_switch_trans[iswitch];
+                                    ntrans_sharing += unsharable_switch_trans[iswitch];
+                                } else if (from_node < to_node) {
+                                    /* Pass transistor shared by two edges -- only count once.  *
+                                    * Also, no part of a pass transistor is sharable.          */
 
-                        case IPIN:
-                            num_inputs_to_cblock[to_node]++;
-                            max_inputs_to_cblock = std::max(max_inputs_to_cblock,
-                                                            num_inputs_to_cblock[to_node]);
+                                    ntrans_no_sharing += unsharable_switch_trans[iswitch];
+                                    ntrans_sharing += unsharable_switch_trans[iswitch];
+                                }
+                                break;
 
-                            iseg = seg_index_of_cblock(from_rr_type, to_node);
+                            case IPIN:
+                                num_inputs_to_cblock[to_node]++;
+                                max_inputs_to_cblock = std::max(max_inputs_to_cblock,
+                                                                num_inputs_to_cblock[to_node]);
 
-                            if (cblock_counted[iseg] == false) {
-                                cblock_counted[iseg] = true;
-                                ntrans_sharing += trans_track_to_cblock_buf;
-                                ntrans_no_sharing += trans_track_to_cblock_buf;
-                            }
-                            break;
+                                iseg = seg_index_of_cblock(from_rr_type, to_node);
 
-                        default:
-                            VPR_ERROR(VPR_ERROR_ROUTE,
-                                      "in count_routing_transistors:\n"
-                                      "\tUnexpected connection from node %d (type %s) to node %d (type %s).\n",
-                                      from_node, rr_node_typename[from_rr_type], to_node, rr_node_typename[to_rr_type]);
-                            break;
+                                if (cblock_counted[iseg] == false) {
+                                    cblock_counted[iseg] = true;
+                                    ntrans_sharing += trans_track_to_cblock_buf;
+                                    ntrans_no_sharing += trans_track_to_cblock_buf;
+                                }
+                                break;
 
-                    } /* End switch on to_rr_type. */
+                            default:
+                                VPR_ERROR(VPR_ERROR_ROUTE,
+                                        "in count_routing_transistors:\n"
+                                        "\tUnexpected connection from node %d (type %s) to node %d (type %s).\n",
+                                        from_node, rr_node_typename[from_rr_type], to_node, rr_node_typename[to_rr_type]);
+                                break;
 
-                } /* End for each edge. */
+                        } /* End switch on to_rr_type. */
+
+                    } /* End for each edge. */
+
+                }
+
+
+
+                
 
                 /* Now add in the shared buffer transistors, and reset some flags. */
 

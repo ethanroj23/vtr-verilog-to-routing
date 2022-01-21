@@ -563,13 +563,28 @@ static void check_unbuffered_edges(int from_node) {
         to_num_edges = rr_graph.num_edges(RRNodeId(to_node));
         trans_matched = false;
 
-        for (to_edge = 0; to_edge < to_num_edges; to_edge++) { // ESR TODO DIRECT
-            if ((size_t) rr_graph.edge_sink_node(RRNodeId(to_node), to_edge) == from_node
-                && rr_graph.edge_switch(RRNodeId(to_node), to_edge) == from_switch_type) {
-                trans_matched = true;
-                break;
+        if( strcmp(rr_graph.rr_graph_name(), "FoldedPerTileRRGraph") == 0 ){ //ESR1
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(RRNodeId(to_node), edges);
+            for (auto edge : edges){
+                if ((size_t) edge.dest == from_node
+                    && edge.switch_id == from_switch_type) {
+                    trans_matched = true;
+                    break;
+                }
             }
         }
+        else{
+            for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
+                if ((size_t) rr_graph.edge_sink_node(RRNodeId(to_node), to_edge) == from_node
+                    && rr_graph.edge_switch(RRNodeId(to_node), to_edge) == from_switch_type) {
+                    trans_matched = true;
+                    break;
+                }
+            }
+        }
+
+        
 
         if (trans_matched == false) {
             VPR_ERROR(VPR_ERROR_ROUTE,
