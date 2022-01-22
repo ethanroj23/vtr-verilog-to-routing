@@ -44,6 +44,9 @@ class RRGraphBuilder {
     inline void set_node_type(RRNodeId id, t_rr_type type) {
         node_storage_.set_node_type(id, type);
     }
+    inline void set_node_pattern_idx(RRNodeId id, int idx) {
+        node_storage_.set_node_pattern_idx(id, idx);
+    }
     /**
      * @brief Add an existing rr_node in the node storage to the node look-up
      *

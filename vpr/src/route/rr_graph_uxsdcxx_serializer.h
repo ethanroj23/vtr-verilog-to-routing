@@ -230,8 +230,14 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using MetaReadContext = const t_metadata_dict::value_type*;
     using MetadataReadContext = t_metadata_dict_iterator;
     using NodeReadContext = const t_rr_node;
-    using EdgeReadContext = const EdgeWalker*;
-    using RrEdgesReadContext = EdgeWalker;
+    using TNodeReadContext = int;
+    using TileReadContext = int;
+    using TileWriteContext = int;
+    using TilesReadContext = int;
+    using TilesWriteContext = int;
+    // using RrGraphReadContext = int;
+    // using EdgeReadContext = const EdgeWalker*;
+    using EdgeReadContext = int;
     using TimingWriteContext = t_rr_switch_inf*;
     using SizingWriteContext = t_rr_switch_inf*;
     using SwitchWriteContext = t_rr_switch_inf*;
@@ -246,7 +252,12 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using MetaWriteContext = MetadataBind;
     using MetadataWriteContext = MetadataBind;
     using NodeWriteContext = int;
-    using EdgeWriteContext = MetadataBind;
+    using TNodeWriteContext = int;
+    using EdgeWriteContext = int;
+    using RrEdgesReadContext = int;
+    using RrEdgesWriteContext = int;
+    using SharedEdgesReadContext = int;
+    using SharedEdgesWriteContext = int;
 };
 
 class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
@@ -759,11 +770,12 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void preallocate_rr_nodes_node(void*& /*ctx*/, size_t size) final {
         rr_graph_builder_->reserve_nodes(size);
     }
-    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, uxsd::enum_node_type type) final {
+    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, unsigned int ptn_idx, uxsd::enum_node_type type) final {
         // make_room_in_vector will not allocate if preallocate_rr_nodes_node
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
         // amoritized O(1).
+        (void) ptn_idx;
         const auto& rr_graph = (*rr_graph_);
         rr_nodes_->make_room_for_node(RRNodeId(id));
         auto node = (*rr_nodes_)[id];
@@ -821,6 +833,12 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return to_uxsd_node_type(rr_graph.node_type(node.id()));
     }
 
+    inline unsigned int get_node_ptn_idx(const t_rr_node& node) final{
+        (void) node;
+        return -1;
+    }
+
+
     inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
         const auto& rr_graph = (*rr_graph_);
         auto node = (*rr_nodes_)[inode];
@@ -873,81 +891,61 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      *   <xs:attribute name="switch_id" type="xs:unsignedInt" use="required" />
      * </xs:complexType>
      */
-    inline void preallocate_rr_edges_edge(void*& /*ctx*/, size_t size) final {
-        rr_graph_builder_->reserve_edges(size);
-        if (read_edge_metadata_) {
-            rr_edge_metadata_->reserve(size);
-        }
-    }
-    inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
-        if (src_node >= rr_nodes_->size()) {
-            report_error(
-                "source_node %d is larger than rr_nodes.size() %d",
-                src_node, rr_nodes_->size());
-        }
+    // inline void preallocate_rr_edges_edge(void*& /*ctx*/, size_t size) final {
+    //     rr_graph_builder_->reserve_edges(size);
+    //     if (read_edge_metadata_) {
+    //         rr_edge_metadata_->reserve(size);
+    //     }
+    // }
+    // inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
+    //     if (src_node >= rr_nodes_->size()) {
+    //         report_error(
+    //             "source_node %d is larger than rr_nodes.size() %d",
+    //             src_node, rr_nodes_->size());
+    //     }
 
-        MetadataBind bind(strings_, empty_);
-        if (read_edge_metadata_) {
-            bind.set_edge_target(src_node, sink_node, switch_id);
-        } else {
-            bind.set_ignore();
-        }
+    //     MetadataBind bind(strings_, empty_);
+    //     if (read_edge_metadata_) {
+    //         bind.set_edge_target(src_node, sink_node, switch_id);
+    //     } else {
+    //         bind.set_ignore();
+    //     }
 
-        rr_graph_builder_->emplace_back_edge(RRNodeId(src_node), RRNodeId(sink_node), switch_id);
-        return bind;
-    }
-    inline void finish_rr_edges_edge(MetadataBind& bind) final {
-        bind.finish();
-    }
-    inline size_t num_rr_edges_edge(EdgeWalker& walker) final {
-        return walker.num_edges();
-    }
-    inline const EdgeWalker* get_rr_edges_edge(int n, EdgeWalker& walker) final {
-        size_t cur = walker.advance(n);
-        if ((ssize_t)cur != n) {
-            report_error("Incorrect edge index %zu != %d", cur, n);
-        }
-        return &walker;
-    }
+    //     rr_graph_builder_->emplace_back_edge(RRNodeId(src_node), RRNodeId(sink_node), switch_id);
+    //     return bind;
+    // }
+    // inline void finish_rr_edges_edge(MetadataBind& bind) final {
+    //     bind.finish();
+    // }
+    // inline size_t num_rr_edges_edge(EdgeWalker& walker) final {
+    //     return walker.num_edges();
+    // }
+    // inline const EdgeWalker* get_rr_edges_edge(int n, EdgeWalker& walker) final {
+    //     size_t cur = walker.advance(n);
+    //     if ((ssize_t)cur != n) {
+    //         report_error("Incorrect edge index %zu != %d", cur, n);
+    //     }
+    //     return &walker;
+    // }
 
-    inline unsigned int get_edge_sink_node(const EdgeWalker*& walker) final {
-        return walker->current_sink_node();
+    inline int get_edge_dx(int& ctx){
+        return ctx;
     }
-    inline unsigned int get_edge_src_node(const EdgeWalker*& walker) final {
-        return walker->current_src_node();
+    inline int get_edge_dy(int& ctx){
+        return ctx;
     }
-    inline unsigned int get_edge_switch_id(const EdgeWalker*& walker) final {
-        return walker->current_switch_id_node();
+    inline unsigned int get_edge_switch_id(int& ctx){
+        return ctx;
     }
-
-    inline MetadataBind init_edge_metadata(MetadataBind& bind) final {
-        return bind;
-    }
-    inline void finish_edge_metadata(MetadataBind& bind) final {
-        bind.finish();
-    }
-    inline t_metadata_dict_iterator get_edge_metadata(const EdgeWalker*& walker) final {
-        return t_metadata_dict_iterator(&rr_edge_metadata_->find(
-                                                              std::make_tuple(
-                                                                  walker->current_src_node(),
-                                                                  walker->current_sink_node(),
-                                                                  walker->current_switch_id_node()))
-                                             ->second,
-                                        report_error_);
-    }
-    inline bool has_edge_metadata(const EdgeWalker*& walker) final {
-        return rr_edge_metadata_->find(
-                   std::make_tuple(
-                       walker->current_src_node(),
-                       walker->current_sink_node(),
-                       walker->current_switch_id_node()))
-               != rr_edge_metadata_->end();
+    inline unsigned int get_edge_tile_idx(int& ctx){
+        return ctx;
     }
 
-    inline void* init_rr_graph_rr_edges(void*& /*ctx*/) final {
-        return nullptr;
+    inline int init_rr_graph_rr_edges(void*& /*ctx*/) final {
+        return -1;
     }
-    inline void finish_rr_graph_rr_edges(void*& /*ctx*/) final {
+
+    inline void finish_rr_graph_rr_edges(int& /*ctx*/) final {
         /*initialize a vector that keeps track of the number of wire to ipin switches
          * There should be only one wire to ipin switch. In case there are more, make sure to
          * store the most frequent switch */
@@ -999,21 +997,124 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         *wire_to_rr_ipin_switch_ = most_frequent_switch.first;
     }
 
-    inline EdgeWalker get_rr_graph_rr_edges(void*& /*ctx*/) final {
-        EdgeWalker walker;
-        walker.initialize(rr_nodes_, rr_graph_);
-        return walker;
+    inline int get_rr_graph_rr_edges(void*& /*ctx*/) final {
+        return -1;
     }
 
-    /** Generated for complex type "channels":
-     * <xs:complexType name="channels">
-     *   <xs:sequence>
-     *     <xs:element name="channel" type="channel" />
-     *     <xs:element maxOccurs="unbounded" name="x_list" type="x_list" />
-     *     <xs:element maxOccurs="unbounded" name="y_list" type="y_list" />
-     *   </xs:sequence>
-     * </xs:complexType>
-     */
+    inline unsigned int get_t_node_id(int& node) final {
+        return node;
+    }
+    inline unsigned int get_tile_x(int& coord) final {
+        return coord;
+    }
+    inline unsigned int get_tile_y(int& coord) final {
+        return coord;
+    }
+    inline void finish_tile_t_node(int& unused) final {
+        (void) unused;
+        printf("finish_tile_t_node\n");
+    }
+	inline void preallocate_tile_t_node(int& ctx, size_t size){
+        (void) ctx;
+        (void) size;
+    }
+	inline int add_tile_t_node(int& ctx, unsigned int id){
+        (void) ctx;
+        return id;
+    }
+	inline size_t num_tile_t_node(int& ctx){
+        return ctx;
+    }
+	inline int get_tile_t_node(int n, int& ctx){
+        (void) ctx;
+        return n;
+    }
+
+
+    inline void preallocate_tiles_tile(int& /*ctx*/, size_t size) final {
+        (void) size;
+        //could reserve space here...
+    }
+    inline int add_tiles_tile(int& ctx, unsigned int x, unsigned int y) final {
+        (void) x;
+        (void) y;
+        return ctx;
+    }
+
+    inline void finish_tiles_tile(int& ctx) final {
+        (void) ctx;
+        printf("finish_tiles_tile\n");
+    }
+
+    inline size_t num_tiles_tile(int& ctx) final {
+        return ctx;
+    }
+
+    inline int get_tiles_tile(int n, int& ctx) final {
+        (void) ctx;
+        return n;
+    }
+
+
+    inline unsigned int get_shared_edges_id(int& edge) final {
+        return edge;
+    }
+
+    inline void finish_shared_edges_edge(int& ctx) final {
+        (void) ctx;
+        printf("finish_tile_t_node\n");
+    }
+    inline int get_shared_edges_edge(int n, int& ctx) final {
+        (void) n;
+        return ctx;
+    }
+
+    inline void preallocate_rr_edges_shared_edges(int& /*ctx*/, size_t size) final {
+        //could reserve space here...
+    }
+    inline int add_rr_edges_shared_edges(int& ctx, unsigned int id) final {
+        return id;
+    }
+    inline void finish_rr_edges_shared_edges(int& ctx) final {
+
+    }
+    inline size_t num_rr_edges_shared_edges(int& ctx) final {
+        return ctx;
+    }
+    inline int get_rr_edges_shared_edges(int n, int& ctx) final {
+        return n;
+    }
+
+	inline void preallocate_shared_edges_edge(int& ctx, size_t size){
+        (void) ctx;
+        (void) size;
+    }
+	inline int add_shared_edges_edge(int& ctx, int dx, int dy, unsigned int switch_id, unsigned int tile_idx){
+        (void) ctx;
+        (void) dx;
+        (void) dy;
+        (void) switch_id;
+        (void) tile_idx;
+        return -1;
+    }
+	inline size_t num_shared_edges_edge(int& ctx){
+        return ctx;
+    }
+
+
+
+    inline int init_rr_graph_tiles(void*& /*ctx*/) final {
+        return -1;
+    }
+    
+    inline void finish_rr_graph_tiles(int& ctx) final {
+        (void) ctx;
+    }
+
+    inline int get_rr_graph_tiles(void*& /*ctx*/) final {
+        return -1;
+    }
+
     inline int get_channel_chan_width_max(void*& /*ctx*/) final {
         return chan_width_->max;
     }

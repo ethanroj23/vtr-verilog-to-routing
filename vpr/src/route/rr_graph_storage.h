@@ -477,6 +477,10 @@ class t_rr_graph_storage {
     void set_node_capacity(RRNodeId, short new_capacity);
     void set_node_direction(RRNodeId, Direction new_direction);
 
+    inline void set_node_pattern_idx(RRNodeId id, int new_idx) {
+        node_coords_[id].node_pattern_idx = new_idx;
+    }
+
     /* Add a side to the node abbributes
      * This is the function to use when you just add a new side WITHOUT reseting side attributes
      */
@@ -616,6 +620,41 @@ class t_rr_graph_storage {
         return side_tt[size_t(side)];
     }
 
+    using SharedNodeDataIdx = uint16_t; // 2 Bytes
+    using NodePatternIdx = uint32_t; // 2 Bytes
+    using TileIdx = uint16_t; // 2 Bytes
+    using DxDyIdx = uint16_t; // 2 Bytes
+    
+    struct t_folded_dir_side {
+      uint16_t capacity;
+      union {
+          Direction direction; //Valid only for CHANX/CHANY
+          unsigned char sides = 0x0; //Valid only for IPINs/OPINs
+      } dir_side; // 1 Byte
+    };
+
+    struct t_folded_rc {
+      uint16_t xhigh;
+      uint16_t yhigh;
+      int16_t cost_index; // 2 Bytes
+      uint16_t rc_index;
+    };
+
+    struct t_folded_coords {
+      uint16_t xlow;
+      uint16_t ylow;
+      NodePatternIdx node_pattern_idx;
+    };
+
+    struct t_folded_edge_data { //try this - adjust this structure so that it contains dx, dy instead of dxdyidx
+      // DxDyIdx dx_dy_idx = 0; // invalid
+      short dx;
+      short dy;
+      short switch_id;
+      TileIdx tile_idx = -1;
+    };
+
+
   private:
     friend struct edge_swapper;
     friend class edge_sort_iterator;
@@ -665,6 +704,20 @@ class t_rr_graph_storage {
     vtr::vector<RREdgeId, RRNodeId> edge_src_node_;
     vtr::vector<RREdgeId, RRNodeId> edge_dest_node_;
     vtr::vector<RREdgeId, short> edge_switch_;
+
+
+
+
+
+    // FoldedPerTile data
+    vtr::vector<RRNodeId, t_folded_coords> node_coords_; // goes from RRNodeId to x, y, node_pattern_idx
+    vtr::vector<RRNodeId, t_folded_rc> node_to_rc_; // goes from RRNodeId to xhigh, yhigh, cost_index, rc_index
+    vtr::vector<RRNodeId, t_folded_dir_side> node_to_dir_side_; // goes from RRNodeId to dir_side, capacity
+    vtr::vector<RRNodeId, t_rr_type> node_type_; // goes from RRNodeId to node type
+
+    std::vector< std::vector< std::vector<RRNodeId>>> tile_to_node_; // goes from [x, y, tile_idx] to RRNodeId
+
+    std::vector<std::vector<t_folded_edge_data>> shared_edges_; // goes from NodePatternIdx to array of edges
 
     /***************
      * State flags *

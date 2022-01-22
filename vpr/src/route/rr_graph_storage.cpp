@@ -663,6 +663,8 @@ void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
     node_storage_[id].type_ = new_type;
 }
 
+
+
 void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
     auto& node = node_storage_[id];
     if (x1 < x2) {
