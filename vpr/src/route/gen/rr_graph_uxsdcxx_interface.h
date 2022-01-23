@@ -494,7 +494,7 @@ public:
 	virtual inline unsigned int get_tile_x(typename ContextTypes::TileReadContext &ctx) = 0;
 	virtual inline unsigned int get_tile_y(typename ContextTypes::TileReadContext &ctx) = 0;
 	virtual inline void preallocate_tile_t_node(typename ContextTypes::TileWriteContext &ctx, size_t size) = 0;
-	virtual inline typename ContextTypes::TNodeWriteContext add_tile_t_node(typename ContextTypes::TileWriteContext &ctx, unsigned int id) = 0;
+	virtual inline typename ContextTypes::TNodeWriteContext add_tile_t_node(typename ContextTypes::TileWriteContext &ctx, unsigned int id, size_t x, size_t y) = 0;
 	virtual inline void finish_tile_t_node(typename ContextTypes::TNodeWriteContext &ctx) = 0;
 	virtual inline size_t num_tile_t_node(typename ContextTypes::TileReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::TNodeReadContext get_tile_t_node(int n, typename ContextTypes::TileReadContext &ctx) = 0;

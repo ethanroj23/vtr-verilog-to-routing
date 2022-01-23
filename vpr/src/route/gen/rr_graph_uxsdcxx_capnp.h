@@ -863,7 +863,7 @@ inline void load_tile_capnp_type(const ucap::Tile::Reader &root, T &out, Context
 		auto data = root.getTNodes();
 		out.preallocate_tile_t_node(context, data.size());
 		for(const auto & el : data) {
-			auto child_context = out.add_tile_t_node(context, el.getId());
+			auto child_context = out.add_tile_t_node(context, el.getId(), 0, 0); // last 2 params are for xml version
 			load_t_node_capnp_type(el, out, child_context, report_error, stack);
 			out.finish_tile_t_node(child_context);
 			stack->back().second += 1;

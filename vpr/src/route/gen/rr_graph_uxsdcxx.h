@@ -107,7 +107,7 @@ template <class T, typename Context>
 inline void load_t_node(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 inline void load_t_node_required_attributes(const pugi::xml_node &root, unsigned int * id, const std::function<void(const char*)> * report_error);
 template <class T, typename Context>
-inline void load_tile(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
+inline void load_tile(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug, size_t x, size_t y);
 inline void load_tile_required_attributes(const pugi::xml_node &root, unsigned int * x, unsigned int * y, const std::function<void(const char*)> * report_error);
 template <class T, typename Context>
 inline void load_tiles(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
@@ -3791,7 +3791,7 @@ constexpr int gstate_t_tile[NUM_T_TILE_STATES][NUM_T_TILE_INPUTS] = {
 	{0},
 };
 template<class T, typename Context>
-inline void load_tile(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
+inline void load_tile(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug, size_t x, size_t y){
 	(void)root;
 	(void)out;
 	(void)context;
@@ -3835,7 +3835,7 @@ inline void load_tile(const pugi::xml_node &root, T &out, Context &context, cons
 				unsigned int t_node_id;
 				memset(&t_node_id, 0, sizeof(t_node_id));
 				load_t_node_required_attributes(node, &t_node_id, report_error);
-				auto child_context = out.add_tile_t_node(context, t_node_id);
+				auto child_context = out.add_tile_t_node(context, t_node_id, x, y);
 				load_t_node(node, out, child_context, report_error, offset_debug);
 				out.finish_tile_t_node(child_context);
 			}
@@ -3903,7 +3903,7 @@ inline void load_tiles(const pugi::xml_node &root, T &out, Context &context, con
 				memset(&tile_y, 0, sizeof(tile_y));
 				load_tile_required_attributes(node, &tile_x, &tile_y, report_error);
 				auto child_context = out.add_tiles_tile(context, tile_x, tile_y);
-				load_tile(node, out, child_context, report_error, offset_debug);
+				load_tile(node, out, child_context, report_error, offset_debug, tile_x, tile_y);
 				out.finish_tiles_tile(child_context);
 			}
 			break;

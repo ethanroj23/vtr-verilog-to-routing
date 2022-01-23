@@ -138,6 +138,22 @@ class RRGraphBuilder {
     inline void reserve_edges(size_t num_edges) {
         node_storage_.reserve_edges(num_edges);
     }
+    inline void add_tile_to_node(size_t x, size_t y) {
+        node_storage_.add_tile_to_node(x, y);
+    }
+    inline void add_tile_to_node_id(size_t x, size_t y, size_t id) {
+        node_storage_.add_tile_to_node_id(x, y, id);
+    }
+    inline void add_shared_edges() {
+        node_storage_.add_shared_edges();
+    }
+    inline void add_shared_edges_edge(int dx, int dy, unsigned int switch_id, unsigned int tile_idx) {
+        node_storage_.add_shared_edges_edge(dx, dy, switch_id, tile_idx);
+    }
+    inline void add_node_to_rc() {
+        node_storage_.add_node_to_rc();
+    }
+
 
     /** @brief emplace_back_edge; It add one edge. This method is efficient if reserve_edges was called with
      * the number of edges present in the graph. */
@@ -190,12 +206,12 @@ class RRGraphBuilder {
 
     /** @brief This function reserve storage for RR nodes. */
     inline void reserve_nodes(size_t size) {
-        node_storage_.reserve(size);
+        node_storage_.reserve_nodes(size);
     }
 
     /** @brief This function resize node storage to accomidate size RR nodes. */
     inline void resize_nodes(size_t size) {
-        node_storage_.resize(size);
+        node_storage_.resize_nodes(size);
     }
 
     /** brief Validate that edge data is partitioned correctly
@@ -235,6 +251,7 @@ class RRGraphBuilder {
      */
     /* node-level storage including edge storages */
     t_rr_graph_storage& node_storage_;
+
     /* Fast look-up for rr nodes */
     RRSpatialLookup node_lookup_;
 

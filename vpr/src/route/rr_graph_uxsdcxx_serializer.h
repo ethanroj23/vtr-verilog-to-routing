@@ -775,7 +775,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
         // amoritized O(1).
-        (void) ptn_idx;
         const auto& rr_graph = (*rr_graph_);
         rr_nodes_->make_room_for_node(RRNodeId(id));
         auto node = (*rr_nodes_)[id];
@@ -783,6 +782,9 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         rr_graph_builder_->set_node_type(node_id, from_uxsd_node_type(type));
         rr_graph_builder_->set_node_capacity(node_id, capacity);
+        rr_graph_builder_->set_node_pattern_idx(node_id, ptn_idx);
+        rr_graph_builder_->add_node_to_rc();
+        // vtr::vector<RRNodeId, t_folded_rc> node_to_rc_; // goes from RRNodeId to xhigh, yhigh, cost_index, rc_index
 
         switch (rr_graph.node_type(node.id())) {
             case CHANX:
@@ -1012,14 +1014,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     inline void finish_tile_t_node(int& unused) final {
         (void) unused;
-        printf("finish_tile_t_node\n");
     }
 	inline void preallocate_tile_t_node(int& ctx, size_t size){
         (void) ctx;
         (void) size;
     }
-	inline int add_tile_t_node(int& ctx, unsigned int id){
+	inline int add_tile_t_node(int& ctx, unsigned int id, size_t x, size_t y){
         (void) ctx;
+        rr_graph_builder_->add_tile_to_node_id(x, y, id);
         return id;
     }
 	inline size_t num_tile_t_node(int& ctx){
@@ -1033,11 +1035,9 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
     inline void preallocate_tiles_tile(int& /*ctx*/, size_t size) final {
         (void) size;
-        //could reserve space here...
     }
     inline int add_tiles_tile(int& ctx, unsigned int x, unsigned int y) final {
-        (void) x;
-        (void) y;
+        rr_graph_builder_->add_tile_to_node(x, y);
         return ctx;
     }
 
@@ -1062,7 +1062,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
     inline void finish_shared_edges_edge(int& ctx) final {
         (void) ctx;
-        printf("finish_tile_t_node\n");
     }
     inline int get_shared_edges_edge(int n, int& ctx) final {
         (void) n;
@@ -1070,18 +1069,23 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
 
     inline void preallocate_rr_edges_shared_edges(int& /*ctx*/, size_t size) final {
+        (void) size;
         //could reserve space here...
     }
     inline int add_rr_edges_shared_edges(int& ctx, unsigned int id) final {
+        (void) ctx;
+        // id is actually unnecessary here...
+        rr_graph_builder_->add_shared_edges();
         return id;
     }
     inline void finish_rr_edges_shared_edges(int& ctx) final {
-
+        (void) ctx;
     }
     inline size_t num_rr_edges_shared_edges(int& ctx) final {
         return ctx;
     }
     inline int get_rr_edges_shared_edges(int n, int& ctx) final {
+        (void) ctx;
         return n;
     }
 
@@ -1091,10 +1095,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
 	inline int add_shared_edges_edge(int& ctx, int dx, int dy, unsigned int switch_id, unsigned int tile_idx){
         (void) ctx;
-        (void) dx;
-        (void) dy;
-        (void) switch_id;
-        (void) tile_idx;
+        rr_graph_builder_->add_shared_edges_edge(dx, dy, switch_id, tile_idx);
         return -1;
     }
 	inline size_t num_shared_edges_edge(int& ctx){

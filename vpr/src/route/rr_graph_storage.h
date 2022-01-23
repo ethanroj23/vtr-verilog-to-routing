@@ -159,7 +159,7 @@ class t_rr_graph_storage {
      ****************/
 
     t_rr_type node_type(RRNodeId id) const {
-        return node_storage_[id].type_;
+        return node_type_[id];
     }
     const char* node_type_string(RRNodeId id) const;
 
@@ -170,23 +170,23 @@ class t_rr_graph_storage {
     float node_C(RRNodeId id) const;
 
     short node_xlow(RRNodeId id) const {
-        return node_storage_[id].xlow_;
+        return node_coords_[id].xlow;
     }
     short node_ylow(RRNodeId id) const {
-        return node_storage_[id].ylow_;
+        return node_coords_[id].ylow;
     }
     short node_xhigh(RRNodeId id) const {
-        return node_storage_[id].xhigh_;
+        return node_to_rc_[id].xhigh;
     }
     short node_yhigh(RRNodeId id) const {
-        return node_storage_[id].yhigh_;
+        return node_to_rc_[id].yhigh;
     }
 
     short node_capacity(RRNodeId id) const {
-        return node_storage_[id].capacity_;
+        return node_to_dir_side_[id].capacity;
     }
     RRIndexedDataId node_cost_index(RRNodeId id) const {
-        return RRIndexedDataId(node_storage_[id].cost_index_);
+        return RRIndexedDataId(node_to_rc_[id].cost_index);
     }
 
     Direction node_direction(RRNodeId id) const {
@@ -478,8 +478,57 @@ class t_rr_graph_storage {
     void set_node_direction(RRNodeId, Direction new_direction);
 
     inline void set_node_pattern_idx(RRNodeId id, int new_idx) {
-        node_coords_[id].node_pattern_idx = new_idx;
+        t_folded_coords initial {
+            0,
+            0,
+            new_idx
+        };
+        node_coords_.push_back(initial);
     }
+    inline void reserve_nodes(int size){
+        node_storage_.reserve(size);
+        node_coords_.reserve(size);
+        node_to_rc_.reserve(size);
+        node_to_dir_side_.reserve(size);
+        node_type_.reserve(size);
+    }
+    inline void resize_nodes(int size){
+        node_storage_.resize(size);
+        node_coords_.resize(size);
+        node_to_rc_.resize(size);
+        node_to_dir_side_.resize(size);
+        node_type_.resize(size);
+    }
+    inline void add_tile_to_node(size_t x, size_t y){
+        tile_to_node_.resize(x+1);
+        tile_to_node_[x].resize(y+1);
+    }
+    inline void add_tile_to_node_id(size_t x, size_t y, size_t id) {
+        tile_to_node_[x][y].push_back(RRNodeId(id));
+    }
+    inline void add_shared_edges() {
+        std::vector<t_folded_edge_data> next;
+        shared_edges_.push_back(next);
+    }
+    inline void add_shared_edges_edge(int dx, int dy, unsigned int switch_id, unsigned int tile_idx) {
+        t_folded_edge_data edge{
+            dx,
+            dy,
+            switch_id,
+            tile_idx
+        };
+        shared_edges_[shared_edges_.size()-1].push_back(edge);
+    }
+    inline void add_node_to_rc() {
+        t_folded_rc node_to_rc{
+            0,
+            0,
+            0,
+            0
+        };
+        node_to_rc_.push_back(node_to_rc);
+    }
+
 
     /* Add a side to the node abbributes
      * This is the function to use when you just add a new side WITHOUT reseting side attributes

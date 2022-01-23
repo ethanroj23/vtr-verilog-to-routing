@@ -322,46 +322,47 @@ void t_rr_graph_storage::assign_first_edges() {
     // Last element is a dummy element
     node_first_edge_.resize(node_storage_.size() + 1);
 
-    VTR_ASSERT(std::is_sorted(
-        edge_src_node_.begin(),
-        edge_src_node_.end()));
+    // VTR_ASSERT(std::is_sorted(
+    //     edge_src_node_.begin(),
+    //     edge_src_node_.end()));
 
-    size_t node_id = 0;
-    size_t first_id = 0;
-    size_t second_id = 0;
-    size_t num_edges = edge_src_node_.size();
-    VTR_ASSERT(edge_dest_node_.size() == num_edges);
-    VTR_ASSERT(edge_switch_.size() == num_edges);
-    while (true) {
-        VTR_ASSERT(first_id < num_edges);
-        VTR_ASSERT(second_id < num_edges);
-        size_t current_node_id = size_t(edge_src_node_[RREdgeId(second_id)]);
-        if (node_id < current_node_id) {
-            // All edges belonging to node_id are assigned.
-            while (node_id < current_node_id) {
-                // Store any edges belongs to node_id.
-                node_first_edge_[RRNodeId(node_id)] = RREdgeId(first_id);
-                first_id = second_id;
-                node_id += 1;
-                VTR_ASSERT(node_first_edge_.size());
-            }
+    size_t cur_edge = 0;
 
-            VTR_ASSERT(node_id == current_node_id);
-            node_first_edge_[RRNodeId(node_id)] = RREdgeId(second_id);
-        } else {
-            second_id += 1;
-            if (second_id == num_edges) {
-                break;
-            }
-        }
+    for (size_t node=0; node < node_coords_.size(); node++){
+        node_first_edge_[RRNodeId(node)] = RREdgeId(cur_edge);
+        size_t num_edges = shared_edges_[node_coords_[RRNodeId(node)].node_pattern_idx].size();
+        cur_edge += num_edges;
     }
+    node_first_edge_[RRNodeId(node_coords_.size())] = RREdgeId(cur_edge);
 
-    // All remaining nodes have no edges, set as such.
-    for (size_t inode = node_id + 1; inode < node_first_edge_.size(); ++inode) {
-        node_first_edge_[RRNodeId(inode)] = RREdgeId(second_id);
-    }
+    // while (true) {
+    //     size_t current_node_id = size_t(edge_src_node_[RREdgeId(second_id)]);
+    //     if (node_id < current_node_id) {
+    //         // All edges belonging to node_id are assigned.
+    //         while (node_id < current_node_id) {
+    //             // Store any edges belongs to node_id.
+    //             node_first_edge_[RRNodeId(node_id)] = RREdgeId(first_id);
+    //             first_id = second_id;
+    //             node_id += 1;
+    //             VTR_ASSERT(node_first_edge_.size());
+    //         }
 
-    VTR_ASSERT_SAFE(verify_first_edges());
+    //         VTR_ASSERT(node_id == current_node_id);
+    //         node_first_edge_[RRNodeId(node_id)] = RREdgeId(second_id);
+    //     } else {
+    //         second_id += 1;
+    //         if (second_id == num_edges) {
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // // All remaining nodes have no edges, set as such.
+    // for (size_t inode = node_id + 1; inode < node_first_edge_.size(); ++inode) {
+    //     node_first_edge_[RRNodeId(inode)] = RREdgeId(second_id);
+    // }
+
+    // VTR_ASSERT_SAFE(verify_first_edges());
 }
 
 bool t_rr_graph_storage::verify_first_edges() const {
@@ -502,10 +503,10 @@ void t_rr_graph_storage::partition_edges() {
     //    by assign_first_edges()
     //  - Edges within a source node have the configurable edges before the
     //    non-configurable edges.
-    std::sort(
-        edge_sort_iterator(this, 0),
-        edge_sort_iterator(this, edge_src_node_.size()),
-        edge_compare_src_node_and_configurable_first(device_ctx.rr_switch_inf));
+    // std::sort(
+    //     edge_sort_iterator(this, 0),
+    //     edge_sort_iterator(this, edge_src_node_.size()),
+    //     edge_compare_src_node_and_configurable_first(device_ctx.rr_switch_inf));
 
     partitioned_ = true;
 
@@ -660,65 +661,70 @@ short t_rr_graph_storage::node_class_num(RRNodeId id) const {
 }
 
 void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
-    node_storage_[id].type_ = new_type;
+    node_type_.push_back(new_type);
 }
 
 
 
 void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
-    auto& node = node_storage_[id];
+    auto& node = node_coords_[id]; // xlow, ylow
+    auto& node_rc = node_to_rc_[id]; // xhigh, yhigh
+    
     if (x1 < x2) {
-        node.xlow_ = x1;
-        node.xhigh_ = x2;
+        node.xlow = x1;
+        node_rc.xhigh = x2;
     } else {
-        node.xlow_ = x2;
-        node.xhigh_ = x1;
+        node.xlow = x2;
+        node_rc.xhigh = x1;
     }
 
     if (y1 < y2) {
-        node.ylow_ = y1;
-        node.yhigh_ = y2;
+        node.ylow = y1;
+        node_rc.yhigh = y2;
     } else {
-        node.ylow_ = y2;
-        node.yhigh_ = y1;
+        node.ylow = y2;
+        node_rc.yhigh = y1;
     }
 }
 
 void t_rr_graph_storage::set_node_cost_index(RRNodeId id, RRIndexedDataId new_cost_index) {
-    auto& node = node_storage_[id];
-    if ((size_t)new_cost_index >= std::numeric_limits<decltype(node.cost_index_)>::max()) {
+    auto& node = node_to_rc_[id];
+    if ((size_t)new_cost_index >= std::numeric_limits<decltype(node.cost_index)>::max()) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set cost_index_ %zu above cost_index storage max value.",
                         new_cost_index);
     }
-    node.cost_index_ = (size_t)new_cost_index;
+    node.cost_index = (size_t)new_cost_index;
 }
 
 void t_rr_graph_storage::set_node_rc_index(RRNodeId id, NodeRCIndex new_rc_index) {
-    node_storage_[id].rc_index_ = (size_t)new_rc_index;
+    node_to_rc_[id].rc_index = (size_t)new_rc_index;
 }
 
 void t_rr_graph_storage::set_node_capacity(RRNodeId id, short new_capacity) {
-    VTR_ASSERT(new_capacity >= 0);
-    node_storage_[id].capacity_ = new_capacity;
+    t_folded_dir_side node_folded_dir_side{
+        new_capacity, 
+        {Direction::NUM_DIRECTIONS}
+    };
+    node_to_dir_side_.push_back(node_folded_dir_side);
 }
 
 void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction) {
     if (node_type(id) != CHANX && node_type(id) != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
     }
-    node_storage_[id].dir_side_.direction = new_direction;
+    node_to_dir_side_[id].dir_side.direction = new_direction;
 }
 
 void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
     if (node_type(id) != IPIN && node_type(id) != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
     }
-    std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;
+    std::bitset<NUM_SIDES> side_bits = node_to_dir_side_[id].dir_side.sides;
     side_bits[size_t(new_side)] = true;
     if (side_bits.to_ulong() > CHAR_MAX) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node %u", SIDE_STRING[new_side], size_t(id));
     }
-    node_storage_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
+    node_to_dir_side_[id].dir_side.sides = static_cast<unsigned char>(side_bits.to_ulong());
 }
 
 short t_rr_graph_view::node_ptc_num(RRNodeId id) const {
