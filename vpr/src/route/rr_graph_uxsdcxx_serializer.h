@@ -902,7 +902,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     // inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
     //     if (src_node >= rr_nodes_->size()) {
     //         report_error(
-    //             "source_node %d is larger than rr_nodes.size() %d",
+    //             "source_node %d is larger than rr_graph.size() %d",
     //             src_node, rr_nodes_->size());
     //     }
 
@@ -970,7 +970,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
                 size_t switch_id = rr_nodes_->edge_switch(RRNodeId(source_node), iconn);
                 if (sink_node >= rr_nodes_->size()) {
                     report_error(
-                        "sink_node %zu is larger than rr_nodes.size() %zu",
+                        "sink_node %zu is larger than rr_graph.size() %zu",
                         sink_node, rr_nodes_->size());
                 }
 
@@ -1043,7 +1043,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
     inline void finish_tiles_tile(int& ctx) final {
         (void) ctx;
-        printf("finish_tiles_tile\n");
     }
 
     inline size_t num_tiles_tile(int& ctx) final {

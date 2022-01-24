@@ -283,7 +283,7 @@ template<typename Heap>
 std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_paths_from_heap(
     const t_conn_cost_params cost_params,
     t_bb bounding_box) {
-    std::vector<t_heap> cheapest_paths(rr_nodes_.size());
+    std::vector<t_heap> cheapest_paths(rr_graph_->size());
 
     VTR_ASSERT_SAFE(heap_.is_valid());
 
@@ -393,7 +393,6 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //For each node associated with the current heap element, expand all of it's neighbors
     int from_node_int = current->index;
     RRNodeId from_node(from_node_int);
-    auto edges = rr_nodes_.edge_range(from_node);
 
     // This is a simple prefetch that prefetches:
     //  - RR node data reachable from this node
@@ -412,19 +411,21 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - directrf_stratixiv_arch_timing.blif
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
-    for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_nodes_.edge_sink_node(from_edge);
-        rr_nodes_.prefetch_node(to_node);
+    std::vector<t_edge_with_id> edges;
+    rr_graph_->edge_range_with_id_direct(from_node, edges);
+    // for (auto edge : edges) { // ESR remove this prefetch for now
+    //     RRNodeId to_node = edge.dest;
+    //     rr_graph_->prefetch_node(to_node);
 
-        int switch_idx = rr_nodes_.edge_switch(from_edge);
-        VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
-    }
+    //     int switch_idx = edge.switch_id;
+    //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
+    // }
 
-    for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_nodes_.edge_sink_node(from_edge);
+    for (auto edge : edges) {
+        RRNodeId to_node = edge.dest;
         timing_driven_expand_neighbour(current,
                                        from_node_int,
-                                       from_edge,
+                                       edge.edge_id,
                                        size_t(to_node),
                                        cost_params,
                                        bounding_box,
@@ -678,7 +679,8 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
      */
 
     //Info for the switch connecting from_node to_node
-    int iswitch = rr_nodes_.edge_switch(from_edge);
+    // int iswitch = rr_nodes_.edge_switch(from_edge);
+    int iswitch = rr_graph_->edge_switch(from_edge);
     bool switch_buffered = rr_switch_inf_[iswitch].buffered();
     bool reached_configurably = rr_switch_inf_[iswitch].configurable();
     float switch_R = rr_switch_inf_[iswitch].R;

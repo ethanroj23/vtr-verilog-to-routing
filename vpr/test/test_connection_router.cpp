@@ -79,7 +79,7 @@ static float do_one_route(int source_node, int sink_node, const t_router_opts& r
 // Find a source and a sink by walking edges.
 std::tuple<size_t, size_t, int> find_source_and_sink() {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_graph = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     // Current longest walk
     std::tuple<size_t, size_t, int> longest = std::make_tuple(0, 0, 0);
@@ -89,8 +89,8 @@ std::tuple<size_t, size_t, int> find_source_and_sink() {
         RRNodeId source(id), sink = source;
         for (int hops = 0; hops < kMaxHops; hops++) {
             // Take the first edge, if there is one.
-            auto edge = rr_graph.first_edge(sink);
-            if (edge == rr_graph.last_edge(sink)) {
+            auto edge = rr_graph.node_first_edge(sink);
+            if (edge == rr_graph.node_last_edge(sink)) {
                 break;
             }
             sink = rr_graph.edge_sink_node(edge);

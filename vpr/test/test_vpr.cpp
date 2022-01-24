@@ -183,7 +183,7 @@ TEST_CASE("read_rr_graph_metadata", "[vpr]") {
     const auto& device_ctx = g_vpr_ctx.device();
 
     // recompute ordering from 'random_shuffle'
-    std::vector<int> src_order(device_ctx.rr_nodes.size()); // new id -> old id
+    std::vector<int> src_order(device_ctx.rr_graph.size()); // new id -> old id
     std::iota(src_order.begin(), src_order.end(), 0);       // Initialize to [0, 1, 2 ...]
     std::mt19937 g(1);
     std::shuffle(src_order.begin(), src_order.end(), g);

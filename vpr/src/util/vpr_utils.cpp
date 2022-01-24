@@ -1799,7 +1799,7 @@ void print_switch_usage() {
     switch_fanin_delay = new std::map<int, float>[device_ctx.num_arch_switches];
     // a node can have multiple inward switches, so
     // map key: switch index; map value: count (fanin)
-    std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_nodes.size()];
+    std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_graph.size()];
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         int num_edges = rr_graph.num_edges(inode);
         for (int iedge = 0; iedge < num_edges; iedge++) {

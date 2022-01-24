@@ -1290,7 +1290,7 @@ bool verify_rr_node_indices(const DeviceGrid& grid,
         }
     }
 
-    if (rr_node_counts.size() != rr_nodes.size()) {
+    if (rr_node_counts.size() != rr_graph.size()) {
         VPR_ERROR(VPR_ERROR_ROUTE, "Mismatch in number of unique RR nodes in rr_nodes (%zu) and rr_node_indices (%zu)",
                   rr_nodes.size(),
                   rr_node_counts.size());

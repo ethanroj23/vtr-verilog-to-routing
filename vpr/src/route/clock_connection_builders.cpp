@@ -96,7 +96,7 @@ RRNodeId RoutingToClockConnection::create_virtual_clock_network_sink_node(int x,
     auto& rr_graph_builder = device_ctx.rr_graph_builder;
     auto& node_lookup = device_ctx.rr_graph_builder.node_lookup();
     rr_graph.emplace_back();
-    RRNodeId node_index = RRNodeId(rr_graph.size() - 1);
+    RRNodeId node_index = RRNodeId(temp_rr_graph.size() - 1);
 
     //Determine the a valid PTC
     std::vector<RRNodeId> nodes_at_loc = node_lookup.find_grid_nodes_at_all_sides(x, y, SINK);
@@ -119,9 +119,9 @@ RRNodeId RoutingToClockConnection::create_virtual_clock_network_sink_node(int x,
 
     // Use a generic way when adding nodes to lookup.
     // However, since the SINK node has the same xhigh/xlow as well as yhigh/ylow, we can probably use a shortcut
-    for (int ix = rr_graph.node_xlow(node_index); ix <= rr_graph.node_xhigh(node_index); ++ix) {
-        for (int iy = rr_graph.node_ylow(node_index); iy <= rr_graph.node_yhigh(node_index); ++iy) {
-            node_lookup.add_node(node_index, ix, iy, rr_graph.node_type(node_index), temp_rr_graph.node_class_num(node_index));
+    for (int ix = temp_rr_graph.node_xlow(node_index); ix <= temp_rr_graph.node_xhigh(node_index); ++ix) {
+        for (int iy = temp_rr_graph.node_ylow(node_index); iy <= temp_rr_graph.node_yhigh(node_index); ++iy) {
+            node_lookup.add_node(node_index, ix, iy, temp_rr_graph.node_type(node_index), temp_rr_graph.node_class_num(node_index));
         }
     }
 

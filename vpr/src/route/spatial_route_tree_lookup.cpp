@@ -33,12 +33,12 @@ void update_route_tree_spatial_lookup_recur(t_rt_node* rt_node, SpatialRouteTree
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    auto& rr_node = device_ctx.rr_nodes[rt_node->inode];
+    const auto& rr_node = RRNodeId(rt_node->inode);
 
-    int bin_xlow = grid_to_bin_x(rr_graph.node_xlow(rr_node.id()), spatial_lookup);
-    int bin_ylow = grid_to_bin_y(rr_graph.node_ylow(rr_node.id()), spatial_lookup);
-    int bin_xhigh = grid_to_bin_x(rr_graph.node_xhigh(rr_node.id()), spatial_lookup);
-    int bin_yhigh = grid_to_bin_y(rr_graph.node_yhigh(rr_node.id()), spatial_lookup);
+    int bin_xlow = grid_to_bin_x(rr_graph.node_xlow(rr_node), spatial_lookup);
+    int bin_ylow = grid_to_bin_y(rr_graph.node_ylow(rr_node), spatial_lookup);
+    int bin_xhigh = grid_to_bin_x(rr_graph.node_xhigh(rr_node), spatial_lookup);
+    int bin_yhigh = grid_to_bin_y(rr_graph.node_yhigh(rr_node), spatial_lookup);
 
     spatial_lookup[bin_xlow][bin_ylow].push_back(rt_node);
 

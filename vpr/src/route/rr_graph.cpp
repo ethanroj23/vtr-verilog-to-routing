@@ -334,7 +334,7 @@ void create_rr_graph(const t_graph_type graph_type,
             }
         }
     } else {
-        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
+        if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_graph.empty()) {
             //No change in channel width, so skip re-building RR graph
             VTR_LOG("RR graph channel widths unchanged, skipping RR graph rebuild\n");
             return;
@@ -386,11 +386,11 @@ void print_rr_graph_stats() {
     const auto& rr_graph = device_ctx.rr_graph;
 
     size_t num_rr_edges = 0;
-    for (auto& rr_node : device_ctx.rr_nodes) {
-        num_rr_edges += rr_graph.edges(rr_node.id()).size();
+    for (auto& rr_node : rr_graph.nodes()) {
+        num_rr_edges += rr_graph.edges(rr_node).size();
     }
 
-    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_nodes.size());
+    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.size());
     VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
 }
 
@@ -708,14 +708,14 @@ static void build_rr_graph(const t_graph_type graph_type,
         clock_modeling);
 
     // Verify no incremental node allocation.
-    if (device_ctx.rr_nodes.size() > expected_node_count) {
+    if (device_ctx.rr_graph.size() > expected_node_count) {
         VTR_LOG_ERROR("Expected no more than %zu nodes, have %zu nodes\n",
-                      expected_node_count, device_ctx.rr_nodes.size());
+                      expected_node_count, device_ctx.rr_graph.size());
     }
 
     /* Update rr_nodes capacities if global routing */
     if (graph_type == GRAPH_GLOBAL) {
-        // Using num_rr_nodes here over device_ctx.rr_nodes.size() because
+        // Using num_rr_nodes here over device_ctx.rr_graph.size() because
         // clock_modeling::DEDICATED_NETWORK will append some rr nodes after
         // the regular graph.
         for (int i = 0; i < num_rr_nodes; i++) {
@@ -2443,41 +2443,41 @@ std::string describe_rr_node(int inode) {
 
     std::string msg = vtr::string_fmt("RR node: %d", inode);
 
-    auto rr_node = device_ctx.rr_nodes[inode];
+    auto rr_node = RRNodeId(inode);
 
-    if (rr_graph.node_type(RRNodeId(inode)) == CHANX || rr_graph.node_type(RRNodeId(inode)) == CHANY) {
-        auto cost_index = rr_graph.node_cost_index(RRNodeId(inode));
+    if (rr_graph.node_type(rr_node) == CHANX || rr_graph.node_type(rr_node) == CHANY) {
+        auto cost_index = rr_graph.node_cost_index(rr_node);
 
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
-        std::string rr_node_direction_string = rr_graph.node_direction_string(RRNodeId(inode));
+        std::string rr_node_direction_string = rr_graph.node_direction_string(rr_node);
 
         if (seg_index < (int)device_ctx.rr_segments.size()) {
             msg += vtr::string_fmt(" track: %d longline: %d",
-                                   rr_graph.node_track_num(RRNodeId(inode)),
+                                   rr_graph.node_track_num(rr_node),
                                    rr_graph.rr_segments(RRSegmentId(seg_index)).longline);
         } else {
             msg += vtr::string_fmt(" track: %d seg_type: ILLEGAL_SEG_INDEX %d",
-                                   rr_graph.node_track_num(RRNodeId(inode)),
+                                   rr_graph.node_track_num(rr_node),
                                    seg_index);
         }
-    } else if (rr_graph.node_type(RRNodeId(inode)) == IPIN || rr_graph.node_type(RRNodeId(inode)) == OPIN) {
-        auto type = device_ctx.grid[rr_graph.node_xlow(rr_node.id())][rr_graph.node_ylow(rr_node.id())].type;
-        std::string pin_name = block_type_pin_index_to_name(type, rr_graph.node_pin_num(rr_node.id()));
+    } else if (rr_graph.node_type(rr_node) == IPIN || rr_graph.node_type(rr_node) == OPIN) {
+        auto type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+        std::string pin_name = block_type_pin_index_to_name(type, rr_graph.node_pin_num(rr_node));
 
         msg += vtr::string_fmt(" pin: %d pin_name: %s",
-                               rr_graph.node_pin_num(rr_node.id()),
+                               rr_graph.node_pin_num(rr_node),
                                pin_name.c_str());
     } else {
-        VTR_ASSERT(rr_graph.node_type(RRNodeId(inode)) == SOURCE || rr_graph.node_type(RRNodeId(inode)) == SINK);
+        VTR_ASSERT(rr_graph.node_type(rr_node) == SOURCE || rr_graph.node_type(rr_node) == SINK);
 
-        msg += vtr::string_fmt(" class: %d", rr_graph.node_class_num(RRNodeId(inode)));
+        msg += vtr::string_fmt(" class: %d", rr_graph.node_class_num(rr_node));
     }
 
-    msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(RRNodeId(inode)));
-    msg += vtr::string_fmt(" fan-in: %d", rr_graph.node_fan_in(RRNodeId(inode)));
-    msg += vtr::string_fmt(" fan-out: %d", rr_graph.num_edges(RRNodeId(inode)));
+    msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(rr_node));
+    msg += vtr::string_fmt(" fan-in: %d", rr_graph.node_fan_in(rr_node));
+    msg += vtr::string_fmt(" fan-out: %d", rr_graph.num_edges(rr_node));
 
-    msg += " " + rr_graph.node_coordinate_to_string(RRNodeId(inode));
+    msg += " " + rr_graph.node_coordinate_to_string(rr_node);
 
     return msg;
 }
@@ -2982,11 +2982,10 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const RRGraphView& rr_gr
 //Collects the sets of connected non-configurable edges in the RR graph
 static void create_edge_groups(EdgeGroups* groups) {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_nodes = device_ctx.rr_nodes;
     const auto& rr_graph = device_ctx.rr_graph;
-    rr_nodes.for_each_edge(
+    rr_graph.for_each_edge( //ESR TODO
         [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
-            if (!rr_graph.rr_switch_inf(RRSwitchId(rr_nodes.edge_switch(edge))).configurable()) {
+            if (!rr_graph.rr_switch_inf(RRSwitchId(rr_graph.edge_switch(edge))).configurable()) {
                 groups->add_non_config_edge(size_t(src), size_t(sink));
             }
         });

@@ -522,13 +522,14 @@ t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const
     const auto& rr_graph = device_ctx.rr_graph;
     auto first_id = size_t(node_first_edge_[id]);
     auto last_id = size_t((&node_first_edge_[id])[1]);
-    for (size_t idx = first_id; idx < last_id; ++idx) {
-        auto switch_idx = edge_switch_[RREdgeId(idx)];
+    size_t idx = 0;
+    for (auto edge : edge_range_src(id)){
+        auto switch_idx = edge.switch_id;
         if (!rr_graph.rr_switch_inf(RRSwitchId(switch_idx)).configurable()) {
             return idx - first_id;
         }
+        idx++;
     }
-
     return last_id - first_id;
 }
 
@@ -612,10 +613,10 @@ static short get_node_pin_num(
     vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
     vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
     RRNodeId id) {
-    auto node_type = node_storage[id].type_;
-    if (node_type != IPIN && node_type != OPIN) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[node_type]);
-    }
+    // auto node_type = node_storage[id].type_; // ESR TODO bring this back later
+    // if (node_type != IPIN && node_type != OPIN) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[node_type]);
+    // }
     return node_ptc[id].ptc_.pin_num;
 }
 
@@ -623,10 +624,10 @@ static short get_node_track_num(
     vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
     vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
     RRNodeId id) {
-    auto node_type = node_storage[id].type_;
-    if (node_type != CHANX && node_type != CHANY) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[node_type]);
-    }
+    // auto node_type = node_storage[id].type_;  // ESR TODO bring this back later
+    // if (node_type != CHANX && node_type != CHANY) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[node_type]);
+    // }
     return node_ptc[id].ptc_.track_num;
 }
 
@@ -634,10 +635,10 @@ static short get_node_class_num(
     vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
     vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
     RRNodeId id) {
-    auto node_type = node_storage[id].type_;
-    if (node_type != SOURCE && node_type != SINK) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[node_type]);
-    }
+    // auto node_type = node_storage[id].type_;  // ESR TODO bring this back later
+    // if (node_type != SOURCE && node_type != SINK) {
+    //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[node_type]);
+    // }
     return node_ptc[id].ptc_.class_num;
 }
 

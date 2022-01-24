@@ -50,8 +50,8 @@ void check_rr_graph(const t_graph_type graph_type,
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    auto total_edges_to_node = std::vector<int>(device_ctx.rr_nodes.size());
-    auto switch_types_from_current_to_node = std::vector<unsigned char>(device_ctx.rr_nodes.size());
+    auto total_edges_to_node = std::vector<int>(device_ctx.rr_graph.size());
+    auto switch_types_from_current_to_node = std::vector<unsigned char>(device_ctx.rr_graph.size());
     const int num_rr_switches = device_ctx.rr_switch_inf.size();
 
     std::vector<std::pair<int, int>> edges;
@@ -82,7 +82,7 @@ void check_rr_graph(const t_graph_type graph_type,
         for (int iedge = 0; iedge < num_edges; iedge++) {
             int to_node = size_t(rr_graph.edge_sink_node(rr_node, iedge));
 
-            if (to_node < 0 || to_node >= (int)device_ctx.rr_nodes.size()) {
+            if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                 "in check_rr_graph: node %d has an edge %d.\n"
                                 "\tEdge is out of range.\n",

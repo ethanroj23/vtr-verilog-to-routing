@@ -72,7 +72,7 @@ bool try_breadth_first_route(const t_router_opts& router_opts) {
     BinaryHeap heap;
     heap.init_heap(device_ctx.grid);
 
-    OveruseInfo overuse_info(device_ctx.rr_nodes.size());
+    OveruseInfo overuse_info(device_ctx.rr_graph.size());
 
     for (itry = 1; itry <= router_opts.max_router_iterations; itry++) {
         VTR_LOG("Routing Iteration %d\n", itry);
@@ -387,8 +387,10 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    for (RREdgeId from_edge : device_ctx.rr_nodes.edge_range(RRNodeId(inode))) {
-        RRNodeId to_node = device_ctx.rr_nodes.edge_sink_node(from_edge);
+    std::vector<t_edge_with_id> edges;
+    rr_graph.edge_range_with_id_direct(RRNodeId(inode), edges);
+    for (auto edge : edges) {
+        RRNodeId to_node = edge.dest;
 
         vtr::Point<int> lower_left(route_ctx.route_bb[net_id].xmin, route_ctx.route_bb[net_id].ymin);
         vtr::Point<int> upper_right(route_ctx.route_bb[net_id].xmax, route_ctx.route_bb[net_id].ymax);
@@ -396,7 +398,7 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
 
         if (!rr_graph.node_is_inside_bounding_box(to_node, bounding_box)) continue;
 
-        breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, from_edge, pres_fac);
+        breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, edge.edge_id, pres_fac);
     }
 }
 

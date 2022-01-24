@@ -588,11 +588,11 @@ static void run_dijkstra(RRNodeId start_node, int start_x, int start_y, t_routin
     const auto& rr_graph = device_ctx.rr_graph;
 
     auto& node_expanded = data->node_expanded;
-    node_expanded.resize(device_ctx.rr_nodes.size());
+    node_expanded.resize(device_ctx.rr_graph.size());
     std::fill(node_expanded.begin(), node_expanded.end(), false);
 
     auto& node_visited_costs = data->node_visited_costs;
-    node_visited_costs.resize(device_ctx.rr_nodes.size());
+    node_visited_costs.resize(device_ctx.rr_graph.size());
     std::fill(node_visited_costs.begin(), node_visited_costs.end(), -1.0);
 
     /* a priority queue for expansion */
@@ -649,9 +649,11 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
 
     RRNodeId parent = parent_entry.rr_node;
 
-    for (t_edge_size edge : rr_graph.edges(parent)) {
-        RRNodeId child_node = rr_graph.edge_sink_node(parent, edge);
-        int switch_ind = size_t(rr_graph.edge_switch(parent, edge));
+    std::vector<t_dest_switch> edges;
+    rr_graph.edge_range_direct(parent, edges);
+    for (auto edge : edges) {
+        RRNodeId child_node = edge.dest;
+        int switch_ind = size_t(edge.switch_id);
 
         if (rr_graph.node_type(child_node) == SINK) return;
 

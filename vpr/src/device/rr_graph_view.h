@@ -285,11 +285,47 @@ class RRGraphView {
     inline short edge_switch(RRNodeId id, t_edge_size iedge) const {
         return node_storage_.edge_switch(id, iedge);
     }
+    /** @brief Get the switch id that represents the iedge'th outgoing edge from a specific node
+     * TODO: We may need to revisit this API and think about higher level APIs, like ``switch_delay()``
+     **/
+    inline short edge_switch(const RREdgeId& id) const {
+        return node_storage_.edge_switch(id);
+    }
+    inline vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId id) const {
+        return node_storage_.edge_range(id);
+    }
+
+    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+        node_storage_.edge_range_direct(node, return_edges);
+    }
+
+    inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
+        node_storage_.edge_range_with_id_direct(node, return_edges);
+    }
+
+
+
+
     /** @brief Get the destination node for the iedge'th edge from specified RRNodeId.
      *  This method should generally not be used, and instead first_edge and
      *  last_edge should be used.*/
     inline RRNodeId edge_sink_node(RRNodeId id, t_edge_size iedge) const {
         return node_storage_.edge_sink_node(id, iedge);
+    }
+    inline RRNodeId edge_sink_node(const RREdgeId& id) const {
+        return node_storage_.edge_sink_node(id);
+    }
+    
+    inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
+        node_storage_.for_each_edge(apply);
+    }
+
+    inline bool empty() const{
+        return node_storage_.empty();
+    }
+
+    inline void prefetch_node(RRNodeId id) const {
+        return node_storage_.prefetch_node(id);
     }
 
     /** @brief Get the number of configurable edges. This function is inlined for runtime optimization. */

@@ -322,7 +322,7 @@ bool try_timing_driven_route_tmpl(const t_router_opts& router_opts,
      */
     bool routing_is_successful = false;
     WirelengthInfo wirelength_info;
-    OveruseInfo overuse_info(device_ctx.rr_nodes.size());
+    OveruseInfo overuse_info(device_ctx.rr_graph.size());
     tatum::TimingPathInfo critical_path;
     int itry; //Routing iteration number
     int itry_conflicted_mode = 0;
@@ -1944,15 +1944,15 @@ static t_bb calc_current_bb(const t_trace* head) {
     bb.ymax = 0;
 
     for (const t_trace* elem = head; elem != nullptr; elem = elem->next) {
-        const t_rr_node& node = device_ctx.rr_nodes[elem->index];
         //The router interprets RR nodes which cross the boundary as being
         //'within' of the BB. Only those which are *strictly* out side the
         //box are excluded, hence we use the nodes xhigh/yhigh for xmin/xmax,
         //and xlow/ylow for xmax/ymax calculations
-        bb.xmin = std::min<int>(bb.xmin, rr_graph.node_xhigh(node.id()));
-        bb.ymin = std::min<int>(bb.ymin, rr_graph.node_yhigh(node.id()));
-        bb.xmax = std::max<int>(bb.xmax, rr_graph.node_xlow(node.id()));
-        bb.ymax = std::max<int>(bb.ymax, rr_graph.node_ylow(node.id()));
+        RRNodeId rr_node = RRNodeId(elem->index);
+        bb.xmin = std::min<int>(bb.xmin, rr_graph.node_xhigh(rr_node));
+        bb.ymin = std::min<int>(bb.ymin, rr_graph.node_yhigh(rr_node));
+        bb.xmax = std::max<int>(bb.xmax, rr_graph.node_xlow(rr_node));
+        bb.ymax = std::max<int>(bb.ymax, rr_graph.node_ylow(rr_node));
     }
 
     VTR_ASSERT(bb.xmin <= bb.xmax);

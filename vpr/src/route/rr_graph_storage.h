@@ -164,7 +164,7 @@ class t_rr_graph_storage {
     const char* node_type_string(RRNodeId id) const;
 
     int16_t node_rc_index(RRNodeId id) const {
-        return node_storage_[id].rc_index_;
+        return node_to_rc_[id].rc_index;
     }
     float node_R(RRNodeId id) const;
     float node_C(RRNodeId id) const;
@@ -190,20 +190,9 @@ class t_rr_graph_storage {
     }
 
     Direction node_direction(RRNodeId id) const {
-        return get_node_direction(
-            vtr::array_view_id<RRNodeId, const t_rr_node_data>(
-                node_storage_.data(), node_storage_.size()),
-            id);
+        return get_node_direction(id);
     }
     const std::string& node_direction_string(RRNodeId id) const;
-
-    /* Find if the given node appears on a specific side */
-    bool is_node_on_specific_side(RRNodeId id, e_side side) const {
-        return is_node_on_specific_side(
-            vtr::array_view_id<RRNodeId, const t_rr_node_data>(
-                node_storage_.data(), node_storage_.size()),
-            id, side);
-    }
 
     /* FIXME: This function should be DEPRECATED!
      * Developers can easily use the following codes with more flexibility
@@ -308,16 +297,55 @@ class t_rr_graph_storage {
         return ret;
     }
 
-    // Get the destination node for the specified edge.
-    RRNodeId edge_sink_node(const RREdgeId& edge) const {
-        return edge_dest_node_[edge];
-    }
 
     // Call the `apply` function with the edge id, source, and sink nodes of every edge.
-    void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
-        for (size_t i = 0; i < edge_dest_node_.size(); i++) {
-            RREdgeId edge(i);
-            apply(edge, edge_src_node_[edge], edge_dest_node_[edge]);
+    inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const { //ESR TODO
+        for (size_t i = 0; i < size(); i++){
+        int k = 0;
+        RRNodeId node = RRNodeId(i);
+        size_t first = (size_t)first_edge(node);
+            for (const auto& edge : edge_range_src(node)){
+                apply(RREdgeId(first+k), node, edge.dest);
+                k++;
+            }
+        }
+    }
+
+    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+        // returns a vector of edge structs, which each include sink, switch
+        
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+
+        return_edges.reserve(folded_edges.size());
+
+        for (const auto& cur_edge : folded_edges){
+            return_edges.push_back({
+            tile_to_node_[x_y_idx.xlow + cur_edge.dx][x_y_idx.ylow + cur_edge.dy][cur_edge.tile_idx], // dest
+            cur_edge.switch_id // switch
+            });
+        }
+    }
+
+    inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
+        // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
+
+        auto x_y_idx = node_coords_[node];
+        auto folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+
+        // std::vector<t_edge_with_id> return_edges; // initialize return vector
+        return_edges.reserve(folded_edges.size());
+        size_t k = 0; // kth edge
+        size_t first = (size_t)first_edge(node);
+        for (auto cur_edge : folded_edges){
+            // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
+            t_edge_with_id add_edge = {
+            tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
+            cur_edge.switch_id, // switch
+            RREdgeId(first+k)
+            };
+            return_edges.push_back(add_edge);
+            k++;
         }
     }
 
@@ -329,10 +357,6 @@ class t_rr_graph_storage {
         return edge_sink_node(edge_id(id, iedge));
     }
 
-    // Get the switch used for the specified edge.
-    short edge_switch(const RREdgeId& edge) const {
-        return edge_switch_[edge];
-    }
 
     // Get the switch used for the iedge'th edge from specified RRNodeId.
     //
@@ -410,12 +434,12 @@ class t_rr_graph_storage {
 
     // Number of RR nodes that can be accessed.
     size_t size() const {
-        return node_storage_.size();
+        return node_coords_.size();
     }
 
     // Is the RR graph currently empty?
     bool empty() const {
-        return node_storage_.empty();
+        return node_coords_.empty();
     }
 
     // Remove all nodes and edges from the RR graph.
@@ -481,8 +505,9 @@ class t_rr_graph_storage {
         t_folded_coords initial {
             0,
             0,
-            new_idx
+            (unsigned int)new_idx
         };
+        (void) id;
         node_coords_.push_back(initial);
     }
     inline void reserve_nodes(int size){
@@ -512,10 +537,10 @@ class t_rr_graph_storage {
     }
     inline void add_shared_edges_edge(int dx, int dy, unsigned int switch_id, unsigned int tile_idx) {
         t_folded_edge_data edge{
-            dx,
-            dy,
-            switch_id,
-            tile_idx
+            (short)dx,
+            (short)dy,
+            (short)switch_id,
+            (uint16_t)tile_idx
         };
         shared_edges_[shared_edges_.size()-1].push_back(edge);
     }
@@ -528,6 +553,67 @@ class t_rr_graph_storage {
         };
         node_to_rc_.push_back(node_to_rc);
     }
+
+    // ESR FPT
+
+
+    inline std::vector<t_edge_struct> edge_range_src(RRNodeId node) const{
+        // returns a vector of edge structs, which each include src, sink, switch
+
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+
+        std::vector<t_edge_struct> return_edges; // initialize return vector
+        return_edges.reserve(folded_edges.size());
+        for (const auto& cur_edge : folded_edges){
+            t_edge_struct add_edge = {
+            node, // src
+            tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
+            cur_edge.switch_id // switch
+            };
+            return_edges.push_back(add_edge);
+        }
+        return return_edges;
+    }
+
+    inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
+        return edge_range_src(node)[k];
+    }
+
+    inline RRNodeId edge_sink_node(const RREdgeId& edge_id) const {
+        return get_t_edge_struct(edge_id).dest;
+    }
+
+    inline short edge_switch(const RREdgeId& edge_id) const {
+        return get_t_edge_struct(edge_id).switch_id;
+    }
+
+    inline t_edge_struct get_t_edge_struct(RREdgeId edge_id) const {
+    // optimized this to be a binary search
+    size_t edge_id_size = size_t(edge_id);
+        int l = 0; // start left index at 0
+        int r = node_coords_.size() - 1; // start right index at end of nodes
+        while (r >= l){
+            int mid = l + (r - l) / 2; //  mid is node id
+            RRNodeId node = RRNodeId(mid);
+            size_t first = (size_t)first_edge(node);
+            size_t last = (size_t)last_edge(node);
+
+            if (edge_id_size < first) // try again with left half of nodes
+            r = mid - 1;
+            else if (last <= edge_id_size) // try again with right half of nodes
+            l = mid + 1;
+            else if (first != last){ // edge is a part of this node
+                int edge_idx = edge_id_size - first;
+                return kth_edge_for_node(node, edge_idx);
+            }
+        }
+    return {RRNodeId(0), RRNodeId(0), 0}; // INVALID
+    }
+
+
+
+
 
 
     /* Add a side to the node abbributes
@@ -641,31 +727,27 @@ class t_rr_graph_storage {
      * have a complete rr-graph and not called often.*/
     void init_fan_in();
 
-    static inline Direction get_node_direction(
-        vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
-        RRNodeId id) {
-        auto& node_data = node_storage[id];
-        if (node_data.type_ != CHANX && node_data.type_ != CHANY) {
-            VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "Attempted to access RR node 'direction' for non-channel type '%s'",
-                            rr_node_typename[node_data.type_]);
-        }
-        return node_storage[id].dir_side_.direction;
+    inline Direction get_node_direction(RRNodeId id) const {
+        // const auto& node_type = node_type_[id]; // ESR TODO bring this back later
+        // if (node_type != CHANX && node_type != CHANY) {
+        //     VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+        //                     "Attempted to access RR node 'direction' for non-channel type '%s'",
+        //                     rr_node_typename[node_type]);
+        // }
+        return node_to_dir_side_[id].dir_side.direction;
     }
 
     /* Find if the given node appears on a specific side */
-    static inline bool is_node_on_specific_side(
-        vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
-        const RRNodeId& id,
-        const e_side& side) {
-        auto& node_data = node_storage[id];
-        if (node_data.type_ != IPIN && node_data.type_ != OPIN) {
+    inline bool is_node_on_specific_side(const RRNodeId& id,
+        const e_side& side) const {
+        const auto& cur_node_type = node_type(id);
+        if (cur_node_type != IPIN && cur_node_type != OPIN) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                             "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
-                            rr_node_typename[node_data.type_]);
+                            rr_node_typename[cur_node_type]);
         }
         // Return a vector showing only the sides that the node appears
-        std::bitset<NUM_SIDES> side_tt = node_storage[id].dir_side_.sides;
+        std::bitset<NUM_SIDES> side_tt = node_to_dir_side_[id].dir_side.sides;
         return side_tt[size_t(side)];
     }
 
@@ -859,7 +941,9 @@ class t_rr_graph_view {
     }
 
     Direction node_direction(RRNodeId id) const {
-        return t_rr_graph_storage::get_node_direction(node_storage_, id);
+        // return t_rr_graph_storage::get_node_direction(id);
+        (void) id;
+        return Direction::NUM_DIRECTIONS;
     }
 
     /* PTC get methods */
@@ -888,16 +972,6 @@ class t_rr_graph_view {
     // If this range is empty, then RRNodeId id has no edges.
     vtr::StrongIdRange<RREdgeId> edge_range(RRNodeId id) const {
         return vtr::StrongIdRange<RREdgeId>(first_edge(id), last_edge(id));
-    }
-
-    // Get the destination node for the specified edge.
-    RRNodeId edge_sink_node(RREdgeId edge) const {
-        return edge_dest_node_[edge];
-    }
-
-    // Get the switch used for the specified edge.
-    short edge_switch(RREdgeId edge) const {
-        return edge_switch_[edge];
     }
 
   private:
