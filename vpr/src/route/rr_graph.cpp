@@ -2983,9 +2983,9 @@ static RRNodeId pick_best_direct_connect_target_rr_node(const RRGraphView& rr_gr
 static void create_edge_groups(EdgeGroups* groups) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    rr_graph.for_each_edge( //ESR TODO
-        [&](RREdgeId edge, RRNodeId src, RRNodeId sink) {
-            if (!rr_graph.rr_switch_inf(RRSwitchId(rr_graph.edge_switch(edge))).configurable()) {
+    rr_graph.for_each_src_sink_switch( //ESR TODO
+        [&](RRNodeId src, RRNodeId sink, short switch_id) {
+            if (!rr_graph.rr_switch_inf(RRSwitchId(switch_id)).configurable()) {
                 groups->add_non_config_edge(size_t(src), size_t(sink));
             }
         });

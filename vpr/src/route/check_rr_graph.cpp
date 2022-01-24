@@ -79,8 +79,10 @@ void check_rr_graph(const t_graph_type graph_type,
         edges.resize(0);
         edges.reserve(num_edges);
 
-        for (int iedge = 0; iedge < num_edges; iedge++) {
-            int to_node = size_t(rr_graph.edge_sink_node(rr_node, iedge));
+        std::vector<t_edge_with_id> cur_edges;
+        rr_graph.edge_range_with_id_direct(RRNodeId(inode), cur_edges);
+        for(auto edge : cur_edges) {
+            int to_node = size_t(edge.dest);
 
             if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -89,12 +91,12 @@ void check_rr_graph(const t_graph_type graph_type,
                                 inode, to_node);
             }
 
-            check_rr_edge(inode, iedge, to_node);
+            check_rr_edge(inode, (size_t)edge.edge_id, to_node);
 
-            edges.emplace_back(to_node, iedge);
+            edges.emplace_back(to_node, (size_t)edge.edge_id);
             total_edges_to_node[to_node]++;
 
-            auto switch_type = rr_graph.edge_switch(rr_node, iedge);
+            auto switch_type = edge.switch_id;
 
             if (switch_type < 0 || switch_type >= num_rr_switches) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -109,8 +111,10 @@ void check_rr_graph(const t_graph_type graph_type,
         });
 
         //Check that multiple edges between the same from/to nodes make sense
-        for (int iedge = 0; iedge < num_edges; iedge++) {
-            int to_node = size_t(rr_graph.edge_sink_node(rr_node, iedge));
+        std::vector<t_dest_switch> cur_edges_2;
+        rr_graph.edge_range_direct(RRNodeId(inode), cur_edges_2);
+        for(auto cur_edge : cur_edges_2) {
+            int to_node = size_t(cur_edge.dest);
 
             auto range = std::equal_range(edges.begin(), edges.end(),
                                           to_node, node_edge_sorter());
@@ -532,7 +536,7 @@ static void check_unbuffered_edges(int from_node) {
     /* This routine checks that all pass transistors in the routing truly are  *
      * bidirectional.  It may be a slow check, so don't use it all the time.   */
 
-    int from_edge, to_node, to_edge, from_num_edges, to_num_edges;
+    int from_edge, to_node, to_edge, to_num_edges;
     t_rr_type from_rr_type, to_rr_type;
     short from_switch_type;
     bool trans_matched;
@@ -544,16 +548,16 @@ static void check_unbuffered_edges(int from_node) {
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
 
-    from_num_edges = rr_graph.num_edges(RRNodeId(from_node));
-
-    for (from_edge = 0; from_edge < from_num_edges; from_edge++) {
-        to_node = size_t(rr_graph.edge_sink_node(RRNodeId(from_node), from_edge));
+    std::vector<t_dest_switch> edges;
+    rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+    for(auto edge : edges) {
+        to_node = size_t(edge.dest);
         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
         if (to_rr_type != CHANX && to_rr_type != CHANY)
             continue;
 
-        from_switch_type = rr_graph.edge_switch(RRNodeId(from_node), from_edge);
+        from_switch_type = edge.switch_id;
 
         if (rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).buffered())
             continue;
@@ -566,8 +570,8 @@ static void check_unbuffered_edges(int from_node) {
         trans_matched = false;
 
         for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
-            if (size_t(rr_graph.edge_sink_node(RRNodeId(to_node), to_edge)) == size_t(from_node)
-                && rr_graph.edge_switch(RRNodeId(to_node), to_edge) == from_switch_type) {
+            if (size_t(edge.dest) == size_t(from_node)
+                && edge.switch_id == from_switch_type) {
                 trans_matched = true;
                 break;
             }

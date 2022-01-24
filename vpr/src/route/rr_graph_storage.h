@@ -311,6 +311,17 @@ class t_rr_graph_storage {
         }
     }
 
+    inline void for_each_src_sink_switch(std::function<void(RRNodeId, RRNodeId, short)> apply) const { //ESR TODO
+        for (size_t i = 0; i < size(); i++){
+        int k = 0;
+        RRNodeId node = RRNodeId(i);
+            for (const auto& edge : edge_range_src(node)){
+                apply(node, edge.dest, edge.switch_id);
+                k++;
+            }
+        }
+    }
+
     inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
         // returns a vector of edge structs, which each include sink, switch
         
@@ -347,6 +358,78 @@ class t_rr_graph_storage {
             return_edges.push_back(add_edge);
             k++;
         }
+    }
+
+    bool switch_is_configurable(short switch_id) const;
+
+    inline void non_configurable_edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+        // returns a vector of only non-configurable edge structs, which each include src, sink, switch
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+
+        for (const auto& cur_edge : folded_edges){
+            if (!switch_is_configurable(cur_edge.switch_id)) { // only add if edge is non_configurable
+            t_dest_switch add_edge = {
+                tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
+                cur_edge.switch_id // switch  
+            };
+            return_edges.push_back(add_edge);
+            }
+        }
+    }
+
+    inline void non_configurable_edge_with_id_range_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
+        // returns a vector of only non-configurable edge structs, which each include src, sink, switch
+
+        const auto& x_y_idx = node_coords_[node]; // 629451 is the problem node
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx]; // ESR HERE segmentation fault
+
+        size_t k = 0; //kth edge
+        size_t first = (size_t)first_edge(node);
+        for (const auto& cur_edge : folded_edges){
+            if (!switch_is_configurable(cur_edge.switch_id)) { // only add if edge is non_configurable
+            RREdgeId cur_edge_id = RREdgeId(first+k);
+            // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
+            t_edge_with_id add_edge = {
+                tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
+                cur_edge.switch_id, // switch  
+                cur_edge_id
+            };
+            return_edges.push_back(add_edge);
+            }
+            k++;
+        }
+    }
+    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const{
+        const auto& x_y_idx = node_coords_[src_rr_node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+
+        for (const auto& i_src_edge : folded_edges){
+        uint16_t x = x_y_idx.xlow+i_src_edge.dx;
+        uint16_t y = x_y_idx.ylow+i_src_edge.dy;
+        uint16_t tile_idx = i_src_edge.tile_idx;
+        RRNodeId opin_rr_node = tile_to_node_[x][y][tile_idx];
+        if (node_type_[opin_rr_node] != OPIN) continue;
+
+        const auto& folded_edges_2 = shared_edges_[node_coords_[opin_rr_node].node_pattern_idx];
+        for (const auto& i_opin_edge : folded_edges_2){
+            uint16_t x_2 = x + i_opin_edge.dx;
+            uint16_t y_2 = y + i_opin_edge.dy;
+            uint16_t tile_idx_2 = i_opin_edge.tile_idx;
+            RRNodeId ipin_rr_node = tile_to_node_[x_2][y_2][tile_idx_2];
+            if (node_type_[ipin_rr_node] != IPIN) continue;
+
+            const auto& folded_edges_3 = shared_edges_[node_coords_[ipin_rr_node].node_pattern_idx];
+            for (const auto& i_ipin_edge : folded_edges_3){
+            uint16_t x_3 = x_2 + i_ipin_edge.dx;
+            uint16_t y_3 = y_2 + i_ipin_edge.dy;
+            uint16_t tile_idx_3 = i_ipin_edge.tile_idx;
+            RRNodeId sink_rr_node = tile_to_node_[x_3][y_3][tile_idx_3];
+            if (sink_rr_node == dest_rr_node) return true;
+        }
+        }
+    }
+    return false;
     }
 
     // Get the destination node for the iedge'th edge from specified RRNodeId.

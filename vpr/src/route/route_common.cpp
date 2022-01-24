@@ -626,16 +626,18 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
     t_trace* tail = nullptr;
 
     //Record the non-configurable out-going edges
-    std::vector<t_edge_size> unvisited_non_configurable_edges;
+    std::vector<t_edge_with_id> unvisited_non_configurable_edges;
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    for (auto iedge : rr_graph.non_configurable_edges(RRNodeId(node))) {
-        VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable(iedge));
+    std::vector<t_edge_with_id> edges;
+    rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(node), edges);
+    for (auto edge : edges) {
+        VTR_ASSERT_SAFE(!device_ctx.rr_nodes[node].edge_is_configurable((size_t)edge.edge_id));
 
-        int to_node = size_t(rr_graph.edge_sink_node(RRNodeId(node), iedge));
+        int to_node = size_t(edge.dest);
 
         if (!trace_nodes.count(to_node)) {
-            unvisited_non_configurable_edges.push_back(iedge);
+            unvisited_non_configurable_edges.push_back(edge);
         }
     }
 
@@ -654,9 +656,9 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
 
     } else {
         //Recursive case: intermediate node with non-configurable edges
-        for (auto iedge : unvisited_non_configurable_edges) {
-            int to_node = size_t(rr_graph.edge_sink_node(RRNodeId(node), iedge));
-            int iswitch = rr_graph.edge_switch(RRNodeId(node), iedge);
+        for (auto edge : unvisited_non_configurable_edges) {
+            int to_node = size_t(edge.dest);
+            int iswitch = edge.switch_id;
 
             VTR_ASSERT(!trace_nodes.count(to_node));
             trace_nodes.insert(node);
@@ -1426,9 +1428,10 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             //the reserved OPINs to move out of the way of congestion, by preferring
             //to reserve OPINs with lower congestion costs).
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
-            num_edges = rr_graph.num_edges(RRNodeId(from_node));
-            for (iconn = 0; iconn < num_edges; iconn++) {
-                to_node = size_t(rr_graph.edge_sink_node(RRNodeId(from_node), iconn));
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(RRNodeId(from_node), edges);
+            for (auto edge : edges) {
+                to_node = size_t(edge.dest);
 
                 VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
 
@@ -1565,14 +1568,16 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             auto& device_ctx = g_vpr_ctx.device();
             const auto& rr_graph = device_ctx.rr_graph;
             bool found = false;
-            for (t_edge_size iedge = 0; iedge < rr_graph.num_edges(RRNodeId(trace->index)); ++iedge) {
-                int to_node = size_t(rr_graph.edge_sink_node(RRNodeId(trace->index), iedge));
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(RRNodeId(trace->index), edges);
+            for (auto edge : edges) {
+                int to_node = size_t(edge.dest);
 
                 if (to_node == next->index) {
                     found = true;
 
                     //Verify that the switch matches
-                    int rr_iswitch = rr_graph.edge_switch(RRNodeId(trace->index), iedge);
+                    int rr_iswitch = edge.switch_id;
                     if (trace->iswitch != rr_iswitch) {
                         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
                                         trace->iswitch, rr_iswitch,

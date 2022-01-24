@@ -420,16 +420,18 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
                 VTR_ASSERT(rt_node->inode == rr_node);
             }
         }
-        for (int iedge : rr_graph.non_configurable_edges(RRNodeId(rr_node))) {
+        std::vector<t_edge_with_id> edges;
+        rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(rr_node), edges);
+        for (auto edge : edges) {
             //Recursive case: expand children
-            VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable(iedge));
-            int to_rr_node = size_t(rr_graph.edge_sink_node(RRNodeId(rr_node), iedge));
+            VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable((size_t)edge.edge_id));
+            int to_rr_node = size_t(edge.dest);
 
             //Recurse
             t_rt_node* child_rt_node = add_non_configurable_to_route_tree(to_rr_node, true, visited);
 
             if (!child_rt_node) continue;
-            int iswitch = rr_graph.edge_switch(RRNodeId(rr_node), iedge);
+            int iswitch = edge.switch_id;
 
             //Create the edge
             t_linked_rt_edge* linked_rt_edge = alloc_linked_rt_edge();

@@ -537,6 +537,12 @@ t_edge_size t_rr_graph_storage::num_non_configurable_edges(const RRNodeId& id) c
     return num_edges(id) - num_configurable_edges(id);
 }
 
+bool t_rr_graph_storage::switch_is_configurable(short switch_id) const {
+    return g_vpr_ctx.device().rr_graph.rr_switch_inf(RRSwitchId(switch_id)).configurable();
+}
+
+
+
 bool t_rr_graph_storage::validate() const {
     bool all_valid = verify_first_edges();
     for (size_t inode = 0; inode < size(); ++inode) {

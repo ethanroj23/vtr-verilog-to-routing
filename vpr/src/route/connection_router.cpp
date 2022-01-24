@@ -430,7 +430,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
                                        cost_params,
                                        bounding_box,
                                        target_node,
-                                       target_bb);
+                                       target_bb,
+                                       edge.switch_id);
     }
 }
 
@@ -445,7 +446,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
                                                             const t_conn_cost_params cost_params,
                                                             const t_bb bounding_box,
                                                             int target_node,
-                                                            const t_bb target_bb) {
+                                                            const t_bb target_bb,
+                                                            const short switch_id) {
     RRNodeId to_node(to_node_int);
     int to_xlow = rr_graph_->node_xlow(to_node);
     int to_ylow = rr_graph_->node_ylow(to_node);
@@ -512,7 +514,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
                                   from_node,
                                   to_node_int,
                                   from_edge,
-                                  target_node);
+                                  target_node,
+                                  switch_id);
     }
 }
 
@@ -523,7 +526,8 @@ void ConnectionRouter<Heap>::timing_driven_add_to_heap(const t_conn_cost_params 
                                                        const int from_node,
                                                        const int to_node,
                                                        const RREdgeId from_edge,
-                                                       const int target_node) {
+                                                       const int target_node,
+                                                       const short switch_id) {
     t_heap next;
 
     // Initalize RCV data struct if needed, otherwise it's set to nullptr
@@ -548,7 +552,8 @@ void ConnectionRouter<Heap>::timing_driven_add_to_heap(const t_conn_cost_params 
                                       from_node,
                                       to_node,
                                       from_edge,
-                                      target_node);
+                                      target_node,
+                                      switch_id);
 
     float best_total_cost = rr_node_route_inf_[to_node].path_cost;
     float best_back_cost = rr_node_route_inf_[to_node].backward_path_cost;
@@ -668,7 +673,8 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
                                                                const int from_node,
                                                                const int to_node,
                                                                const RREdgeId from_edge,
-                                                               const int target_node) {
+                                                               const int target_node,
+                                                               const short switch_id) {
     /* new_costs.backward_cost: is the "known" part of the cost to this node -- the
      * congestion cost of all the routing resources back to the existing route
      * plus the known delay of the total path back to the source.
@@ -679,13 +685,11 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
      */
 
     //Info for the switch connecting from_node to_node
-    // int iswitch = rr_nodes_.edge_switch(from_edge);
-    int iswitch = rr_graph_->edge_switch(from_edge);
-    bool switch_buffered = rr_switch_inf_[iswitch].buffered();
-    bool reached_configurably = rr_switch_inf_[iswitch].configurable();
-    float switch_R = rr_switch_inf_[iswitch].R;
-    float switch_Tdel = rr_switch_inf_[iswitch].Tdel;
-    float switch_Cinternal = rr_switch_inf_[iswitch].Cinternal;
+    bool switch_buffered = rr_switch_inf_[switch_id].buffered();
+    bool reached_configurably = rr_switch_inf_[switch_id].configurable();
+    float switch_R = rr_switch_inf_[switch_id].R;
+    float switch_Tdel = rr_switch_inf_[switch_id].Tdel;
+    float switch_Cinternal = rr_switch_inf_[switch_id].Cinternal;
 
     //To node info
     auto rc_index = rr_graph_->node_rc_index(RRNodeId(to_node));

@@ -303,6 +303,21 @@ class RRGraphView {
         node_storage_.edge_range_with_id_direct(node, return_edges);
     }
 
+    inline void non_configurable_edge_with_id_range_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
+        node_storage_.non_configurable_edge_with_id_range_direct(node, return_edges);
+    }
+
+    inline void non_configurable_edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+        node_storage_.non_configurable_edge_range_direct(node, return_edges);
+    }
+    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const{
+        return node_storage_.directconnect_exists(src_rr_node, dest_rr_node);
+    }
+
+
+
+
+
 
 
 
@@ -319,6 +334,10 @@ class RRGraphView {
     inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
         node_storage_.for_each_edge(apply);
     }
+    inline void for_each_src_sink_switch(std::function<void(RRNodeId, RRNodeId, short)> apply) const {
+        node_storage_.for_each_src_sink_switch(apply);
+    }
+
 
     inline bool empty() const{
         return node_storage_.empty();
