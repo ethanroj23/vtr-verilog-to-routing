@@ -279,6 +279,43 @@ class t_rr_graph_storage {
         return (&node_first_edge_[id])[1];
     }
 
+    inline void print_graph() const{
+        // this function prints the entire RRGraph for verification purposes
+        // start with nodes
+        for (size_t i=0; i < size(); i++){
+            RRNodeId node = RRNodeId(i);
+            VTR_LOG("xlow:%d\nxhigh:%d\nylow:%d\nyhigh:%d\ncost_index:%d\nrc_index:%d\ntype:%s\nnum_edges:%d\nnum_configurable_edges:%d\nnum_non_configurable_edges:%d\nfirst_edge:%d\nlast_edge:%d\n",
+                    node_xlow(node),
+                    node_xhigh(node),
+                    node_ylow(node),
+                    node_yhigh(node),
+                    node_cost_index(node),
+                    node_rc_index(node),
+                    // node_direction_string(node),
+                    // node_side_string(node),
+                    node_type_string(node),
+                    num_edges(node),
+                    num_configurable_edges(node),
+                    num_non_configurable_edges(node),
+                    first_edge(node),
+                    last_edge(node)
+                    );
+        }
+
+        for (size_t i=0; i < size(); i++){
+            RRNodeId node = RRNodeId(i);
+            std::vector<t_edge_with_id> edges;
+            edge_range_with_id_direct(node, edges);
+            for (auto edge : edges){
+                printf("edge_id:%lu\nsrc:%lu\nsink:%lu\nswitch:%d\n",
+                    (size_t)edge.edge_id,
+                    (size_t)node,
+                    (size_t)edge.dest,
+                    edge.switch_id);
+            }
+        }
+    }
+
     // Returns a range of RREdgeId's belonging to RRNodeId id.
     //
     // If this range is empty, then RRNodeId id has no edges.
@@ -317,6 +354,19 @@ class t_rr_graph_storage {
         RRNodeId node = RRNodeId(i);
             for (const auto& edge : edge_range_src(node)){
                 apply(node, edge.dest, edge.switch_id);
+                k++;
+            }
+        }
+    }
+
+    // Call the `apply` function with the edge id, source, and sink nodes of every edge.
+    inline void for_each_src_sink_switch_edge(std::function<void(RRNodeId, RRNodeId, short, RREdgeId)> apply) const { //ESR TODO
+        for (size_t i = 0; i < size(); i++){
+        int k = 0;
+        RRNodeId node = RRNodeId(i);
+        size_t first = (size_t)first_edge(node);
+            for (const auto& edge : edge_range_src(node)){
+                apply(node, edge.dest, edge.switch_id, RREdgeId(first+k));
                 k++;
             }
         }

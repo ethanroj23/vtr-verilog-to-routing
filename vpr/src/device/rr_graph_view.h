@@ -314,6 +314,10 @@ class RRGraphView {
         return node_storage_.directconnect_exists(src_rr_node, dest_rr_node);
     }
 
+    inline void print_graph() const{
+        node_storage_.print_graph();
+    }
+
 
 
 

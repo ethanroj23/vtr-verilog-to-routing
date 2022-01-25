@@ -334,6 +334,7 @@ void t_rr_graph_storage::assign_first_edges() {
         cur_edge += num_edges;
     }
     node_first_edge_[RRNodeId(node_coords_.size())] = RREdgeId(cur_edge);
+    // for (size_t i=0; i< node_first_edge_.size())
 
     // while (true) {
     //     size_t current_node_id = size_t(edge_src_node_[RREdgeId(second_id)]);
@@ -385,13 +386,18 @@ bool t_rr_graph_storage::verify_first_edges() const {
 void t_rr_graph_storage::init_fan_in() {
     //Reset all fan-ins to zero
     edges_read_ = true;
-    node_fan_in_.resize(node_storage_.size(), 0);
+    node_fan_in_.resize(node_coords_.size(), 0);
     node_fan_in_.shrink_to_fit();
 
     //Walk the graph and increment fanin on all downstream nodes
-    for (const auto& dest_node : edge_dest_node_) {
-        node_fan_in_[dest_node] += 1;
+    for (size_t i=0; i<node_coords_.size(); i++){
+        for (auto edge : edge_range_src(RRNodeId(i))){
+            node_fan_in_[edge.dest] += 1;
+        }
     }
+    // for (const auto& dest_node : edge_dest_node_) {
+    //     node_fan_in_[dest_node] += 1;
+    // }
 }
 
 size_t t_rr_graph_storage::count_rr_switches(
