@@ -55,7 +55,7 @@ t_heap* ConnectionRouter<Heap>::timing_driven_route_connection_common_setup(
         return nullptr;
     }
 
-    VTR_LOGV_DEBUG(router_debug_, "  Routing to %d as normal net (BB: %d,%d x %d,%d)\n", sink_node,
+    /*ESR*/VTR_LOG("  Routing to %d as normal net (BB: %d,%d x %d,%d)\n", sink_node,
                    bounding_box.xmin, bounding_box.ymin,
                    bounding_box.xmax, bounding_box.ymax);
 
@@ -144,7 +144,7 @@ std::pair<bool, t_heap> ConnectionRouter<Heap>::timing_driven_route_connection_f
         return std::make_pair(false, t_heap());
     }
 
-    VTR_LOGV_DEBUG(router_debug_, "  Routing to %d as high fanout net (BB: %d,%d x %d,%d)\n", sink_node,
+    /*ESR*/VTR_LOG("  Routing to %d as high fanout net (BB: %d,%d x %d,%d)\n", sink_node,
                    high_fanout_bb.xmin, high_fanout_bb.ymin,
                    high_fanout_bb.xmax, high_fanout_bb.ymax);
 
@@ -200,7 +200,7 @@ t_heap* ConnectionRouter<Heap>::timing_driven_route_connection_from_heap(int sin
     VTR_ASSERT_SAFE(heap_.is_valid());
 
     if (heap_.is_empty_heap()) { //No source
-        VTR_LOGV_DEBUG(router_debug_, "  Initial heap empty (no source)\n");
+        /*ESR*/VTR_LOG("  Initial heap empty (no source)\n");
     }
 
     auto& route_ctx = g_vpr_ctx.mutable_routing();
@@ -212,7 +212,7 @@ t_heap* ConnectionRouter<Heap>::timing_driven_route_connection_from_heap(int sin
         ++router_stats_->heap_pops;
 
         int inode = cheapest->index;
-        VTR_LOGV_DEBUG(router_debug_, "  Popping node %d (cost: %g)\n",
+        /*ESR*/VTR_LOG("  Popping node %d (cost: %g)\n",
                        inode, cheapest->cost);
 
         //Have we found the target?
@@ -224,7 +224,7 @@ t_heap* ConnectionRouter<Heap>::timing_driven_route_connection_from_heap(int sin
                 rcv_path_manager.insert_backwards_path_into_traceback(cheapest->path_data, cheapest->cost, cheapest->backward_path_cost, route_ctx);
             }
 
-            VTR_LOGV_DEBUG(router_debug_, "  Found target %8d (%s)\n", inode, describe_rr_node(inode).c_str());
+            /*ESR*/VTR_LOG("  Found target %8d (%s)\n", inode, describe_rr_node(inode).c_str());
             break;
         }
 
@@ -245,7 +245,7 @@ t_heap* ConnectionRouter<Heap>::timing_driven_route_connection_from_heap(int sin
     }
 
     if (cheapest == nullptr) { /* Impossible routing.  No path for net. */
-        VTR_LOGV_DEBUG(router_debug_, "  Empty heap (no path found)\n");
+        /*ESR*/VTR_LOG("  Empty heap (no path found)\n");
         return nullptr;
     }
 
@@ -288,7 +288,7 @@ std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_path
     VTR_ASSERT_SAFE(heap_.is_valid());
 
     if (heap_.is_empty_heap()) { //No source
-        VTR_LOGV_DEBUG(router_debug_, "  Initial heap empty (no source)\n");
+        /*ESR*/VTR_LOG("  Initial heap empty (no source)\n");
     }
 
     while (!heap_.is_empty_heap()) {
@@ -297,7 +297,7 @@ std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_path
         ++router_stats_->heap_pops;
 
         int inode = cheapest->index;
-        VTR_LOGV_DEBUG(router_debug_, "  Popping node %d (cost: %g)\n",
+        /*ESR*/VTR_LOG("  Popping node %d (cost: %g)\n",
                        inode, cheapest->cost);
 
         //Since we want to find shortest paths to all nodes in the graph
@@ -313,10 +313,10 @@ std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_path
                                       bounding_box);
 
         if (cheapest_paths[inode].index == OPEN || cheapest_paths[inode].cost >= cheapest->cost) {
-            VTR_LOGV_DEBUG(router_debug_, "  Better cost to node %d: %g (was %g)\n", inode, cheapest->cost, cheapest_paths[inode].cost);
+            /*ESR*/VTR_LOG("  Better cost to node %d: %g (was %g)\n", inode, cheapest->cost, cheapest_paths[inode].cost);
             cheapest_paths[inode] = *cheapest;
         } else {
-            VTR_LOGV_DEBUG(router_debug_, "  Worse cost to node %d: %g (better %g)\n", inode, cheapest->cost, cheapest_paths[inode].cost);
+            /*ESR*/VTR_LOG("  Worse cost to node %d: %g (better %g)\n", inode, cheapest->cost, cheapest_paths[inode].cost);
         }
 
         rcv_path_manager.free_path_struct(cheapest->path_data);
@@ -351,10 +351,10 @@ void ConnectionRouter<Heap>::timing_driven_expand_cheapest(t_heap* cheapest,
     if (best_total_cost > new_total_cost && ((rcv_path_manager.is_enabled()) || best_back_cost > new_back_cost)) {
         //Explore from this node, since the current/new partial path has the best cost
         //found so far
-        VTR_LOGV_DEBUG(router_debug_, "    Better cost to %d\n", inode);
-        VTR_LOGV_DEBUG(router_debug_, "    New total cost: %g\n", new_total_cost);
-        VTR_LOGV_DEBUG(router_debug_, "    New back cost: %g\n", new_back_cost);
-        VTR_LOGV_DEBUG(router_debug_, "      Setting path costs for associated node %d (from %d edge %zu)\n",
+        /*ESR*/VTR_LOG("    Better cost to %d\n", inode);
+        /*ESR*/VTR_LOG("    New total cost: %g\n", new_total_cost);
+        /*ESR*/VTR_LOG("    New back cost: %g\n", new_back_cost);
+        /*ESR*/VTR_LOG("      Setting path costs for associated node %d (from %d edge %zu)\n",
                        cheapest->index,
                        cheapest->prev_node(),
                        size_t(cheapest->prev_edge()));
@@ -366,11 +366,11 @@ void ConnectionRouter<Heap>::timing_driven_expand_cheapest(t_heap* cheapest,
     } else {
         //Post-heap prune, do not re-explore from the current/new partial path as it
         //has worse cost than the best partial path to this node found so far
-        VTR_LOGV_DEBUG(router_debug_, "    Worse cost to %d\n", inode);
-        VTR_LOGV_DEBUG(router_debug_, "    Old total cost: %g\n", best_total_cost);
-        VTR_LOGV_DEBUG(router_debug_, "    Old back cost: %g\n", best_back_cost);
-        VTR_LOGV_DEBUG(router_debug_, "    New total cost: %g\n", new_total_cost);
-        VTR_LOGV_DEBUG(router_debug_, "    New back cost: %g\n", new_back_cost);
+        /*ESR*/VTR_LOG("    Worse cost to %d\n", inode);
+        /*ESR*/VTR_LOG("    Old total cost: %g\n", best_total_cost);
+        /*ESR*/VTR_LOG("    Old back cost: %g\n", best_back_cost);
+        /*ESR*/VTR_LOG("    New total cost: %g\n", new_total_cost);
+        /*ESR*/VTR_LOG("    New back cost: %g\n", new_back_cost);
     }
 }
 
@@ -497,7 +497,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbour(t_heap* current,
         }
     }
 
-    VTR_LOGV_DEBUG(router_debug_, "      Expanding node %d edge %zu -> %d\n",
+    /*ESR*/VTR_LOG("      Expanding node %d edge %zu -> %d\n",
                    from_node, size_t(from_edge), to_node_int);
 
     // Check if the node exists in the route tree when RCV is enabled
@@ -545,7 +545,7 @@ void ConnectionRouter<Heap>::timing_driven_add_to_heap(const t_conn_cost_params 
 
     next.R_upstream = current->R_upstream;
 
-    VTR_LOGV_DEBUG(router_debug_, "      Expanding to node %d (%s)\n", to_node, describe_rr_node(to_node).c_str());
+    /*ESR*/VTR_LOG("      Expanding to node %d (%s)\n", to_node, describe_rr_node(to_node).c_str());
 
     evaluate_timing_driven_node_costs(&next,
                                       cost_params,
@@ -855,7 +855,7 @@ void ConnectionRouter<Heap>::add_route_tree_node_to_heap(
         float tot_cost = backward_path_cost
                          + cost_params.astar_fac
                                * router_lookahead_.get_expected_cost(RRNodeId(inode), RRNodeId(target_node), cost_params, R_upstream);
-        VTR_LOGV_DEBUG(router_debug_, "  Adding node %8d to heap from init route tree with cost %g (%s)\n", inode, tot_cost, describe_rr_node(inode).c_str());
+        /*ESR*/VTR_LOG("  Adding node %8d to heap from init route tree with cost %g (%s)\n", inode, tot_cost, describe_rr_node(inode).c_str());
 
         push_back_node(&heap_, rr_node_route_inf_,
                        inode, tot_cost, NO_PREVIOUS, RREdgeId::INVALID(),
