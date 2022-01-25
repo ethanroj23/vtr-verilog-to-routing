@@ -510,9 +510,7 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     // If it's starting a new sub branch this is ok
     if (device_ctx.rr_graph.node_type(prev_node) == SINK) return true;
 
-    std::vector<t_dest_switch> edges;
-    rr_graph.edge_range_direct(prev_node, edges);
-    for (auto edge : edges) {
+    for (auto edge : rr_graph.edge_range_iter(prev_node)) {
         //If the sink node is reachable by previous node return true
         if (edge.dest == node) {
             return true;

@@ -79,10 +79,8 @@ void check_rr_graph(const t_graph_type graph_type,
         edges.resize(0);
         edges.reserve(num_edges);
 
-        std::vector<t_dest_switch> cur_edges;
-        rr_graph.edge_range_direct(RRNodeId(inode), cur_edges);
         size_t k = 0;
-        for(auto edge : cur_edges) {
+        for(auto edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
             int to_node = size_t(edge.dest);
 
             if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
@@ -113,9 +111,7 @@ void check_rr_graph(const t_graph_type graph_type,
         });
 
         //Check that multiple edges between the same from/to nodes make sense
-        std::vector<t_dest_switch> cur_edges_2;
-        rr_graph.edge_range_direct(RRNodeId(inode), cur_edges_2);
-        for(auto cur_edge : cur_edges_2) {
+        for(auto cur_edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
             int to_node = size_t(cur_edge.dest);
 
             auto range = std::equal_range(edges.begin(), edges.end(),
@@ -550,9 +546,7 @@ static void check_unbuffered_edges(int from_node) {
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
 
-    std::vector<t_dest_switch> edges;
-    rr_graph.edge_range_direct(RRNodeId(from_node), edges);
-    for(auto edge : edges) {
+    for(auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
         to_node = size_t(edge.dest);
         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 

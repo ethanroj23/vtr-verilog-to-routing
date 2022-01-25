@@ -387,9 +387,7 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    std::vector<t_edge_with_id> edges;
-    rr_graph.edge_range_with_id_direct(RRNodeId(inode), edges);
-    for (auto edge : edges) {
+    for (auto edge : rr_graph.edge_range_with_id_iter(RRNodeId(inode))) {
         RRNodeId to_node = edge.dest;
 
         vtr::Point<int> lower_left(route_ctx.route_bb[net_id].xmin, route_ctx.route_bb[net_id].ymin);

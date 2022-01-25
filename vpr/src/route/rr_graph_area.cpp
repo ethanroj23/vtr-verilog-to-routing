@@ -160,12 +160,10 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
         size_t from_node = (size_t)from_rr_node;
         from_rr_type = rr_graph.node_type(from_rr_node);
-        std::vector<t_dest_switch> edges;
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
-                rr_graph.edge_range_direct(RRNodeId(from_node), edges);
-                for (auto edge : edges) {
+                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
                     RRNodeId to_node = edge.dest;
                     to_rr_type = rr_graph.node_type(to_node);
 
@@ -250,8 +248,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
             case OPIN:
                 
                 shared_opin_buffer_trans = 0.;
-                rr_graph.edge_range_direct(RRNodeId(from_node), edges);
-                for (auto edge : edges) {
+                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
                     iswitch = edge.switch_id;
                     ntrans_no_sharing += unsharable_switch_trans[iswitch]
                                          + sharable_switch_trans[iswitch];
@@ -356,14 +353,12 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
         size_t from_node = size_t(from_rr_node);
         from_rr_type = rr_graph.node_type(from_rr_node);
-        std::vector<t_dest_switch> edges;
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
 
                 /* Increment number of inputs per cblock if IPIN */
-                rr_graph.edge_range_direct(RRNodeId(from_node), edges);
-                for (auto edge : edges) {
+                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
                     RRNodeId to_node = edge.dest;
                     to_rr_type = rr_graph.node_type(to_node);
 

@@ -411,8 +411,6 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - directrf_stratixiv_arch_timing.blif
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
-    std::vector<t_edge_with_id> edges;
-    rr_graph_->edge_range_with_id_direct(from_node, edges);
     // for (auto edge : edges) { // ESR remove this prefetch for now
     //     RRNodeId to_node = edge.dest;
     //     rr_graph_->prefetch_node(to_node);
@@ -421,7 +419,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
     // }
 
-    for (auto edge : edges) {
+    for (auto edge : rr_graph_->edge_range_with_id_iter(from_node)) {
         RRNodeId to_node = edge.dest;
         timing_driven_expand_neighbour(current,
                                        from_node_int,

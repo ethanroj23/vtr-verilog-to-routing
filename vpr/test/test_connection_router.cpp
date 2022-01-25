@@ -93,7 +93,11 @@ std::tuple<size_t, size_t, int> find_source_and_sink() {
             if (edge == rr_graph.node_last_edge(sink)) {
                 break;
             }
-            sink = rr_graph.edge_sink_node(edge);
+            // sink = rr_graph.edge_sink_node(edge);
+            sink = rr_graph.node_first_sink(sink);
+            // std::vector<t_dest_switch> edges;
+            // rr_graph.edge_range_direct(sink, edges);
+            // sink = edges[0].dest;
 
             // If this is the new longest walk, store it.
             if (hops > std::get<2>(longest)) {

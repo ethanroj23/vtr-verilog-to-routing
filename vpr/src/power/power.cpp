@@ -819,9 +819,7 @@ static void power_usage_routing(t_power_usage* power_usage,
             if (node_power->visited) {
                 continue;
             }
-            std::vector<t_dest_switch> edges;
-            rr_graph.edge_range_direct(RRNodeId(trace->index), edges);
-            for (auto edge : edges) {
+            for (auto edge : rr_graph.edge_range_iter(RRNodeId(trace->index))) {
                 const auto& next_node_id = size_t(edge.dest);
                 if (next_node_id != size_t(OPEN)) {
                     t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
@@ -980,9 +978,7 @@ static void power_usage_routing(t_power_usage* power_usage,
                 connectionbox_fanout = 0;
                 switchbox_fanout = 0;
 
-                std::vector<t_dest_switch> edges;
-                rr_graph.edge_range_direct(rr_id, edges);
-                for(auto edge : edges) {
+                for(auto edge : rr_graph.edge_range_iter(rr_id)) {
                     if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
                         connectionbox_fanout++;
                     } else if (edge.switch_id == routing_arch->delayless_switch) {
@@ -1212,7 +1208,6 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
         t_edge_size fanout_to_seg = 0;
         t_rr_node_power* node_power = &rr_node_power[size_t(rr_node_idx)];
         const t_edge_size node_fan_in = rr_graph.node_fan_in(rr_node_idx);
-        std::vector<t_dest_switch> edges;
         switch (rr_graph.node_type(rr_node_idx)) {
             case IPIN:
                 max_IPIN_fanin = std::max(max_IPIN_fanin, node_fan_in);
@@ -1225,8 +1220,7 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
                 break;
             case CHANX:
             case CHANY:
-                rr_graph.edge_range_direct(rr_node_idx, edges);
-                for(auto edge : edges) {
+                for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
                     if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
                         fanout_to_IPIN++;
                     } else if (edge.switch_id != routing_arch->delayless_switch) {
@@ -1259,9 +1253,7 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
 
     /* Populate driver switch type */
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
-        std::vector<t_dest_switch> edges;
-        rr_graph.edge_range_direct(rr_node_idx, edges);
-        for(auto edge : edges) {
+        for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
             if (size_t(edge.dest)) {
                 if (rr_node_power[size_t(edge.dest)].driver_switch_type == OPEN) {
                     rr_node_power[size_t(edge.dest)].driver_switch_type = edge.switch_id;

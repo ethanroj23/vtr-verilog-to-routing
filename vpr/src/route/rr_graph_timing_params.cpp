@@ -55,9 +55,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         from_rr_type = rr_graph.node_type(rr_id);
 
         if (from_rr_type == CHANX || from_rr_type == CHANY) {
-            std::vector<t_dest_switch> edges;
-            rr_graph.edge_range_direct(rr_id, edges);
-            for (auto edge : edges) {
+            for (auto edge : rr_graph.edge_range_iter(rr_id)) {
                 to_node = size_t(edge.dest);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
@@ -152,9 +150,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         }
         /* End node is CHANX or CHANY */
         else if (from_rr_type == OPIN) {
-            std::vector<t_dest_switch> edges;
-            rr_graph.edge_range_direct(rr_id, edges);
-            for (auto edge : edges) {
+            for (auto edge : rr_graph.edge_range_iter(rr_id)) {
                 switch_index = edge.switch_id;
                 to_node = size_t(edge.dest);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
@@ -178,9 +174,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
      * out what the Cout's should be */
     Couts_to_add = (float*)vtr::calloc(device_ctx.rr_graph.size(), sizeof(float));
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
-        std::vector<t_dest_switch> edges;
-        rr_graph.edge_range_direct(inode, edges);
-        for (auto edge : edges) {
+        for (auto edge : rr_graph.edge_range_iter(inode)) {
             switch_index = edge.switch_id;
             to_node = size_t(edge.dest);
             to_rr_type = rr_graph.node_type(RRNodeId(to_node));

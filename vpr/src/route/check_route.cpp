@@ -308,9 +308,7 @@ static bool check_adjacent(int from_node, int to_node) {
     const auto& rr_graph = device_ctx.rr_graph;
 
     reached = false;
-    std::vector<t_dest_switch> edges;
-    rr_graph.edge_range_direct(RRNodeId(from_node), edges);
-    for (auto edge : edges) {
+    for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
         if (size_t(edge.dest) == size_t(to_node)) {
             reached = true;
             break;

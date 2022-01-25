@@ -299,8 +299,20 @@ class RRGraphView {
         node_storage_.edge_range_direct(node, return_edges);
     }
     inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const{
-        node_storage_.edge_range_iter(node);
+        return node_storage_.edge_range_iter(node);
     }
+    inline std::vector<t_edge_with_id> edge_range_with_id_iter(RRNodeId node) const{
+        return node_storage_.edge_range_with_id_iter(node);
+    }
+
+    inline short edge_switch_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return node_storage_.edge_switch_in_node(node, edge_id);
+    }
+    inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return node_storage_.edge_sink_node_in_node(node, edge_id);
+    }
+
+
 
 
     inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
@@ -345,6 +357,10 @@ class RRGraphView {
     inline void for_each_src_sink_switch(std::function<void(RRNodeId, RRNodeId, short)> apply) const {
         node_storage_.for_each_src_sink_switch(apply);
     }
+    inline RRNodeId node_first_sink(RRNodeId node) const {
+        return node_storage_.node_first_sink(node);
+    }
+
 
 
     inline bool empty() const{

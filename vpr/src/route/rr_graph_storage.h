@@ -427,6 +427,31 @@ class t_rr_graph_storage {
         }
     }
 
+    inline std::vector<t_edge_with_id> edge_range_with_id_iter(RRNodeId node) const{
+        // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
+
+        auto x_y_idx = node_coords_[node];
+        auto folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+        std::vector<t_edge_with_id> return_edges;
+        return_edges.reserve(folded_edges.size());
+
+        // std::vector<t_edge_with_id> return_edges; // initialize return vector
+        return_edges.reserve(folded_edges.size());
+        size_t k = 0; // kth edge
+        size_t first = (size_t)first_edge(node);
+        for (auto cur_edge : folded_edges){
+            // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
+            t_edge_with_id add_edge = {
+            tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
+            cur_edge.switch_id, // switch
+            RREdgeId(first+k)
+            };
+            return_edges.push_back(add_edge);
+            k++;
+        }
+        return return_edges;
+    }
+
     bool switch_is_configurable(short switch_id) const;
 
     inline void non_configurable_edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
@@ -497,6 +522,18 @@ class t_rr_graph_storage {
         }
     }
     return false;
+    }
+    inline t_edge_struct get_t_edge_struct_in_node(RRNodeId node, RREdgeId edge_id) const {
+        size_t first = (size_t)first_edge(node);
+        size_t k = (size_t)edge_id - first;
+        return kth_edge_for_node(node, k);
+    }
+
+    inline short edge_switch_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return get_t_edge_struct_in_node(node, edge_id).switch_id;
+    }
+    inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) const {
+        return get_t_edge_struct_in_node(node, edge_id).dest;
     }
 
     // Get the destination node for the iedge'th edge from specified RRNodeId.
@@ -725,9 +762,22 @@ class t_rr_graph_storage {
         return return_edges;
     }
 
+    inline RRNodeId node_first_sink(RRNodeId node) const {
+        // returns a vector of edge structs, which each include src, sink, switch
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edge = shared_edges_[x_y_idx.node_pattern_idx][0];
+        return tile_to_node_[x_y_idx.xlow+folded_edge.dx][x_y_idx.ylow+folded_edge.dy][folded_edge.tile_idx];
+    }
+
 
     inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
-        return edge_range_src(node)[k];
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edge = shared_edges_[x_y_idx.node_pattern_idx][k];
+        return {node, // src
+         tile_to_node_[x_y_idx.xlow+folded_edge.dx][x_y_idx.ylow+folded_edge.dy][folded_edge.tile_idx], // dest
+         folded_edge.switch_id // switch
+        };
+        // return edge_range_src(node)[k];
     }
 
     inline RRNodeId edge_sink_node(const RREdgeId& edge_id) const {
