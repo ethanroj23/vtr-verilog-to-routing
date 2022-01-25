@@ -298,6 +298,10 @@ class RRGraphView {
     inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
         node_storage_.edge_range_direct(node, return_edges);
     }
+    inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const{
+        node_storage_.edge_range_iter(node);
+    }
+
 
     inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
         node_storage_.edge_range_with_id_direct(node, return_edges);

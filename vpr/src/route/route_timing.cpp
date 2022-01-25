@@ -997,7 +997,7 @@ bool timing_driven_route_net(ConnectionRouter& router,
 
     unsigned int num_sinks = cluster_ctx.clb_nlist.net_sinks(net_id).size();
 
-    /*ESR*/VTR_LOG("Routing Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
+    VTR_LOGV_DEBUG(f_router_debug, "Routing Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
 
     t_rt_node* rt_root;
     rt_root = setup_routing_resources(itry,
@@ -1078,7 +1078,7 @@ bool timing_driven_route_net(ConnectionRouter& router,
 
         enable_router_debug(router_opts, net_id, sink_node, itry, &router);
 
-        /*ESR*/VTR_LOG("Pre-routing global net %zu\n", size_t(net_id));
+        VTR_LOGV_DEBUG(f_router_debug, "Pre-routing global net %zu\n", size_t(net_id));
 
         // Set to the max timing criticality which should intern minimize clock insertion
         // delay by selecting a direct route from the clock source to the virtual sink
@@ -1108,7 +1108,7 @@ bool timing_driven_route_net(ConnectionRouter& router,
 
         enable_router_debug(router_opts, net_id, sink_rr, itry, &router);
 
-        /*ESR*/VTR_LOG("Routing Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
+        VTR_LOGV_DEBUG(f_router_debug, "Routing Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
 
         cost_params.criticality = pin_criticality[target_pin];
 
@@ -1167,7 +1167,7 @@ bool timing_driven_route_net(ConnectionRouter& router,
     VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= rr_graph.node_capacity(RRNodeId(rt_root->inode)), "SOURCE should never be congested");
 
     // route tree is not kept persistent since building it from the traceback the next iteration takes almost 0 time
-    /*ESR*/VTR_LOG("Routed Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
+    VTR_LOGV_DEBUG(f_router_debug, "Routed Net %zu (%zu sinks)\n", size_t(net_id), num_sinks);
 
     free_route_tree(rt_root);
     router.empty_rcv_route_tree_set();
@@ -1190,7 +1190,7 @@ static bool timing_driven_pre_route_to_clock_root(
 
     bool high_fanout = is_high_fanout(cluster_ctx.clb_nlist.net_sinks(net_id).size(), high_fanout_threshold);
 
-    /*ESR*/VTR_LOG("Net %zu pre-route to (%s)\n", size_t(net_id), describe_rr_node(sink_node).c_str());
+    VTR_LOGV_DEBUG(f_router_debug, "Net %zu pre-route to (%s)\n", size_t(net_id), describe_rr_node(sink_node).c_str());
 
     profiling::sink_criticality_start();
 
@@ -1257,10 +1257,10 @@ static bool timing_driven_pre_route_to_clock_root(
     // - fix routing for all nodes leading to the sink
     // - free up virtual sink occupancy
     disable_expansion_and_remove_sink_from_route_tree_nodes(rt_root);
-    /*ESR*/VTR_LOG("Traceback tail before update %d \n",
+    VTR_LOGV_DEBUG(f_router_debug, "Traceback tail before update %d \n",
                    route_ctx.trace[net_id].tail->index);
     drop_traceback_tail(net_id);
-    /*ESR*/VTR_LOG("Updated traceback ptrs: %d %d \n",
+    VTR_LOGV_DEBUG(f_router_debug, "Updated traceback ptrs: %d %d \n",
                    route_ctx.trace[net_id].head->index, route_ctx.trace[net_id].tail->index);
     m_route_ctx.rr_node_route_inf[sink_node].set_occ(0);
 
@@ -1290,7 +1290,7 @@ static bool timing_driven_route_sink(
     profiling::sink_criticality_start();
 
     int sink_node = route_ctx.net_rr_terminals[net_id][target_pin];
-    /*ESR*/VTR_LOG("Net %zu Target %d (%s)\n", size_t(net_id), itarget, describe_rr_node(sink_node).c_str());
+    VTR_LOGV_DEBUG(f_router_debug, "Net %zu Target %d (%s)\n", size_t(net_id), itarget, describe_rr_node(sink_node).c_str());
 
     VTR_ASSERT_DEBUG(verify_traceback_route_tree_equivalent(route_ctx.trace[net_id].head, rt_root));
 

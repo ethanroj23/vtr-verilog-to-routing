@@ -79,8 +79,9 @@ void check_rr_graph(const t_graph_type graph_type,
         edges.resize(0);
         edges.reserve(num_edges);
 
-        std::vector<t_edge_with_id> cur_edges;
-        rr_graph.edge_range_with_id_direct(RRNodeId(inode), cur_edges);
+        std::vector<t_dest_switch> cur_edges;
+        rr_graph.edge_range_direct(RRNodeId(inode), cur_edges);
+        size_t k = 0;
         for(auto edge : cur_edges) {
             int to_node = size_t(edge.dest);
 
@@ -91,9 +92,9 @@ void check_rr_graph(const t_graph_type graph_type,
                                 inode, to_node);
             }
 
-            check_rr_edge(inode, (size_t)edge.edge_id, to_node);
+            check_rr_edge(inode, k, to_node);
 
-            edges.emplace_back(to_node, (size_t)edge.edge_id);
+            edges.emplace_back(to_node, k);
             total_edges_to_node[to_node]++;
 
             auto switch_type = edge.switch_id;
@@ -104,6 +105,7 @@ void check_rr_graph(const t_graph_type graph_type,
                                 "\tSwitch type is out of range.\n",
                                 inode, switch_type);
             }
+            k++;
         } /* End for all edges of node. */
 
         std::sort(edges.begin(), edges.end(), [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {

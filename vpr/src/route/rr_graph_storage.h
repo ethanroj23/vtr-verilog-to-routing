@@ -388,6 +388,23 @@ class t_rr_graph_storage {
         }
     }
 
+    inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const{
+        // returns a vector of edge structs, which each include sink, switch
+        
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+        std::vector<t_dest_switch> return_edges;
+        return_edges.reserve(folded_edges.size());
+
+        for (const auto& cur_edge : folded_edges){
+            return_edges.push_back({
+            tile_to_node_[x_y_idx.xlow + cur_edge.dx][x_y_idx.ylow + cur_edge.dy][cur_edge.tile_idx], // dest
+            cur_edge.switch_id // switch
+            });
+        }
+        return return_edges;
+    }
+
     inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
         // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
 
@@ -486,8 +503,8 @@ class t_rr_graph_storage {
     //
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
-    RRNodeId edge_sink_node(const RRNodeId& id, t_edge_size iedge) const {
-        return edge_sink_node(edge_id(id, iedge));
+    inline RRNodeId edge_sink_node(const RRNodeId& id, t_edge_size iedge) const {
+        return kth_edge_for_node(id, iedge).dest;
     }
 
 
@@ -495,10 +512,9 @@ class t_rr_graph_storage {
     //
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
-    short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
-        return edge_switch(edge_id(id, iedge));
+    inline short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
+        return kth_edge_for_node(id, iedge).switch_id;
     }
-
     /*
      * Node proxy methods
      *
@@ -709,6 +725,7 @@ class t_rr_graph_storage {
         return return_edges;
     }
 
+
     inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const{
         return edge_range_src(node)[k];
     }
@@ -870,10 +887,10 @@ class t_rr_graph_storage {
         return node_to_dir_side_[id].dir_side.direction;
     }
 
-    /* Find if the given node appears on a specific side */
-    inline bool is_node_on_specific_side(const RRNodeId& id,
+    inline bool is_node_on_specific_side (
+        const RRNodeId& id,
         const e_side& side) const {
-        const auto& cur_node_type = node_type(id);
+        auto& cur_node_type = node_type_[id];
         if (cur_node_type != IPIN && cur_node_type != OPIN) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                             "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",

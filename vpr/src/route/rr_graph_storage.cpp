@@ -714,11 +714,10 @@ void t_rr_graph_storage::set_node_rc_index(RRNodeId id, NodeRCIndex new_rc_index
 }
 
 void t_rr_graph_storage::set_node_capacity(RRNodeId id, short new_capacity) {
-    t_folded_dir_side node_folded_dir_side{
-        new_capacity, 
-        {Direction::NUM_DIRECTIONS}
-    };
-    node_to_dir_side_.push_back(node_folded_dir_side);
+    if ((size_t) id >= node_to_dir_side_.size()){
+        node_to_dir_side_.emplace_back();
+    }
+    node_to_dir_side_[id].capacity = new_capacity;
 }
 
 void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction) {
