@@ -1428,8 +1428,10 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             //the reserved OPINs to move out of the way of congestion, by preferring
             //to reserve OPINs with lower congestion costs).
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-                to_node = size_t(edge.dest);
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                to_node = size_t(iter_edges.dests[k]);
 
                 VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
 
@@ -1566,14 +1568,16 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             auto& device_ctx = g_vpr_ctx.device();
             const auto& rr_graph = device_ctx.rr_graph;
             bool found = false;
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(trace->index))) {
-                int to_node = size_t(edge.dest);
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(RRNodeId(trace->index));
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                int to_node = size_t(iter_edges.dests[k]);
 
                 if (to_node == next->index) {
                     found = true;
 
                     //Verify that the switch matches
-                    int rr_iswitch = edge.switch_id;
+                    int rr_iswitch = iter_edges.switches[k];
                     if (trace->iswitch != rr_iswitch) {
                         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
                                         trace->iswitch, rr_iswitch,

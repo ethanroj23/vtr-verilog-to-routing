@@ -308,8 +308,10 @@ static bool check_adjacent(int from_node, int to_node) {
     const auto& rr_graph = device_ctx.rr_graph;
 
     reached = false;
-    for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-        if (size_t(edge.dest) == size_t(to_node)) {
+    t_edge_soa edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+    size_t num_edges = edges.dests.size();
+    for (size_t k=0; k < num_edges; k++) {
+        if (size_t(edges.dests[k]) == size_t(to_node)) {
             reached = true;
             break;
         }

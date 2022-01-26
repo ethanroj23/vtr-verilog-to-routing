@@ -509,15 +509,16 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     const auto& rr_graph = device_ctx.rr_graph;
     // If it's starting a new sub branch this is ok
     if (device_ctx.rr_graph.node_type(prev_node) == SINK) return true;
-
-    for (auto edge : rr_graph.edge_range_iter(prev_node)) {
+    t_edge_soa edges = rr_graph.edge_range_soa(prev_node);
+    size_t num_edges = edges.dests.size();
+    for (size_t k=0; k < num_edges; k++) {
         //If the sink node is reachable by previous node return true
-        if (edge.dest == node) {
+        if (edges.dests[k] == node) {
             return true;
         }
 
         // If there are any non-configurable branches return true
-        short edge_switch = edge.switch_id;
+        short edge_switch = edges.switches[k];
         if (!(rr_graph.rr_switch_inf(RRSwitchId(edge_switch)).configurable())) return true;
     }
 

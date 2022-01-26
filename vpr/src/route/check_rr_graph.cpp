@@ -71,17 +71,17 @@ void check_rr_graph(const t_graph_type graph_type,
         }
 
         t_rr_type rr_type = rr_graph.node_type(rr_node);
-        int num_edges = rr_graph.num_edges(RRNodeId(inode));
 
         check_rr_node(inode, route_type, device_ctx);
 
+        t_edge_soa iter_edges = rr_graph.edge_range_soa(RRNodeId(inode));
+        size_t num_edges = iter_edges.dests.size();
         /* Check all the connectivity (edges, etc.) information.                    */
         edges.resize(0);
         edges.reserve(num_edges);
 
-        size_t k = 0;
-        for(auto edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
-            int to_node = size_t(edge.dest);
+        for (size_t k=0; k < num_edges; k++) {
+            int to_node = size_t(iter_edges.dests[k]);
 
             if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -95,7 +95,7 @@ void check_rr_graph(const t_graph_type graph_type,
             edges.emplace_back(to_node, k);
             total_edges_to_node[to_node]++;
 
-            auto switch_type = edge.switch_id;
+            auto switch_type = iter_edges.switches[k];
 
             if (switch_type < 0 || switch_type >= num_rr_switches) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -103,7 +103,6 @@ void check_rr_graph(const t_graph_type graph_type,
                                 "\tSwitch type is out of range.\n",
                                 inode, switch_type);
             }
-            k++;
         } /* End for all edges of node. */
 
         std::sort(edges.begin(), edges.end(), [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {
@@ -111,8 +110,10 @@ void check_rr_graph(const t_graph_type graph_type,
         });
 
         //Check that multiple edges between the same from/to nodes make sense
-        for(auto cur_edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
-            int to_node = size_t(cur_edge.dest);
+        t_edge_soa iter_edges2 = rr_graph.edge_range_soa(RRNodeId(inode));
+        size_t num_edges2 = iter_edges2.dests.size();
+        for (size_t k=0; k < num_edges2; k++) {
+            int to_node = size_t(iter_edges2.dests[k]);
 
             auto range = std::equal_range(edges.begin(), edges.end(),
                                           to_node, node_edge_sorter());
@@ -534,7 +535,7 @@ static void check_unbuffered_edges(int from_node) {
     /* This routine checks that all pass transistors in the routing truly are  *
      * bidirectional.  It may be a slow check, so don't use it all the time.   */
 
-    int from_edge, to_node, to_edge, to_num_edges;
+    int from_edge, to_node, to_edge;
     t_rr_type from_rr_type, to_rr_type;
     short from_switch_type;
     bool trans_matched;
@@ -545,15 +546,16 @@ static void check_unbuffered_edges(int from_node) {
     from_rr_type = rr_graph.node_type(RRNodeId(from_node));
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
-
-    for(auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-        to_node = size_t(edge.dest);
+    t_edge_soa iter_edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+    size_t num_edges = iter_edges.dests.size();
+    for (size_t k=0; k < num_edges; k++) {
+        to_node = size_t(iter_edges.dests[k]);
         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
         if (to_rr_type != CHANX && to_rr_type != CHANY)
             continue;
 
-        from_switch_type = edge.switch_id;
+        from_switch_type = iter_edges.switches[k];
 
         if (rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).buffered())
             continue;
@@ -562,12 +564,13 @@ static void check_unbuffered_edges(int from_node) {
          * check that there is a corresponding edge from to_node back to         *
          * from_node.                                                            */
 
-        to_num_edges = rr_graph.num_edges(RRNodeId(to_node));
         trans_matched = false;
 
-        for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
-            if (size_t(edge.dest) == size_t(from_node)
-                && edge.switch_id == from_switch_type) {
+        t_edge_soa iter_edges2 = rr_graph.edge_range_soa(RRNodeId(to_node));
+        size_t to_num_edges = iter_edges2.dests.size();
+        for (size_t k2=0; k < to_num_edges; k2++) {
+            if (size_t(iter_edges2.dests[k2]) == size_t(from_node)
+                && iter_edges2.switches[k2] == from_switch_type) {
                 trans_matched = true;
                 break;
             }

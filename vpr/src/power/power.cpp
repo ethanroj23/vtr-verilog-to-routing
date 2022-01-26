@@ -819,8 +819,10 @@ static void power_usage_routing(t_power_usage* power_usage,
             if (node_power->visited) {
                 continue;
             }
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(trace->index))) {
-                const auto& next_node_id = size_t(edge.dest);
+            t_edge_soa edges = rr_graph.edge_range_soa(RRNodeId(trace->index));
+            size_t num_edges = edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                const auto& next_node_id = size_t(edges.dests[k]);
                 if (next_node_id != size_t(OPEN)) {
                     t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
 
@@ -977,11 +979,12 @@ static void power_usage_routing(t_power_usage* power_usage,
                 /* Determine types of switches that this wire drives */
                 connectionbox_fanout = 0;
                 switchbox_fanout = 0;
-
-                for(auto edge : rr_graph.edge_range_iter(rr_id)) {
-                    if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
+                t_edge_soa edges = rr_graph.edge_range_soa(rr_id);
+                size_t num_edges = edges.dests.size();
+                for (size_t k=0; k < num_edges; k++) {
+                    if (edges.switches[k] == routing_arch->wire_to_rr_ipin_switch) {
                         connectionbox_fanout++;
-                    } else if (edge.switch_id == routing_arch->delayless_switch) {
+                    } else if (edges.switches[k] == routing_arch->delayless_switch) {
                         /* Do nothing */
                     } else {
                         switchbox_fanout++;
@@ -1176,6 +1179,8 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
     t_edge_size max_IPIN_fanin;
     t_edge_size max_seg_to_IPIN_fanout;
     t_edge_size max_seg_to_seg_fanout;
+    size_t num_edges;
+    t_edge_soa edges;
     auto& power_ctx = g_vpr_ctx.mutable_power();
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
@@ -1220,10 +1225,12 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
                 break;
             case CHANX:
             case CHANY:
-                for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
-                    if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
+                edges = rr_graph.edge_range_soa(rr_node_idx);
+                num_edges = edges.dests.size();
+                for (size_t k=0; k < num_edges; k++) {
+                    if (edges.switches[k] == routing_arch->wire_to_rr_ipin_switch) {
                         fanout_to_IPIN++;
-                    } else if (edge.switch_id != routing_arch->delayless_switch) {
+                    } else if (edges.switches[k] != routing_arch->delayless_switch) {
                         fanout_to_seg++;
                     }
                 }
@@ -1253,12 +1260,14 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
 
     /* Populate driver switch type */
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
-        for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
-            if (size_t(edge.dest)) {
-                if (rr_node_power[size_t(edge.dest)].driver_switch_type == OPEN) {
-                    rr_node_power[size_t(edge.dest)].driver_switch_type = edge.switch_id;
+        t_edge_soa edges = rr_graph.edge_range_soa(rr_node_idx);
+        size_t num_edges = edges.dests.size();
+        for (size_t k=0; k < num_edges; k++) {
+            if (size_t(edges.dests[k])) {
+                if (rr_node_power[size_t(edges.dests[k])].driver_switch_type == OPEN) {
+                    rr_node_power[size_t(edges.dests[k])].driver_switch_type = edges.switches[k];
                 } else {
-                    VTR_ASSERT(rr_node_power[size_t(edge.dest)].driver_switch_type == edge.switch_id);
+                    VTR_ASSERT(rr_node_power[size_t(edges.dests[k])].driver_switch_type == edges.switches[k]);
                 }
             }
         }

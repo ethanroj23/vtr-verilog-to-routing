@@ -111,9 +111,11 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     float *unsharable_switch_trans, *sharable_switch_trans; /* [0..num_switch-1] */
 
     t_rr_type from_rr_type, to_rr_type;
-    int iedge, maxlen;
+    int maxlen;
     int iswitch, i, j, iseg, max_inputs_to_cblock;
     float input_cblock_trans, shared_opin_buffer_trans;
+    size_t num_edges;
+    t_edge_soa iter_edges;
 
     /* Two variables below are the accumulator variables that add up all the    *
      * transistors in the routing.  Make doubles so that they don't stop        *
@@ -163,8 +165,10 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
-                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-                    RRNodeId to_node = edge.dest;
+                iter_edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+                num_edges = iter_edges.dests.size();
+                for (size_t k=0; k < num_edges; k++) {
+                    RRNodeId to_node = iter_edges.dests[k];
                     to_rr_type = rr_graph.node_type(to_node);
 
                     /* Ignore any uninitialized rr_graph nodes */
@@ -175,7 +179,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                     switch (to_rr_type) {
                         case CHANX:
                         case CHANY:
-                            iswitch = edge.switch_id;
+                            iswitch = iter_edges.switches[k];
 
                             if (rr_graph.rr_switch_inf(RRSwitchId(iswitch)).buffered()) {
                                 iseg = seg_index_of_sblock(from_node, size_t(to_node));
@@ -248,8 +252,10 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
             case OPIN:
                 
                 shared_opin_buffer_trans = 0.;
-                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-                    iswitch = edge.switch_id;
+                iter_edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+                num_edges = iter_edges.dests.size();
+                for (size_t k=0; k < num_edges; k++) {
+                    iswitch = iter_edges.switches[k];
                     ntrans_no_sharing += unsharable_switch_trans[iswitch]
                                          + sharable_switch_trans[iswitch];
                     ntrans_sharing += unsharable_switch_trans[iswitch];
@@ -308,6 +314,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     int i, j, iseg, iedge, maxlen;
     int max_inputs_to_cblock;
     float input_cblock_trans;
+    t_edge_soa iter_edges;
+    size_t num_edges;
 
     /* August 2014:
      * In a unidirectional architecture all the fanin to a wire segment comes from
@@ -358,8 +366,10 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
             case CHANY:
 
                 /* Increment number of inputs per cblock if IPIN */
-                for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-                    RRNodeId to_node = edge.dest;
+                iter_edges = rr_graph.edge_range_soa(RRNodeId(from_node));
+                num_edges = iter_edges.dests.size();
+                for (size_t k=0; k < num_edges; k++) {
+                    RRNodeId to_node = iter_edges.dests[k];
                     to_rr_type = rr_graph.node_type(to_node);
 
                     /* Ignore any uninitialized rr_graph nodes */
@@ -371,7 +381,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                         case CHANX:
                         case CHANY:
                             if (!chan_node_switch_done[size_t(to_node)]) {
-                                int switch_index = edge.switch_id;
+                                int switch_index = iter_edges.switches[k];
                                 auto switch_type = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).type();
 
                                 int fan_in = rr_graph.node_fan_in(to_node);

@@ -55,12 +55,14 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         from_rr_type = rr_graph.node_type(rr_id);
 
         if (from_rr_type == CHANX || from_rr_type == CHANY) {
-            for (auto edge : rr_graph.edge_range_iter(rr_id)) {
-                to_node = size_t(edge.dest);
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(rr_id);
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                to_node = size_t(iter_edges.dests[k]);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
                 if (to_rr_type == CHANX || to_rr_type == CHANY) {
-                    switch_index = edge.switch_id;
+                    switch_index = iter_edges.switches[k];
                     Cin = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).Cin;
                     Cout = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).Cout;
                     buffered = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).buffered();
@@ -150,9 +152,11 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         }
         /* End node is CHANX or CHANY */
         else if (from_rr_type == OPIN) {
-            for (auto edge : rr_graph.edge_range_iter(rr_id)) {
-                switch_index = edge.switch_id;
-                to_node = size_t(edge.dest);
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(rr_id);
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                switch_index = iter_edges.switches[k];
+                to_node = size_t(iter_edges.dests[k]);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
                 if (to_rr_type != CHANX && to_rr_type != CHANY)
@@ -160,7 +164,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
 
                 if (rr_graph.node_direction(RRNodeId(to_node)) == Direction::BIDIR) {
                     Cout = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).Cout;
-                    to_node = size_t(edge.dest); /* Will be CHANX or CHANY */
+                    to_node = size_t(iter_edges.dests[k]); /* Will be CHANX or CHANY */
                     rr_node_C[to_node] += Cout;
                 }
             }
@@ -174,9 +178,11 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
      * out what the Cout's should be */
     Couts_to_add = (float*)vtr::calloc(device_ctx.rr_graph.size(), sizeof(float));
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
-        for (auto edge : rr_graph.edge_range_iter(inode)) {
-            switch_index = edge.switch_id;
-            to_node = size_t(edge.dest);
+        t_edge_soa iter_edges = rr_graph.edge_range_soa(inode);
+        size_t num_edges = iter_edges.dests.size();
+        for (size_t k=0; k < num_edges; k++) {
+            switch_index = iter_edges.switches[k];
+            to_node = size_t(iter_edges.dests[k]);
             to_rr_type = rr_graph.node_type(RRNodeId(to_node));
             if (to_rr_type == CHANX || to_rr_type == CHANY) {
                 if (rr_graph.node_direction(RRNodeId(to_node)) != Direction::BIDIR) {

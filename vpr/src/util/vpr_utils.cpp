@@ -1801,9 +1801,11 @@ void print_switch_usage() {
     // map key: switch index; map value: count (fanin)
     std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_graph.size()];
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
-        for (auto edge : rr_graph.edge_range_iter(inode)) {
-            int switch_index = edge.switch_id;
-            int to_node_index = size_t(edge.dest);
+        t_edge_soa iter_edges = rr_graph.edge_range_soa(inode);
+        size_t num_edges = iter_edges.dests.size();
+        for (size_t k=0; k < num_edges; k++) {
+            int switch_index = iter_edges.switches[k];
+            int to_node_index = size_t(iter_edges.dests[k]);
             // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).
             //             physically, the switch driving from point 1 & 3 should be the same. But we will assign then different switch
             //             index; or there is no way to differentiate them after abstracting a 2D wire into a 1D node

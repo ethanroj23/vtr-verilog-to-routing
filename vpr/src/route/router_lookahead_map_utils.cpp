@@ -263,14 +263,14 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
     RRNodeId parent = parent_entry.rr_node;
 
 
-    size_t k = 0;
-    for (auto edge : rr_graph.edge_range_iter(parent)) {
-        int child_node_ind = size_t(edge.dest);
-        int switch_ind = edge.switch_id;
+    t_edge_soa iter_edges = rr_graph.edge_range_soa(parent);
+    size_t num_edges = iter_edges.dests.size();
+    for (size_t k=0; k < num_edges; k++) {
+        int child_node_ind = size_t(iter_edges.dests[k]);
+        int switch_ind = iter_edges.switches[k];
 
         /* skip this child if it has already been expanded from */
         if ((*node_expanded)[child_node_ind]) {
-            k++;
             continue;
         }
 
@@ -285,7 +285,6 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
             pq->push(child_entry);
             path = path_entry;
         }
-        k++;
     }
 }
 
@@ -497,11 +496,13 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            for (auto edge : rr_graph.edge_range_iter(curr.node)) {
-                int iswitch = edge.switch_id;
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(curr.node);
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                int iswitch = iter_edges.switches[k];
                 float incr_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
-                RRNodeId next_node = edge.dest;
+                RRNodeId next_node = iter_edges.dests[k];
 
                 t_pq_entry next;
                 next.congestion = curr.congestion + incr_cong; //Of current node
@@ -590,11 +591,13 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            for (auto edge : rr_graph.edge_range_iter(curr.node)) {
-                int iswitch = edge.switch_id;
+            t_edge_soa iter_edges = rr_graph.edge_range_soa(curr.node);
+            size_t num_edges = iter_edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                int iswitch = iter_edges.switches[k];
                 float new_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
-                RRNodeId next_node = edge.dest;
+                RRNodeId next_node = iter_edges.dests[k];
 
                 t_pq_entry next;
                 next.congestion = new_cong; //Of current node

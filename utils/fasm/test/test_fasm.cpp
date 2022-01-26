@@ -254,10 +254,14 @@ TEST_CASE("fasm_integration_test", "[fasm]") {
 
         auto &device_ctx = g_vpr_ctx.mutable_device();
         const auto& rr_graph = device_ctx.rr_graph;
+
+        
         for (const RRNodeId& inode : rr_graph.nodes()){
-            for(auto edge : rr_graph.edge_range_iter(inode)) {
-                auto sink_inode = size_t(edge.dest);
-                auto switch_id = edge.switch_id;
+            t_edge_soa edges = rr_graph.edge_range_soa(inode);
+            size_t num_edges = edges.dests.size();
+            for (size_t k=0; k < num_edges; k++) {
+                auto sink_inode = size_t(edges.dests[k]);
+                auto switch_id = edges.switches[k];
                 auto value = vtr::string_fmt("%d_%d_%zu",
                             (size_t)inode, sink_inode, switch_id);
 

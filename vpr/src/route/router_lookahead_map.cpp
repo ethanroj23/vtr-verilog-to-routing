@@ -652,7 +652,6 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
     t_edge_soa edges = rr_graph.edge_range_soa(parent);
     size_t num_edges = edges.dests.size();
     for (size_t k=0; k < num_edges; k++) {
-    // for (auto edge : rr_graph.edge_range_iter(parent)) {
         RRNodeId child_node = edges.dests[k];
         int switch_ind = size_t(edges.switches[k]);
 

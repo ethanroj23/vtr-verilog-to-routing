@@ -421,10 +421,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     size_t first_edge = rr_graph_->node_first_edge(from_node);
     t_edge_soa edges = rr_graph_->edge_range_soa(from_node);
     size_t num_edges = edges.dests.size();
-    size_t k = 0;
-    // for (auto edge : rr_graph_->edge_range_iter(from_node)) {
     for (size_t k=0; k < num_edges; k++) {
-        // RRNodeId to_node = edge.dest;
         RRNodeId to_node = edges.dests[k];
         timing_driven_expand_neighbour(current,
                                        from_node_int,
@@ -435,8 +432,6 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
                                        target_node,
                                        target_bb,
                                        edges.switches[k]);
-                                    //    edge.switch_id);
-        // k++;
     }
 }
 
