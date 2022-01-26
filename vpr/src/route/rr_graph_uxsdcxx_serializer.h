@@ -962,7 +962,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         // switches have been allocated.
         rr_graph_builder_->mark_edges_as_rr_switch_ids();
         rr_graph_builder_->partition_edges();
-
+        rr_graph_builder_->create_shared_edges_xy();
         for (int source_node = 0; source_node < (ssize_t)rr_nodes_->size(); ++source_node) {
             int num_edges = rr_nodes_->num_edges(RRNodeId(source_node));
             for (int iconn = 0; iconn < num_edges; ++iconn) {
@@ -997,6 +997,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         VTR_ASSERT(wire_to_rr_ipin_switch_ != nullptr);
         *wire_to_rr_ipin_switch_ = most_frequent_switch.first;
+        
     }
 
     inline int get_rr_graph_rr_edges(void*& /*ctx*/) final {
@@ -1109,6 +1110,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     
     inline void finish_rr_graph_tiles(int& ctx) final {
         (void) ctx;
+        rr_graph_builder_->tiles_to_xy();
     }
 
     inline int get_rr_graph_tiles(void*& /*ctx*/) final {
