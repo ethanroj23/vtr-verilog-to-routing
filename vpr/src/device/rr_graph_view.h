@@ -311,6 +311,10 @@ class RRGraphView {
     inline RRNodeId edge_sink_node_in_node(RRNodeId node, const RREdgeId& edge_id) const {
         return node_storage_.edge_sink_node_in_node(node, edge_id);
     }
+    inline t_edge_soa edge_range_soa(RRNodeId node) const{
+        return node_storage_.edge_range_soa(node);
+    }
+
 
 
 

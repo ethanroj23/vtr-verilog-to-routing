@@ -291,11 +291,17 @@ struct t_dest_switch {
         }
   };
 
+
 struct t_edge_with_id {
       RRNodeId dest;
       short switch_id;
       RREdgeId edge_id;
   };
+
+struct t_edge_soa{
+    std::vector<RRNodeId> dests;
+    std::vector<short> switches;
+};
 
 typedef vtr::flat_map2<int, t_pb_route> t_pb_routes;
 

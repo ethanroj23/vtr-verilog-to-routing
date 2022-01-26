@@ -405,17 +405,36 @@ class t_rr_graph_storage {
         return return_edges;
     }
 
+    inline t_edge_soa edge_range_soa(RRNodeId node) const{
+        // returns a vector of edge structs, which each include sink, switch
+        
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+        t_edge_soa return_edges;
+        return_edges.switches.reserve(folded_edges.size());
+        return_edges.dests.reserve(folded_edges.size());
+
+        for (const auto& cur_edge : folded_edges){
+            return_edges.dests.push_back(
+            tile_to_node_[x_y_idx.xlow + cur_edge.dx][x_y_idx.ylow + cur_edge.dy][cur_edge.tile_idx] // dest
+            );
+            return_edges.switches.push_back(cur_edge.switch_id);
+
+        }
+        return return_edges;
+    }
+
     inline void edge_range_with_id_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
         // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
 
-        auto x_y_idx = node_coords_[node];
-        auto folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
 
         // std::vector<t_edge_with_id> return_edges; // initialize return vector
         return_edges.reserve(folded_edges.size());
         size_t k = 0; // kth edge
         size_t first = (size_t)first_edge(node);
-        for (auto cur_edge : folded_edges){
+        for (const auto& cur_edge : folded_edges){
             // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
             t_edge_with_id add_edge = {
             tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
@@ -430,16 +449,14 @@ class t_rr_graph_storage {
     inline std::vector<t_edge_with_id> edge_range_with_id_iter(RRNodeId node) const{
         // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
 
-        auto x_y_idx = node_coords_[node];
-        auto folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
+        const auto& x_y_idx = node_coords_[node];
+        const auto& folded_edges = shared_edges_[x_y_idx.node_pattern_idx];
         std::vector<t_edge_with_id> return_edges;
         return_edges.reserve(folded_edges.size());
 
-        // std::vector<t_edge_with_id> return_edges; // initialize return vector
-        return_edges.reserve(folded_edges.size());
         size_t k = 0; // kth edge
         size_t first = (size_t)first_edge(node);
-        for (auto cur_edge : folded_edges){
+        for (const auto& cur_edge : folded_edges){
             // auto dx_dy = dx_dy_[cur_edge.dx_dy_idx];
             t_edge_with_id add_edge = {
             tile_to_node_[x_y_idx.xlow+cur_edge.dx][x_y_idx.ylow+cur_edge.dy][cur_edge.tile_idx], // dest
