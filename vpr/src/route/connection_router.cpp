@@ -418,14 +418,15 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //     int switch_idx = edge.switch_id;
     //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
     // }
+    
     size_t first_edge = rr_graph_->node_first_edge(from_node);
-    t_edge_soa edges = rr_graph_->edge_range_soa(from_node);
-    size_t num_edges = edges.dests.size();
+    std::vector<t_dest_switch> edges;
+    rr_graph_->edge_range_direct(from_node, edges);
     size_t k = 0;
     // for (auto edge : rr_graph_->edge_range_iter(from_node)) {
-    for (size_t k=0; k < num_edges; k++) {
+    for (auto edge : edges) {
         // RRNodeId to_node = edge.dest;
-        RRNodeId to_node = edges.dests[k];
+        RRNodeId to_node = edge.dest;
         timing_driven_expand_neighbour(current,
                                        from_node_int,
                                        RREdgeId(k+first_edge),
@@ -434,9 +435,8 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
                                        bounding_box,
                                        target_node,
                                        target_bb,
-                                       edges.switches[k]);
-                                    //    edge.switch_id);
-        // k++;
+                                       edge.switch_id);
+        k++;
     }
 }
 
