@@ -783,8 +783,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_graph_builder_->set_node_type(node_id, from_uxsd_node_type(type));
         rr_graph_builder_->set_node_capacity(node_id, capacity);
         rr_graph_builder_->set_node_pattern_idx(node_id, ptn_idx);
-        rr_graph_builder_->add_node_to_rc();
-        // vtr::vector<RRNodeId, t_folded_rc> node_to_rc_; // goes from RRNodeId to xhigh, yhigh, cost_index, rc_index
 
         switch (rr_graph.node_type(node.id())) {
             case CHANX:

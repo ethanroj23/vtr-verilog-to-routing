@@ -150,9 +150,6 @@ class RRGraphBuilder {
     inline void add_shared_edges_edge(int dx, int dy, unsigned int switch_id, unsigned int tile_idx) {
         node_storage_.add_shared_edges_edge(dx, dy, switch_id, tile_idx);
     }
-    inline void add_node_to_rc() {
-        node_storage_.add_node_to_rc();
-    }
 
 
     /** @brief emplace_back_edge; It add one edge. This method is efficient if reserve_edges was called with
