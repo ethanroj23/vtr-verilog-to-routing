@@ -1801,7 +1801,9 @@ void print_switch_usage() {
     // map key: switch index; map value: count (fanin)
     std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_graph.size()];
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
-        for (auto edge : rr_graph.edge_range_iter(inode)) {
+        std::vector<t_dest_switch> edges;
+        rr_graph.edge_range_direct(inode, edges);
+        for (auto edge : edges) {
             int switch_index = edge.switch_id;
             int to_node_index = size_t(edge.dest);
             // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).

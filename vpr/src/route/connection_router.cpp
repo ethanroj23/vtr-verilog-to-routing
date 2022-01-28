@@ -423,9 +423,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     std::vector<t_dest_switch> edges;
     rr_graph_->edge_range_direct(from_node, edges);
     size_t k = 0;
-    // for (auto edge : rr_graph_->edge_range_iter(from_node)) {
     for (auto edge : edges) {
-        // RRNodeId to_node = edge.dest;
         RRNodeId to_node = edge.dest;
         timing_driven_expand_neighbour(current,
                                        from_node_int,

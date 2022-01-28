@@ -264,7 +264,9 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
 
 
     size_t k = 0;
-    for (auto edge : rr_graph.edge_range_iter(parent)) {
+    std::vector<t_dest_switch> edges;
+    rr_graph.edge_range_direct(parent, edges);
+    for (auto edge : edges) {
         int child_node_ind = size_t(edge.dest);
         int switch_ind = edge.switch_id;
 
@@ -497,7 +499,9 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            for (auto edge : rr_graph.edge_range_iter(curr.node)) {
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(curr.node, edges);
+            for (auto edge : edges) {
                 int iswitch = edge.switch_id;
                 float incr_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
@@ -590,7 +594,9 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            for (auto edge : rr_graph.edge_range_iter(curr.node)) {
+            std::vector<t_dest_switch> edges;
+            rr_graph.edge_range_direct(curr.node, edges);
+            for (auto edge : edges) {
                 int iswitch = edge.switch_id;
                 float new_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 

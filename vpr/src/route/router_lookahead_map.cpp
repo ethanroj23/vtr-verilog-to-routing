@@ -648,13 +648,12 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
     const auto& rr_graph = device_ctx.rr_graph;
 
     RRNodeId parent = parent_entry.rr_node;
-
-    t_edge_soa edges = rr_graph.edge_range_soa(parent);
-    size_t num_edges = edges.dests.size();
-    for (size_t k=0; k < num_edges; k++) {
-    // for (auto edge : rr_graph.edge_range_iter(parent)) {
-        RRNodeId child_node = edges.dests[k];
-        int switch_ind = size_t(edges.switches[k]);
+    
+    std::vector<t_dest_switch> edges;
+    rr_graph.edge_range_direct(parent, edges);
+    for (auto edge : edges) {
+        RRNodeId child_node = edge.dest;
+        int switch_ind = size_t(edge.switch_id);
 
         if (rr_graph.node_type(child_node) == SINK) return;
 
