@@ -954,12 +954,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         count_for_wire_to_ipin_switches.resize(rr_switch_inf_->size(), 0);
         //first is index, second is count
         std::pair<int, int> most_frequent_switch(-1, 0);
+        
 
         // Partition the rr graph edges for efficient access to
         // configurable/non-configurable edge subsets. Must be done after RR
         // switches have been allocated.
         rr_graph_builder_->mark_edges_as_rr_switch_ids();
         rr_graph_builder_->partition_edges();
+        rr_graph_builder_->finalize();
 
         for (int source_node = 0; source_node < (ssize_t)rr_nodes_->size(); ++source_node) {
             int num_edges = rr_nodes_->num_edges(RRNodeId(source_node));

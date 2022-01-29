@@ -326,11 +326,27 @@ void t_rr_graph_storage::assign_first_edges() {
     //     edge_src_node_.begin(),
     //     edge_src_node_.end()));
 
-    size_t cur_edge = 0;
 
+    // remap_node_to_pattern_[RRNodeId(node)] // goes from 
+    // node_to_pattern_ currently goes to original node_pattern_idx
+    // remap_node_to_pattern goes from node_pattern_idx to shared_edges idx
+    // for a given node -> get its pattern idx. get its idx in shared_edges_idx
+    //          then compare that idx with the next pattern idx shared_edges_idx
+
+    size_t cur_edge = 0;
+    size_t num_edges;
+    size_t last_node = node_storage_.size()-1;
     for (size_t node=0; node < node_storage_.size(); node++){
         node_first_edge_[RRNodeId(node)] = RREdgeId(cur_edge);
-        size_t num_edges = shared_edges_[node_to_pattern_[RRNodeId(node)]].size();
+        
+        if (node_to_pattern_[RRNodeId(node)] != remap_node_to_pattern_.size()-1){
+            size_t first_shared = remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]];
+            size_t second_shared = remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]+1];
+            num_edges = second_shared - first_shared;
+        }
+        else{
+            num_edges = shared_edges_.size() - remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]];
+        }
         cur_edge += num_edges;
     }
     node_first_edge_[RRNodeId(node_storage_.size())] = RREdgeId(cur_edge);
