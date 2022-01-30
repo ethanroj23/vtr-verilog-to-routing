@@ -350,6 +350,7 @@ void t_rr_graph_storage::assign_first_edges() {
         cur_edge += num_edges;
     }
     node_first_edge_[RRNodeId(node_storage_.size())] = RREdgeId(cur_edge);
+    VTR_LOG("last element of node_first_edge_ is %d\n", node_first_edge_[RRNodeId(node_storage_.size())]);
     // for (size_t i=0; i< node_first_edge_.size())
 
     // while (true) {

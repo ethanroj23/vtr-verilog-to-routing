@@ -144,6 +144,16 @@ class RRGraphBuilder {
     inline void add_tile_to_node_id(size_t x, size_t y, size_t id) {
         node_storage_.add_tile_to_node_id(x, y, id);
     }
+
+    inline void tiles_to_xy(){
+        node_storage_.tiles_to_xy();
+    }
+    inline void create_shared_edges_xy(){
+        node_storage_.create_shared_edges_xy();
+    }
+
+
+
     inline void add_shared_edges() {
         node_storage_.add_shared_edges();
     }
