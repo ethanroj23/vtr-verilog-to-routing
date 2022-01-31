@@ -485,6 +485,7 @@ class t_rr_graph_storage {
 
     inline void non_configurable_edge_with_id_range_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
         // returns a vector of only non-configurable edge structs, which each include src, sink, switch
+        // edge id is actually a relative edge
 
         const auto& x = node_storage_[node].xlow_;
         const auto& y = node_storage_[node].ylow_;
@@ -503,7 +504,7 @@ class t_rr_graph_storage {
                 t_edge_with_id add_edge = {
                     RRNodeId(tile_to_node_xy_[xy+cur_edge.dxdy]+cur_edge.tile_idx), // dest
                     cur_edge.switch_id, // switch  
-                    RREdgeId(first+k)
+                    RREdgeId(k)
                 };
                 return_edges.push_back(add_edge);
             }
@@ -511,9 +512,6 @@ class t_rr_graph_storage {
             k++;
         }
     }
-
-
-
 
     inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const{
         const auto& x = node_storage_[src_rr_node].xlow_;
@@ -804,10 +802,46 @@ class t_rr_graph_storage {
 
     inline void finalize(){
         // convert node_pattern_idxs to go directly to the first edge of the pattern in shared_edges
+
+        int16_t cost_index_ = -1;
+        int16_t rc_index_ = -1;
+
+        int16_t xlow_ = -1;
+        int16_t ylow_ = -1;
+        int16_t xhigh_ = -1;
+        int16_t yhigh_ = -1;
+
+        // t_rr_type type_ = NUM_RR_TYPES; // 7 possibilities
+        // union {
+        //     Direction direction;       //Valid only for CHANX/CHANY
+        //     unsigned char sides = 0x0; //Valid only for IPINs/OPINs
+        // } dir_side_; // 4 bits
+
+        uint16_t capacity_ = 0;
+
+
         for (uint32_t i=0; i<node_storage_.size(); i++){
             node_to_pattern_[RRNodeId(i)] = remap_node_to_pattern_[node_to_pattern_[RRNodeId(i)]];
+            if (node_storage_[RRNodeId(i)].xlow_ > xlow_) xlow_ = node_storage_[RRNodeId(i)].xlow_;
+            if (node_storage_[RRNodeId(i)].ylow_ > ylow_) ylow_ = node_storage_[RRNodeId(i)].ylow_;
+            if (node_storage_[RRNodeId(i)].xhigh_ > xhigh_) xhigh_ = node_storage_[RRNodeId(i)].xhigh_;
+            if (node_storage_[RRNodeId(i)].yhigh_ > yhigh_) yhigh_ = node_storage_[RRNodeId(i)].yhigh_;
+            if (node_storage_[RRNodeId(i)].rc_index_ > rc_index_) rc_index_ = node_storage_[RRNodeId(i)].rc_index_;
+            if (node_storage_[RRNodeId(i)].cost_index_ > cost_index_) cost_index_ = node_storage_[RRNodeId(i)].cost_index_;
+            if (node_storage_[RRNodeId(i)].capacity_ > capacity_) capacity_ = node_storage_[RRNodeId(i)].capacity_;
         }
-    }
+        VTR_LOG("\nMaximum values of node parameters:\nxlow:%d\nxhigh:%d\nylow:%d\nyhigh:%d\ncost_index:%d\nrc_index:%d\ncapacity:%d\n\n",
+                    xlow_,
+                    xhigh_,
+                    ylow_,
+                    yhigh_,
+                    cost_index_,
+                    rc_index_,
+                    capacity_
+                    );
+
+
+        }
 
     // ESR FPT
 

@@ -424,7 +424,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
         rr_graph.non_configurable_edge_with_id_range_direct(RRNodeId(rr_node), edges);
         for (auto edge : edges) {
             //Recursive case: expand children
-            VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable((size_t)edge.edge_id));
+            VTR_ASSERT(!device_ctx.rr_nodes[rr_node].edge_is_configurable((size_t) edge.edge_id));
             int to_rr_node = size_t(edge.dest);
 
             //Recurse
@@ -445,6 +445,7 @@ static t_rt_node* add_non_configurable_to_route_tree(const int rr_node, const bo
             //Update child to parent ref
             child_rt_node->parent_node = rt_node;
             child_rt_node->parent_switch = iswitch;
+            
         }
         rr_node_to_rt_node[rr_node] = rt_node;
     }
