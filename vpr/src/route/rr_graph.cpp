@@ -333,17 +333,17 @@ void create_rr_graph(const t_graph_type graph_type,
                                                                   router_opts.reorder_rr_graph_nodes_seed);
             }
             // device_ctx.rr_graph.print_graph();
-            int max_edge_count = 0;
-            int min_edge_count = 10000000;
-            int total_edge_count = 0;
-            for (auto node : device_ctx.rr_graph.nodes()){
-                int edge_count = device_ctx.rr_graph.num_edges(node);
-                if (edge_count > max_edge_count) max_edge_count = edge_count;
-                if (edge_count < min_edge_count) min_edge_count = edge_count;
-                total_edge_count += edge_count;
-            }
-            VTR_LOG("max_edge_count: %d\nmin_edge_count:%d\naverage_edge_count%f\n",
-                max_edge_count, min_edge_count, (float)total_edge_count/device_ctx.rr_graph.size());
+            // int max_edge_count = 0;
+            // int min_edge_count = 10000000;
+            // int total_edge_count = 0;
+            // for (auto node : device_ctx.rr_graph.nodes()){
+            //     int edge_count = device_ctx.rr_graph.num_edges(node);
+            //     if (edge_count > max_edge_count) max_edge_count = edge_count;
+            //     if (edge_count < min_edge_count) min_edge_count = edge_count;
+            //     total_edge_count += edge_count;
+            // }
+            // VTR_LOG("max_edge_count: %d\nmin_edge_count:%d\naverage_edge_count%f\n",
+            //     max_edge_count, min_edge_count, (float)total_edge_count/device_ctx.rr_graph.size());
         }
     } else {
         if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_graph.empty()) {
