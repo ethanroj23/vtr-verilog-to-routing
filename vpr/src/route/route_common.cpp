@@ -1428,8 +1428,13 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             //the reserved OPINs to move out of the way of congestion, by preferring
             //to reserve OPINs with lower congestion costs).
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-                to_node = size_t(edge.dest);
+
+            const auto& num_edges = rr_graph.num_edges(RRNodeId(from_node));
+            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+            uint32_t last_idx = first_idx + num_edges;
+
+            while (first_idx < last_idx) {
+                to_node = from_node + rr_graph.shared_dnode(first_idx);;
 
                 VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
 
@@ -1438,6 +1443,7 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
                 add_node_to_heap(heap, route_ctx.rr_node_route_inf,
                                  to_node, cost, OPEN, RREdgeId::INVALID(),
                                  0., 0.);
+                first_idx++;
             }
 
             for (ipin = 0; ipin < num_local_opin; ipin++) {
@@ -1566,14 +1572,19 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             auto& device_ctx = g_vpr_ctx.device();
             const auto& rr_graph = device_ctx.rr_graph;
             bool found = false;
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(trace->index))) {
-                int to_node = size_t(edge.dest);
+
+            const auto& num_edges = rr_graph.num_edges(RRNodeId(trace->index));
+            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            uint32_t last_idx = first_idx + num_edges;
+
+            while (first_idx < last_idx) {
+                int to_node = trace->index + rr_graph.shared_dnode(first_idx);
 
                 if (to_node == next->index) {
                     found = true;
 
                     //Verify that the switch matches
-                    int rr_iswitch = edge.switch_id;
+                    int rr_iswitch = rr_graph.shared_switch(first_idx);
                     if (trace->iswitch != rr_iswitch) {
                         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
                                         trace->iswitch, rr_iswitch,
@@ -1581,6 +1592,7 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
                     }
                     break;
                 }
+                first_idx++;
             }
 
             if (!found) {

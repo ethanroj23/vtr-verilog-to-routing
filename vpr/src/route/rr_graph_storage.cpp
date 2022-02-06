@@ -5,9 +5,8 @@
 #include "globals.h"
 
 void t_rr_graph_storage::reserve_edges(size_t num_edges) {
-    edge_src_node_.reserve(num_edges);
-    edge_dest_node_.reserve(num_edges);
-    edge_switch_.reserve(num_edges);
+    shared_dnodes_.reserve(num_edges);
+    shared_switches_.reserve(num_edges);
 }
 
 void t_rr_graph_storage::emplace_back_edge(RRNodeId src, RRNodeId dest, short edge_switch) {
@@ -326,8 +325,7 @@ void t_rr_graph_storage::assign_first_edges() {
     //     edge_src_node_.begin(),
     //     edge_src_node_.end()));
 
-
-    // remap_node_to_pattern_[RRNodeId(node)] // goes from 
+    // remap_node_to_pattern_[RRNodeId(node)] // goes from
     // node_to_pattern_ currently goes to original node_pattern_idx
     // remap_node_to_pattern goes from node_pattern_idx to shared_edges idx
     // for a given node -> get its pattern idx. get its idx in shared_edges_idx
@@ -335,22 +333,30 @@ void t_rr_graph_storage::assign_first_edges() {
 
     size_t cur_edge = 0;
     size_t num_edges;
-    size_t last_node = node_storage_.size()-1;
-    for (size_t node=0; node < node_storage_.size(); node++){
+    size_t last_node = node_storage_.size() - 1;
+    auto starting_idx = node_pattern_;
+    std::sort(starting_idx.begin(), starting_idx.end());
+    std::map<int, int> ptn_edge_count;
+    // ptn_edge_count.resize(shared_dnodes_.size());
+    int prev_edge = 0;
+    for (size_t idx = 0; idx < starting_idx.size(); idx++) {
+        int ptn = starting_idx[RRNodeId(idx)];
+        if (prev_edge != ptn){
+            ptn_edge_count[prev_edge] = ptn - prev_edge;
+            prev_edge = ptn;
+        }
+    }
+    ptn_edge_count[prev_edge] = shared_dnodes_.size() - prev_edge;
+
+    for (size_t node = 0; node < node_storage_.size(); node++) {
         node_first_edge_[RRNodeId(node)] = RREdgeId(cur_edge);
-        
-        if (node_to_pattern_[RRNodeId(node)] != remap_node_to_pattern_.size()-1){
-            size_t first_shared = remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]];
-            size_t second_shared = remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]+1];
-            num_edges = second_shared - first_shared;
-        }
-        else{
-            num_edges = shared_edges_.size() - remap_node_to_pattern_[node_to_pattern_[RRNodeId(node)]];
-        }
+        const auto& ptn_idx = node_pattern_[RRNodeId(node)];
+        num_edges = ptn_edge_count[ptn_idx];
         cur_edge += num_edges;
     }
     node_first_edge_[RRNodeId(node_storage_.size())] = RREdgeId(cur_edge);
     VTR_LOG("last element of node_first_edge_ is %d\n", node_first_edge_[RRNodeId(node_storage_.size())]);
+    ptn_edge_count.clear();
     // for (size_t i=0; i< node_first_edge_.size())
 
     // while (true) {
@@ -407,8 +413,8 @@ void t_rr_graph_storage::init_fan_in() {
     node_fan_in_.shrink_to_fit();
 
     //Walk the graph and increment fanin on all downstream nodes
-    for (size_t i=0; i<node_storage_.size(); i++){
-        for (auto edge : edge_range_src(RRNodeId(i))){
+    for (size_t i = 0; i < node_storage_.size(); i++) {
+        for (auto edge : edge_range_src(RRNodeId(i))) {
             node_fan_in_[edge.dest] += 1;
         }
     }
@@ -546,7 +552,7 @@ t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const
     auto first_id = size_t(node_first_edge_[id]);
     auto last_id = size_t((&node_first_edge_[id])[1]);
     size_t idx = 0;
-    for (auto edge : edge_range_src(id)){
+    for (auto edge : edge_range_src(id)) {
         auto switch_idx = edge.switch_id;
         if (!rr_graph.rr_switch_inf(RRSwitchId(switch_idx)).configurable()) {
             return idx - first_id;
@@ -563,8 +569,6 @@ t_edge_size t_rr_graph_storage::num_non_configurable_edges(const RRNodeId& id) c
 bool t_rr_graph_storage::switch_is_configurable(short switch_id) const {
     return g_vpr_ctx.device().rr_graph.rr_switch_inf(RRSwitchId(switch_id)).configurable();
 }
-
-
 
 bool t_rr_graph_storage::validate() const {
     bool all_valid = verify_first_edges();
@@ -614,21 +618,21 @@ void t_rr_graph_storage::set_node_ptc_num(RRNodeId id, short new_ptc_num) {
     node_ptc_[id].ptc_.pin_num = new_ptc_num; //TODO: eventually remove
 }
 void t_rr_graph_storage::set_node_pin_num(RRNodeId id, short new_pin_num) {
-    if (node_type(id) != IPIN && node_type(id) != OPIN) {
+    if (temp_node_type(id) != IPIN && temp_node_type(id) != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'pin_num' for non-IPIN/OPIN type '%s'", node_type_string(id));
     }
     node_ptc_[id].ptc_.pin_num = new_pin_num;
 }
 
 void t_rr_graph_storage::set_node_track_num(RRNodeId id, short new_track_num) {
-    if (node_type(id) != CHANX && node_type(id) != CHANY) {
+    if (temp_node_type(id) != CHANX && temp_node_type(id) != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'track_num' for non-CHANX/CHANY type '%s'", node_type_string(id));
     }
     node_ptc_[id].ptc_.track_num = new_track_num;
 }
 
 void t_rr_graph_storage::set_node_class_num(RRNodeId id, short new_class_num) {
-    if (node_type(id) != SOURCE && node_type(id) != SINK) {
+    if (temp_node_type(id) != SOURCE && temp_node_type(id) != SINK) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'class_num' for non-SOURCE/SINK type '%s'", node_type_string(id));
     }
     node_ptc_[id].ptc_.class_num = new_class_num;
@@ -692,26 +696,25 @@ short t_rr_graph_storage::node_class_num(RRNodeId id) const {
 
 void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
     node_storage_[id].type_ = new_type;
+    const auto& x = size_t(id);
+    node_type_[x >> 1] = node_type_[x >> 1] | ( new_type << (x & 1)*4 ); // shift to top 4 bits if number is odd
+    // node_core_[id].pattern_idx_ = node_core_[id].pattern_idx_ | ( size_t(new_type) << 13); // store node type as top 3 bits
 }
 
-
-
 void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
-    auto& node = node_storage_[id];
+    auto& node = node_core_[id];
     if (x1 < x2) {
         node.xlow_ = x1;
-        node.xhigh_ = x2;
+        node.dxy = x1-x2; // if dxy is acting as dx, it will be negative
     } else {
         node.xlow_ = x2;
-        node.xhigh_ = x1;
     }
 
     if (y1 < y2) {
         node.ylow_ = y1;
-        node.yhigh_ = y2;
+        node.dxy = y2-y1;
     } else {
         node.ylow_ = y2;
-        node.yhigh_ = y1;
     }
 }
 
@@ -734,14 +737,14 @@ void t_rr_graph_storage::set_node_capacity(RRNodeId id, short new_capacity) {
 }
 
 void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction) {
-    if (node_type(id) != CHANX && node_type(id) != CHANY) {
+    if (temp_node_type(id) != CHANX && temp_node_type(id) != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
     }
     node_storage_[id].dir_side_.direction = new_direction;
 }
 
 void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
-    if (node_type(id) != IPIN && node_type(id) != OPIN) {
+    if (temp_node_type(id) != IPIN && temp_node_type(id) != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
     }
     std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;

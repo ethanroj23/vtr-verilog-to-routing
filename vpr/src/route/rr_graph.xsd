@@ -289,30 +289,9 @@
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="tile">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="t_node" type="t_node" minOccurs="0"/>
-    </xs:choice>
-    <xs:attribute name="x" type="xs:unsignedInt" use="required"/>
-    <xs:attribute name="y" type="xs:unsignedInt" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="t_node">
-    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="shared_edges">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="edge" type="edge" minOccurs="0"/>
-    </xs:choice>
-    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
-  </xs:complexType>
-
   <xs:complexType name="edge">
-    <xs:attribute name="dx" type="xs:int" use="required"/>
-    <xs:attribute name="dy" type="xs:int" use="required"/>
+    <xs:attribute name="dnode" type="xs:int" use="required"/>
     <xs:attribute name="switch_id" type="xs:unsignedInt" use="required"/>
-    <xs:attribute name="tile_idx" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="switches">
@@ -345,15 +324,10 @@
     </xs:choice>
   </xs:complexType>
 
-  <xs:complexType name="tiles">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="tile" type="tile"/>
-    </xs:choice>
-  </xs:complexType>
 
   <xs:complexType name="rr_edges">
     <xs:choice maxOccurs="unbounded">
-      <xs:element name="shared_edges" type="shared_edges"/>
+      <xs:element name="edge" type="edge" minOccurs="0"/>
     </xs:choice>
   </xs:complexType>
 
@@ -370,7 +344,6 @@
         <xs:element name="block_types" type="block_types"/>
         <xs:element name="grid" type="grid_locs"/>
         <xs:element name="rr_nodes" type="rr_nodes"/>
-        <xs:element name="tiles" type="tiles"/>
         <xs:element name="rr_edges" type="rr_edges"/>
       </xs:all>
 

@@ -418,23 +418,26 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //     int switch_idx = edge.switch_id;
     //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
     // }
-    
+
     size_t first_edge = rr_graph_->node_first_edge(from_node);
-    std::vector<t_dest_switch> edges;
-    rr_graph_->edge_range_direct(from_node, edges);
     size_t k = 0;
-    for (auto edge : edges) {
-        RRNodeId to_node = edge.dest;
+
+    const auto& num_edges = rr_graph_->num_edges(from_node);
+    uint32_t first_idx = rr_graph_->first_shared_idx(from_node);
+    uint32_t last_idx = first_idx + num_edges;
+
+    while (first_idx < last_idx) {
         timing_driven_expand_neighbour(current,
                                        from_node_int,
-                                       RREdgeId(k+first_edge),
-                                       size_t(to_node),
+                                       RREdgeId(k + first_edge),
+                                       from_node_int + rr_graph_->shared_dnode(first_idx),
                                        cost_params,
                                        bounding_box,
                                        target_node,
                                        target_bb,
-                                       edge.switch_id);
+                                       rr_graph_->shared_switch(first_idx));
         k++;
+        first_idx++;
     }
 }
 

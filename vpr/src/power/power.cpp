@@ -819,8 +819,13 @@ static void power_usage_routing(t_power_usage* power_usage,
             if (node_power->visited) {
                 continue;
             }
-            for (auto edge : rr_graph.edge_range_iter(RRNodeId(trace->index))) {
-                const auto& next_node_id = size_t(edge.dest);
+
+            const auto& num_edges = rr_graph.num_edges(RRNodeId(trace->index));
+            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            uint32_t last_idx = first_idx + num_edges;
+
+            while (first_idx < last_idx) {
+                const auto& next_node_id = size_t(RRNodeId(trace->index)) + rr_graph.shared_dnode(first_idx);
                 if (next_node_id != size_t(OPEN)) {
                     t_rr_node_power* next_node_power = &rr_node_power[next_node_id];
 
@@ -847,6 +852,7 @@ static void power_usage_routing(t_power_usage* power_usage,
                             break;
                     }
                 }
+                first_idx++;
             }
             node_power->visited = true;
         }
@@ -978,14 +984,19 @@ static void power_usage_routing(t_power_usage* power_usage,
                 connectionbox_fanout = 0;
                 switchbox_fanout = 0;
 
-                for(auto edge : rr_graph.edge_range_iter(rr_id)) {
-                    if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
+                const auto& num_edges = rr_graph.num_edges(rr_id);
+                uint32_t first_idx = rr_graph.first_shared_idx(rr_id);
+                uint32_t last_idx = first_idx + num_edges;
+
+                while (first_idx < last_idx) {
+                    if (rr_graph.shared_switch(first_idx) == routing_arch->wire_to_rr_ipin_switch) {
                         connectionbox_fanout++;
-                    } else if (edge.switch_id == routing_arch->delayless_switch) {
+                    } else if (rr_graph.shared_switch(first_idx) == routing_arch->delayless_switch) {
                         /* Do nothing */
                     } else {
                         switchbox_fanout++;
                     }
+                    first_idx++;
                 }
 
                 /* Buffer to next Switchbox */
@@ -1203,6 +1214,7 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
     max_IPIN_fanin = 0;
     max_seg_to_seg_fanout = 0;
     max_seg_to_IPIN_fanout = 0;
+    uint32_t first_idx, last_idx, num_edges;
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
         t_edge_size fanout_to_IPIN = 0;
         t_edge_size fanout_to_seg = 0;
@@ -1220,12 +1232,18 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
                 break;
             case CHANX:
             case CHANY:
-                for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
-                    if (edge.switch_id == routing_arch->wire_to_rr_ipin_switch) {
+
+                num_edges = rr_graph.num_edges(rr_node_idx);
+                first_idx = rr_graph.first_shared_idx(rr_node_idx);
+                last_idx = first_idx + num_edges;
+
+                while (first_idx < last_idx) {
+                    if (rr_graph.shared_switch(first_idx) == routing_arch->wire_to_rr_ipin_switch) {
                         fanout_to_IPIN++;
-                    } else if (edge.switch_id != routing_arch->delayless_switch) {
+                    } else if (rr_graph.shared_switch(first_idx) != routing_arch->delayless_switch) {
                         fanout_to_seg++;
                     }
+                    first_idx++;
                 }
                 max_seg_to_IPIN_fanout = std::max(max_seg_to_IPIN_fanout,
                                                   fanout_to_IPIN);
@@ -1253,14 +1271,22 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
 
     /* Populate driver switch type */
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
-        for(auto edge : rr_graph.edge_range_iter(rr_node_idx)) {
-            if (size_t(edge.dest)) {
-                if (rr_node_power[size_t(edge.dest)].driver_switch_type == OPEN) {
-                    rr_node_power[size_t(edge.dest)].driver_switch_type = edge.switch_id;
+
+        const auto& num_edges = rr_graph.num_edges(rr_node_idx);
+        uint32_t first_idx = rr_graph.first_shared_idx(rr_node_idx);
+        uint32_t last_idx = first_idx + num_edges;
+
+        while (first_idx < last_idx) {
+            size_t dest = size_t(rr_node_idx) + rr_graph.shared_dnode(first_idx);
+            short switch_id = rr_graph.shared_switch(first_idx);
+            if (dest) {
+                if (rr_node_power[dest].driver_switch_type == OPEN) {
+                    rr_node_power[dest].driver_switch_type = switch_id;
                 } else {
-                    VTR_ASSERT(rr_node_power[size_t(edge.dest)].driver_switch_type == edge.switch_id);
+                    VTR_ASSERT(rr_node_power[dest].driver_switch_type == switch_id);
                 }
             }
+            first_idx++;
         }
     }
 

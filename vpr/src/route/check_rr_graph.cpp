@@ -80,8 +80,12 @@ void check_rr_graph(const t_graph_type graph_type,
         edges.reserve(num_edges);
 
         size_t k = 0;
-        for(auto edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
-            int to_node = size_t(edge.dest);
+
+        uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(inode));
+        uint32_t last_idx = first_idx + num_edges;
+
+        while (first_idx < last_idx) {
+            int to_node = size_t(RRNodeId(inode)) + rr_graph.shared_dnode(first_idx);
 
             if (to_node < 0 || to_node >= (int)device_ctx.rr_graph.size()) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -95,7 +99,7 @@ void check_rr_graph(const t_graph_type graph_type,
             edges.emplace_back(to_node, k);
             total_edges_to_node[to_node]++;
 
-            auto switch_type = edge.switch_id;
+            auto switch_type = rr_graph.shared_switch(first_idx);
 
             if (switch_type < 0 || switch_type >= num_rr_switches) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -104,22 +108,28 @@ void check_rr_graph(const t_graph_type graph_type,
                                 inode, switch_type);
             }
             k++;
+            first_idx++;
         } /* End for all edges of node. */
 
         std::sort(edges.begin(), edges.end(), [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {
             return lhs.first < rhs.first;
         });
 
+        num_edges = rr_graph.num_edges(RRNodeId(inode));
+        first_idx = rr_graph.first_shared_idx(RRNodeId(inode));
+        last_idx = first_idx + num_edges;
+
         //Check that multiple edges between the same from/to nodes make sense
-        for(auto cur_edge : rr_graph.edge_range_iter(RRNodeId(inode))) {
-            int to_node = size_t(cur_edge.dest);
+        while (first_idx < last_idx) {
+            int to_node = size_t(RRNodeId(inode)) + rr_graph.shared_dnode(first_idx);
+            first_idx++;
 
             auto range = std::equal_range(edges.begin(), edges.end(),
                                           to_node, node_edge_sorter());
 
             size_t num_edges_to_node = std::distance(range.first, range.second);
 
-            if (num_edges_to_node == 1) continue; //Single edges are always OK
+            if (num_edges_to_node == 1)continue; //Single edges are always OK
 
             VTR_ASSERT_MSG(num_edges_to_node > 1, "Expect multiple edges");
 
@@ -546,17 +556,25 @@ static void check_unbuffered_edges(int from_node) {
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
 
-    for(auto edge : rr_graph.edge_range_iter(RRNodeId(from_node))) {
-        to_node = size_t(edge.dest);
+    const auto& num_edges = rr_graph.num_edges(RRNodeId(from_node));
+    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+    uint32_t last_idx = first_idx + num_edges;
+
+    while (first_idx < last_idx) {
+        to_node = size_t(RRNodeId(from_node)) + rr_graph.shared_dnode(first_idx);
         to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
-        if (to_rr_type != CHANX && to_rr_type != CHANY)
+        if (to_rr_type != CHANX && to_rr_type != CHANY){
+            first_idx++;
             continue;
+        }
 
-        from_switch_type = edge.switch_id;
+        from_switch_type = rr_graph.shared_switch(first_idx);
 
-        if (rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).buffered())
+        if (rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).buffered()) {
+            first_idx++;
             continue;
+        }
 
         /* We know that we have a pass transistor from from_node to to_node. Now *
          * check that there is a corresponding edge from to_node back to         *
@@ -566,8 +584,8 @@ static void check_unbuffered_edges(int from_node) {
         trans_matched = false;
 
         for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
-            if (size_t(edge.dest) == size_t(from_node)
-                && edge.switch_id == from_switch_type) {
+            if (size_t(RRNodeId(from_node)) + rr_graph.shared_dnode(first_idx) == size_t(from_node)
+                && rr_graph.shared_switch(first_idx) == from_switch_type) {
                 trans_matched = true;
                 break;
             }
@@ -580,7 +598,7 @@ static void check_unbuffered_edges(int from_node) {
                       "but there is no corresponding unbuffered switch edge in the other direction.\n",
                       from_node, to_node, from_switch_type, rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).name);
         }
-
+        first_idx++;
     } /* End for all from_node edges */
 }
 

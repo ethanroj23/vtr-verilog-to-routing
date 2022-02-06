@@ -387,16 +387,28 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
-    for (auto edge : rr_graph.edge_range_with_id_iter(RRNodeId(inode))) {
-        RRNodeId to_node = edge.dest;
+    size_t first_edge = (size_t)rr_graph.node_first_edge(RRNodeId(inode));
+    size_t k = 0;
+    const auto& num_edges = rr_graph.num_edges(RRNodeId(inode));
+    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(inode));
+    uint32_t last_idx = first_idx + num_edges;
+
+    while (first_idx < last_idx) {
+        RRNodeId to_node = RRNodeId(size_t(RRNodeId(inode)) + rr_graph.shared_dnode(first_idx));
 
         vtr::Point<int> lower_left(route_ctx.route_bb[net_id].xmin, route_ctx.route_bb[net_id].ymin);
         vtr::Point<int> upper_right(route_ctx.route_bb[net_id].xmax, route_ctx.route_bb[net_id].ymax);
         vtr::Rect<int> bounding_box(lower_left, upper_right);
 
-        if (!rr_graph.node_is_inside_bounding_box(to_node, bounding_box)) continue;
+        if (!rr_graph.node_is_inside_bounding_box(to_node, bounding_box)){
+            first_idx++;
+            k++;
+            continue;
+        }
 
-        breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, edge.edge_id, pres_fac);
+        breadth_first_add_to_heap(heap, pcost, bend_cost, inode, to_node, RREdgeId(first_edge+k), pres_fac);
+        first_idx++;
+        k++;
     }
 }
 

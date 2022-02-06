@@ -648,10 +648,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         if (uxsd::enum_loc_side::UXSD_INVALID == side) {
             // node_loc.side is only expected on IPIN/OPIN.
-            if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+            if (rr_graph.temp_node_type(node.id()) == IPIN || rr_graph.temp_node_type(node.id()) == OPIN) {
                 report_error(
                     "inode %d is type %d, which requires a side, but no side was supplied.",
-                    inode, rr_graph.node_type(node.id()));
+                    inode, rr_graph.temp_node_type(node.id()));
             }
         } else {
             std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
@@ -722,12 +722,12 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         if (GRAPH_GLOBAL == graph_type_) {
             rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(0));
-        } else if (rr_graph.node_type(node.id()) == CHANX) {
+        } else if (rr_graph.temp_node_type(node.id()) == CHANX) {
             rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_id));
-            seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
-        } else if (rr_graph.node_type(node.id()) == CHANY) {
+            seg_index_[rr_graph.temp_node_cost_index(node.id())] = segment_id;
+        } else if (rr_graph.temp_node_type(node.id()) == CHANY) {
             rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_inf_.size() + segment_id));
-            seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
+            seg_index_[rr_graph.temp_node_cost_index(node.id())] = segment_id;
         }
         return inode;
     }
@@ -784,7 +784,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_graph_builder_->set_node_capacity(node_id, capacity);
         rr_graph_builder_->set_node_pattern_idx(node_id, ptn_idx);
 
-        switch (rr_graph.node_type(node.id())) {
+        switch (rr_graph.temp_node_type(node.id())) {
             case CHANX:
                 break;
             case CHANY:
@@ -830,14 +830,13 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     inline uxsd::enum_node_type get_node_type(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
-        return to_uxsd_node_type(rr_graph.node_type(node.id()));
+        return to_uxsd_node_type(rr_graph.temp_node_type(node.id()));
     }
 
-    inline unsigned int get_node_ptn_idx(const t_rr_node& node) final{
-        (void) node;
+    inline unsigned int get_node_ptn_idx(const t_rr_node& node) final {
+        (void)node;
         return -1;
     }
-
 
     inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
         const auto& rr_graph = (*rr_graph_);
@@ -845,10 +844,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         RRNodeId node_id = node.id();
 
         if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
-            if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+            if (rr_graph.temp_node_type(node.id()) == CHANX || rr_graph.temp_node_type(node.id()) == CHANY) {
                 report_error(
                     "inode %d is type %d, which requires a direction, but no direction was supplied.",
-                    inode, rr_graph.node_type(node.id()));
+                    inode, rr_graph.temp_node_type(node.id()));
             }
         } else {
             rr_graph_builder_->set_node_direction(node_id, from_uxsd_node_direction(direction));
@@ -891,18 +890,33 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      *   <xs:attribute name="switch_id" type="xs:unsignedInt" use="required" />
      * </xs:complexType>
      */
-    // inline void preallocate_rr_edges_edge(void*& /*ctx*/, size_t size) final {
-    //     rr_graph_builder_->reserve_edges(size);
-    //     if (read_edge_metadata_) {
-    //         rr_edge_metadata_->reserve(size);
-    //     }
-    // }
     // inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
     //     if (src_node >= rr_nodes_->size()) {
     //         report_error(
     //             "source_node %d is larger than rr_graph.size() %d",
     //             src_node, rr_nodes_->size());
     //     }
+    inline void preallocate_rr_edges_edge(int& ctx, size_t size){
+        (void) ctx;
+        rr_graph_builder_->reserve_edges(size);
+    }
+    inline int add_rr_edges_edge(int& ctx, int dnode, unsigned int switch_id){
+        (void) ctx;
+        (void) switch_id;
+        rr_graph_builder_->add_shared_edge(dnode, (short)switch_id);
+        return dnode;
+    }
+    inline void finish_rr_edges_edge(int& ctx){
+        (void) ctx;
+    }
+    inline size_t num_rr_edges_edge(int& ctx){
+        return ctx;
+    }
+    inline int get_rr_edges_edge(int n, int& ctx){
+        (void) ctx;
+        return n;
+    }
+
 
     //     MetadataBind bind(strings_, empty_);
     //     if (read_edge_metadata_) {
@@ -928,16 +942,21 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     //     return &walker;
     // }
 
-    inline int get_edge_dx(int& ctx){
+    inline int get_edge_dx(int& ctx) {
         return ctx;
     }
-    inline int get_edge_dy(int& ctx){
+    inline int get_edge_dy(int& ctx) {
         return ctx;
     }
-    inline unsigned int get_edge_switch_id(int& ctx){
+
+    inline int get_edge_dnode(int& ctx){
         return ctx;
     }
-    inline unsigned int get_edge_tile_idx(int& ctx){
+    unsigned int get_edge_switch_id(int& ctx){
+        return ctx;
+    }
+
+    inline unsigned int get_edge_tile_idx(int& ctx) {
         return ctx;
     }
 
@@ -954,7 +973,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         count_for_wire_to_ipin_switches.resize(rr_switch_inf_->size(), 0);
         //first is index, second is count
         std::pair<int, int> most_frequent_switch(-1, 0);
-        
 
         // Partition the rr graph edges for efficient access to
         // configurable/non-configurable edge subsets. Must be done after RR
@@ -963,7 +981,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_graph_builder_->partition_edges();
         rr_graph_builder_->finalize();
         rr_graph_builder_->create_shared_edges_xy();
-
 
         for (int source_node = 0; source_node < (ssize_t)rr_nodes_->size(); ++source_node) {
             int num_edges = rr_nodes_->num_edges(RRNodeId(source_node));
@@ -985,8 +1002,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
                 /*Keeps track of the number of the specific type of switch that connects a wire to an ipin
                  * use the pair data structure to keep the maximum*/
-                if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
-                    if (rr_graph.node_type(RRNodeId(sink_node)) == IPIN) {
+                if (rr_graph.temp_node_type(node.id()) == CHANX || rr_graph.temp_node_type(node.id()) == CHANY) {
+                    if (rr_graph.temp_node_type(RRNodeId(sink_node)) == IPIN) {
                         count_for_wire_to_ipin_switches[switch_id]++;
                         if (count_for_wire_to_ipin_switches[switch_id] > most_frequent_switch.second) {
                             most_frequent_switch.first = switch_id;
@@ -1005,118 +1022,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return -1;
     }
 
-    inline unsigned int get_t_node_id(int& node) final {
-        return node;
-    }
-    inline unsigned int get_tile_x(int& coord) final {
-        return coord;
-    }
-    inline unsigned int get_tile_y(int& coord) final {
-        return coord;
-    }
-    inline void finish_tile_t_node(int& unused) final {
-        (void) unused;
-    }
-	inline void preallocate_tile_t_node(int& ctx, size_t size){
-        (void) ctx;
-        (void) size;
-    }
-	inline int add_tile_t_node(int& ctx, unsigned int id, size_t x, size_t y){
-        (void) ctx;
-        rr_graph_builder_->add_tile_to_node_id(x, y, id);
-        return id;
-    }
-	inline size_t num_tile_t_node(int& ctx){
-        return ctx;
-    }
-	inline int get_tile_t_node(int n, int& ctx){
-        (void) ctx;
-        return n;
-    }
-
-
-    inline void preallocate_tiles_tile(int& /*ctx*/, size_t size) final {
-        (void) size;
-    }
-    inline int add_tiles_tile(int& ctx, unsigned int x, unsigned int y) final {
-        rr_graph_builder_->add_tile_to_node(x, y);
-        return ctx;
-    }
-
-    inline void finish_tiles_tile(int& ctx) final {
-        (void) ctx;
-    }
-
-    inline size_t num_tiles_tile(int& ctx) final {
-        return ctx;
-    }
-
-    inline int get_tiles_tile(int n, int& ctx) final {
-        (void) ctx;
-        return n;
-    }
-
-
-    inline unsigned int get_shared_edges_id(int& edge) final {
-        return edge;
-    }
-
-    inline void finish_shared_edges_edge(int& ctx) final {
-        (void) ctx;
-    }
-    inline int get_shared_edges_edge(int n, int& ctx) final {
-        (void) n;
-        return ctx;
-    }
-
-    inline void preallocate_rr_edges_shared_edges(int& /*ctx*/, size_t size) final {
-        (void) size;
-        //could reserve space here...
-    }
-    inline int add_rr_edges_shared_edges(int& ctx, unsigned int id) final {
-        (void) ctx;
-        // id is actually unnecessary here...
-        rr_graph_builder_->add_shared_edges();
-        return id;
-    }
-    inline void finish_rr_edges_shared_edges(int& ctx) final {
-        (void) ctx;
-    }
-    inline size_t num_rr_edges_shared_edges(int& ctx) final {
-        return ctx;
-    }
-    inline int get_rr_edges_shared_edges(int n, int& ctx) final {
-        (void) ctx;
-        return n;
-    }
-
-	inline void preallocate_shared_edges_edge(int& ctx, size_t size){
-        (void) ctx;
-        (void) size;
-    }
-	inline int add_shared_edges_edge(int& ctx, int dx, int dy, unsigned int switch_id, unsigned int tile_idx){
-        (void) ctx;
-        rr_graph_builder_->add_shared_edges_edge(dx, dy, switch_id, tile_idx);
-        return -1;
-    }
-	inline size_t num_shared_edges_edge(int& ctx){
-        return ctx;
-    }
 
 
 
-    inline int init_rr_graph_tiles(void*& /*ctx*/) final {
-        return -1;
-    }
-    
-    inline void finish_rr_graph_tiles(int& ctx) final {
-        (void) ctx;
-        rr_graph_builder_->tiles_to_xy();
-    }
 
-    inline int get_rr_graph_tiles(void*& /*ctx*/) final {
-        return -1;
-    }
 
     inline int get_channel_chan_width_max(void*& /*ctx*/) final {
         return chan_width_->max;

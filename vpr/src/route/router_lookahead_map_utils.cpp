@@ -262,16 +262,19 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
                                                     std::greater<Entry>>* pq) {
     RRNodeId parent = parent_entry.rr_node;
 
-
     size_t k = 0;
-    std::vector<t_dest_switch> edges;
-    rr_graph.edge_range_direct(parent, edges);
-    for (auto edge : edges) {
-        int child_node_ind = size_t(edge.dest);
-        int switch_ind = edge.switch_id;
+
+    const auto& num_edges = rr_graph.num_edges(parent);
+    uint32_t first_idx = rr_graph.first_shared_idx(parent);
+    uint32_t last_idx = first_idx + num_edges;
+    
+    while (first_idx < last_idx) {
+        int child_node_ind = size_t(parent) + rr_graph.shared_dnode(first_idx);
+        int switch_ind = rr_graph.shared_switch(first_idx);
 
         /* skip this child if it has already been expanded from */
         if ((*node_expanded)[child_node_ind]) {
+            first_idx++;
             k++;
             continue;
         }
@@ -287,6 +290,7 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
             pq->push(child_entry);
             path = path_entry;
         }
+        first_idx++;
         k++;
     }
 }
@@ -499,13 +503,16 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            std::vector<t_dest_switch> edges;
-            rr_graph.edge_range_direct(curr.node, edges);
-            for (auto edge : edges) {
-                int iswitch = edge.switch_id;
+
+            const auto& num_edges = rr_graph.num_edges(curr.node);
+            uint32_t first_idx = rr_graph.first_shared_idx(curr.node);
+            uint32_t last_idx = first_idx + num_edges;
+
+            while (first_idx < last_idx) {
+                int iswitch = rr_graph.shared_switch(first_idx);
                 float incr_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
-                RRNodeId next_node = edge.dest;
+                RRNodeId next_node = RRNodeId(size_t(curr.node) + rr_graph.shared_dnode(first_idx));
 
                 t_pq_entry next;
                 next.congestion = curr.congestion + incr_cong; //Of current node
@@ -513,6 +520,7 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
                 next.node = next_node;
 
                 pq.push(next);
+                first_idx++;
             }
         } else {
             VPR_ERROR(VPR_ERROR_ROUTE, "Unrecognized RR type");
@@ -594,13 +602,16 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-            std::vector<t_dest_switch> edges;
-            rr_graph.edge_range_direct(curr.node, edges);
-            for (auto edge : edges) {
-                int iswitch = edge.switch_id;
+
+            const auto& num_edges = rr_graph.num_edges(curr.node);
+            uint32_t first_idx = rr_graph.first_shared_idx(curr.node);
+            uint32_t last_idx = first_idx + num_edges;
+
+            while (first_idx < last_idx) {
+                int iswitch = rr_graph.shared_switch(first_idx);
                 float new_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
-                RRNodeId next_node = edge.dest;
+                RRNodeId next_node = RRNodeId(size_t(curr.node) + rr_graph.shared_dnode(first_idx));
 
                 t_pq_entry next;
                 next.congestion = new_cong; //Of current node
@@ -609,6 +620,7 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
                 next.level = curr.level + 1;
 
                 pq.push(next);
+                first_idx++;
             }
         } else {
             VPR_ERROR(VPR_ERROR_ROUTE, "Unrecognized RR type");

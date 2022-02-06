@@ -271,34 +271,30 @@ struct t_pb_stats;
 struct t_pb_route;
 struct t_chain_info;
 struct t_edge_struct {
-      RRNodeId src;
-      RRNodeId dest;
-      short switch_id;
+    RRNodeId src;
+    RRNodeId dest;
+    short switch_id;
 
-      friend bool operator==(const t_edge_struct& lhs, const t_edge_struct& rhs) {
-            return lhs.src == rhs.src &&
-                    lhs.dest == rhs.dest &&
-                    lhs.switch_id == rhs.switch_id;
-        }
-  };
+    friend bool operator==(const t_edge_struct& lhs, const t_edge_struct& rhs) {
+        return lhs.src == rhs.src && lhs.dest == rhs.dest && lhs.switch_id == rhs.switch_id;
+    }
+};
 struct t_dest_switch {
-      RRNodeId dest;
-      short switch_id;
+    RRNodeId dest;
+    short switch_id;
 
-      friend bool operator==(const t_dest_switch& lhs, const t_dest_switch& rhs) {
-            return  lhs.dest == rhs.dest &&
-                    lhs.switch_id == rhs.switch_id;
-        }
-  };
-
+    friend bool operator==(const t_dest_switch& lhs, const t_dest_switch& rhs) {
+        return lhs.dest == rhs.dest && lhs.switch_id == rhs.switch_id;
+    }
+};
 
 struct t_edge_with_id {
-      RRNodeId dest;
-      short switch_id;
-      RREdgeId edge_id;
-  };
+    RRNodeId dest;
+    short switch_id;
+    RREdgeId edge_id;
+};
 
-struct t_edge_soa{
+struct t_edge_soa {
     std::vector<RRNodeId> dests;
     std::vector<short> switches;
 };

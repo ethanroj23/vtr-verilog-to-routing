@@ -79,6 +79,9 @@ class RRGraphView {
     inline t_rr_type node_type(RRNodeId node) const {
         return node_storage_.node_type(node);
     }
+    inline t_rr_type temp_node_type(RRNodeId node) const {
+        return node_storage_.temp_node_type(node);
+    }
 
     /** @brief Get the type string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
@@ -295,13 +298,24 @@ class RRGraphView {
         return node_storage_.edge_range(id);
     }
 
-    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+    inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const {
         node_storage_.edge_range_direct(node, return_edges);
     }
-    inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const{
+
+    inline uint32_t first_shared_idx(RRNodeId node) const {
+        return node_storage_.first_shared_idx(node);
+    }
+    inline int32_t shared_dnode(uint32_t idx) const {
+        return node_storage_.shared_dnode(idx);
+    }
+    inline short shared_switch(uint32_t idx) const {
+        return node_storage_.shared_switch(idx);
+    }
+
+    inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const {
         return node_storage_.edge_range_iter(node);
     }
-    inline std::vector<t_edge_with_id> edge_range_with_id_iter(RRNodeId node) const{
+    inline std::vector<t_edge_with_id> edge_range_with_id_iter(RRNodeId node) const {
         return node_storage_.edge_range_with_id_iter(node);
     }
 
@@ -312,33 +326,20 @@ class RRGraphView {
         return node_storage_.edge_sink_node_in_node(node, edge_id);
     }
 
-
-
-
-
-
-
-    inline void non_configurable_edge_with_id_range_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const{
+    inline void non_configurable_edge_with_id_range_direct(RRNodeId node, std::vector<t_edge_with_id>& return_edges) const {
         node_storage_.non_configurable_edge_with_id_range_direct(node, return_edges);
     }
 
-    inline void non_configurable_edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const{
+    inline void non_configurable_edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const {
         node_storage_.non_configurable_edge_range_direct(node, return_edges);
     }
-    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const{
+    inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const {
         return node_storage_.directconnect_exists(src_rr_node, dest_rr_node);
     }
 
-    inline void print_graph() const{
+    inline void print_graph() const {
         node_storage_.print_graph();
     }
-
-
-
-
-
-
-
 
     /** @brief Get the destination node for the iedge'th edge from specified RRNodeId.
      *  This method should generally not be used, and instead first_edge and
@@ -349,7 +350,7 @@ class RRGraphView {
     inline RRNodeId edge_sink_node(const RREdgeId& id) const {
         return node_storage_.edge_sink_node(id);
     }
-    
+
     inline void for_each_edge(std::function<void(RREdgeId, RRNodeId, RRNodeId)> apply) const {
         node_storage_.for_each_edge(apply);
     }
@@ -360,9 +361,7 @@ class RRGraphView {
         return node_storage_.node_first_sink(node);
     }
 
-
-
-    inline bool empty() const{
+    inline bool empty() const {
         return node_storage_.empty();
     }
 
@@ -449,6 +448,9 @@ class RRGraphView {
     /** @brief Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
     RRIndexedDataId node_cost_index(RRNodeId node) const {
         return node_storage_.node_cost_index(node);
+    }
+    RRIndexedDataId temp_node_cost_index(RRNodeId node) const {
+        return node_storage_.temp_node_cost_index(node);
     }
     /** @brief Return detailed routing segment information with a given id* @note The routing segments here may not be exactly same as those defined in architecture file. They have been
      * adapted to fit the context of routing resource graphs.

@@ -4,9 +4,9 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
 # Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
-# md5sum of input file: 5a338ce1af57917925a9e1af40d69776
+# md5sum of input file: be5a29eb1bc23cd17b5c54f289d60ee1
 
-@0xdd47aea0220ccae7;
+@0xa0a315115df7e3f6;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -203,34 +203,13 @@ struct RrNodes {
 	nodes @0 :List(Node);
 }
 
-struct TNode {
-	id @0 :UInt32;
-}
-
-struct Tile {
-	x @0 :UInt32;
-	y @1 :UInt32;
-	tNodes @2 :List(TNode);
-}
-
-struct Tiles {
-	tiles @0 :List(Tile);
-}
-
 struct Edge {
-	dx @0 :Int32;
-	dy @1 :Int32;
-	switchId @2 :UInt32;
-	tileIdx @3 :UInt32;
-}
-
-struct SharedEdges {
-	id @0 :UInt32;
-	edges @1 :List(Edge);
+	dnode @0 :Int32;
+	switchId @1 :UInt32;
 }
 
 struct RrEdges {
-	sharedEdgeses @0 :List(SharedEdges);
+	edges @0 :List(Edge);
 }
 
 struct RrGraph {
@@ -243,6 +222,5 @@ struct RrGraph {
 	blockTypes @6 :BlockTypes;
 	grid @7 :GridLocs;
 	rrNodes @8 :RrNodes;
-	tiles @9 :Tiles;
-	rrEdges @10 :RrEdges;
+	rrEdges @9 :RrEdges;
 }
