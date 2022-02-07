@@ -696,9 +696,7 @@ short t_rr_graph_storage::node_class_num(RRNodeId id) const {
 
 void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
     node_storage_[id].type_ = new_type;
-    const auto& x = size_t(id);
-    node_type_[x >> 1] = node_type_[x >> 1] | ( new_type << (x & 1)*4 ); // shift to top 4 bits if number is odd
-    // node_core_[id].pattern_idx_ = node_core_[id].pattern_idx_ | ( size_t(new_type) << 13); // store node type as top 3 bits
+    node_type_[id] = node_type_[id] | (uint)new_type; // keep top bits same for dir_side
 }
 
 void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
@@ -740,19 +738,19 @@ void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction
     if (temp_node_type(id) != CHANX && temp_node_type(id) != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
     }
-    node_storage_[id].dir_side_.direction = new_direction;
+    node_type_[id] = (uint(new_direction) << 4) | node_type_[id];
 }
 
 void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
     if (temp_node_type(id) != IPIN && temp_node_type(id) != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
     }
-    std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;
+    std::bitset<NUM_SIDES> side_bits = node_type_[id] >> 4; // top 4 bits are dir_side
     side_bits[size_t(new_side)] = true;
     if (side_bits.to_ulong() > CHAR_MAX) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node %u", SIDE_STRING[new_side], size_t(id));
     }
-    node_storage_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
+    node_type_[id] = (static_cast<unsigned char>(side_bits.to_ulong()) << 4) | node_type_[id];
 }
 
 short t_rr_graph_view::node_ptc_num(RRNodeId id) const {

@@ -166,7 +166,8 @@ class t_rr_graph_storage {
      ****************/
 
     t_rr_type node_type(RRNodeId id) const {
-        return t_rr_type((node_type_[size_t(id) >> 1] >> (size_t(id) & 1)*4 ) & 15); // shift to top 4 bits if number is odd
+        return t_rr_type(node_type_[id] & 15);
+        // return t_rr_type((node_type_[size_t(id) >> 1] >> (size_t(id) & 1)*4 ) & 15); // shift to top 4 bits if number is odd
         // index is id >> 1 or id / 2
         // if the lowest bit is 1, shift all bits the right by 4. This will select the top bits
         // finally, bitwise and with 1111 to only select the bottom 4 bits
@@ -190,13 +191,20 @@ class t_rr_graph_storage {
         return node_core_[id].ylow_;
     }
     short node_xhigh(RRNodeId id) const { // if dxy is negative, add it to xlow
-        return node_core_[id].xlow_ - (node_core_[id].dxy<0)*(node_core_[id].dxy);
+
+        // get a bitmask that is based on node_core_[id].dxy<0
+        // -int16_t(node_core_[id].dxy<0) // bitmask
+
+        return node_core_[id].xlow_ - (-int16_t(node_core_[id].dxy<0) & node_core_[id].dxy);
+        // return node_core_[id].xlow_ - (node_core_[id].dxy<0)*(node_core_[id].dxy);
         // return node_core_[id].xlow_ - ~((node_core_[id].dxy<0) << 16) & node_core_[id].dxy;
         // return node_core_[id].xlow_ - (xy_bitmask_[node_core_[id].dxy<0] & node_core_[id].dxy);
     }
 
     short node_yhigh(RRNodeId id) const { // if dxy is positive, add it to ylow
-        return node_core_[id].ylow_ + (node_core_[id].dxy>0)*(node_core_[id].dxy);
+
+        return node_core_[id].ylow_ + (-int16_t(node_core_[id].dxy>0) & node_core_[id].dxy);
+        // return node_core_[id].ylow_ + (node_core_[id].dxy>0)*(node_core_[id].dxy);
         // return node_core_[id].ylow_ + (xy_bitmask_[node_core_[id].dxy>0] & node_core_[id].dxy);
     }
 
@@ -216,7 +224,7 @@ class t_rr_graph_storage {
                             "Attempted to access RR node 'direction' for non-channel type '%s'",
                             rr_node_typename[node_type(id)]);
         }
-        return shared_nodes_[node_core_[id].pattern_idx_].dir_side_.direction_;
+        return Direction(node_type_[id] >> 4);
     }
 
     const std::string& node_direction_string(RRNodeId id) const;
@@ -228,7 +236,7 @@ class t_rr_graph_storage {
                             rr_node_typename[node_type(id)]);
         }
         // Return a vector showing only the sides that the node appears
-        std::bitset<NUM_SIDES> side_tt = shared_nodes_[node_core_[id].pattern_idx_].dir_side_.sides_;
+        std::bitset<NUM_SIDES> side_tt = node_type_[id] >> 4;
         return side_tt[size_t(side)];
     }
     bool temp_is_node_on_specific_side(RRNodeId id, e_side side) const {
@@ -646,7 +654,7 @@ class t_rr_graph_storage {
         make_room_in_vector(&node_storage_, size_t(elem_position));
         make_room_in_vector(&node_pattern_, size_t(elem_position));
         make_room_in_vector(&node_core_, size_t(elem_position));
-        make_room_in_vector(&node_type_, size_t(elem_position)>>1);
+        make_room_in_vector(&node_type_, size_t(elem_position));
         node_ptc_.reserve(node_storage_.capacity());
         node_ptc_.resize(node_storage_.size());
     }
@@ -834,20 +842,19 @@ class t_rr_graph_storage {
                                               node_storage_[node].cost_index_,
                                               node_storage_[node].rc_index_,
                                               node_storage_[node].capacity_,
-                                              node_storage_[node].type_,
-                                              {Direction::NUM_DIRECTIONS}};
+                                              };
             // set direction if using CHANX or CHANY
-            if (current_type == CHANX || current_type == CHANY) {
-                cur_pattern.dir_side_.direction_ = node_storage_[node].dir_side_.direction;
-            }
+            // if (current_type == CHANX || current_type == CHANY) {
+            //     cur_pattern.dir_side_.direction_ = node_storage_[node].dir_side_.direction;
+            // }
             // set sides if using IPIN or OPIN
-            if (current_type == IPIN || current_type == OPIN) {
-                // for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
-                //     if (strcmp(SIDE_STRING[side], node_side_string(node))==0){
-                cur_pattern.dir_side_.sides_ = node_storage_[node].dir_side_.sides;
-                //     }
-                // }
-            }
+            // if (current_type == IPIN || current_type == OPIN) {
+            //     // for (auto side : SIDES){ // iterate over SIDES to find the side of the current node
+            //     //     if (strcmp(SIDE_STRING[side], node_side_string(node))==0){
+            //     cur_pattern.dir_side_.sides_ = node_storage_[node].dir_side_.sides;
+            //     //     }
+            //     // }
+            // }
 
             if (!(temp_node_patterns.count(cur_pattern) > 0)) { // node_edge pattern has not been found before
                 temp_node_patterns[cur_pattern] = node_pattern_idx;
@@ -1098,22 +1105,23 @@ class t_rr_graph_storage {
         } dir_side_;                   // 1 Byte
     };
 
-    struct alignas(8) t_folded_node_data {
-        int16_t cost_index_; // 2 Bytes 
+    struct alignas(4) t_folded_node_data {
+        int8_t cost_index_; // 2 Bytes 
         int16_t rc_index_;   // 2 Bytes
-        uint16_t capacity_;  // 2 Bytes
-        t_rr_type type_ = NUM_RR_TYPES; // 1 Bytes
+        uint8_t capacity_;  // 2 Bytes
+        // t_rr_type type_ = NUM_RR_TYPES; // 1 Bytes
 
-        union {
-            Direction direction_;       //Valid only for CHANX/CHANY
-            unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
-        } dir_side_;                    // 1 Byte
+        // union {
+        //     Direction direction_;       //Valid only for CHANX/CHANY
+        //     unsigned char sides_ = 0x0; //Valid only for IPINs/OPINs
+        // } dir_side_;                    // 1 Byte
     };
 
     friend bool operator==(const t_folded_node_data& lhs, const t_folded_node_data& rhs) {
         return lhs.cost_index_ == rhs.cost_index_ && lhs.rc_index_ == rhs.rc_index_ && 
-        lhs.dir_side_.direction_ == rhs.dir_side_.direction_ && // lhs.type_ == rhs.type_ &&
-        lhs.dir_side_.sides_ == rhs.dir_side_.sides_ && lhs.capacity_ == rhs.capacity_;
+        // lhs.dir_side_.direction_ == rhs.dir_side_.direction_ && // lhs.type_ == rhs.type_ &&
+        // lhs.dir_side_.sides_ == rhs.dir_side_.sides_ && 
+        lhs.capacity_ == rhs.capacity_;
     }
 
     friend bool operator<(const t_folded_node_data& lhs, const t_folded_node_data& rhs) {
@@ -1126,15 +1134,15 @@ class t_rr_graph_storage {
                 // if (lhs.type_ < rhs.type_)
                     // return true;
                 // else if (lhs.type_ == rhs.type_) {
-                    if (lhs.dir_side_.direction_ < rhs.dir_side_.direction_)
-                        return true;
-                    else if (lhs.dir_side_.direction_ == rhs.dir_side_.direction_) {
-                        if (lhs.dir_side_.sides_ < rhs.dir_side_.sides_)
-                            return true;
-                        else if (lhs.dir_side_.sides_ == rhs.dir_side_.sides_) {
+                    // if (lhs.dir_side_.direction_ < rhs.dir_side_.direction_)
+                    //     return true;
+                    // else if (lhs.dir_side_.direction_ == rhs.dir_side_.direction_) {
+                    //     if (lhs.dir_side_.sides_ < rhs.dir_side_.sides_)
+                    //         return true;
+                    //     else if (lhs.dir_side_.sides_ == rhs.dir_side_.sides_) {
                             if (lhs.capacity_ < rhs.capacity_) return true;
-                        }
-                    }
+                    //     }
+                    // }
                 // }
             }
         }
@@ -1226,7 +1234,7 @@ class t_rr_graph_storage {
     vtr::vector<RREdgeId, short> edge_switch_;
 
     // FoldedPerTile data
-    // vtr::vector<RRNodeId, t_rr_type> node_type_;        // goes from RRNodeId to node type
+    vtr::vector<RRNodeId, uint8_t> node_type_;        // goes from RRNodeId to node type
 
     std::vector<std::vector<uint32_t>> tile_to_node_; // goes from [x, y, tile_idx] to RRNodeId
     std::vector<uint32_t> tile_to_node_xy_;           // goes from [xy] to tile's first RRNodeId
@@ -1238,7 +1246,7 @@ class t_rr_graph_storage {
 
     uint16_t xy_bitmask_ [2] = {0, 65535};
 
-    std::vector<uint8_t> node_type_;
+    // std::vector<uint8_t> node_type_;
 
     std::vector<t_folded_node_data> shared_nodes_; // stores index into shared_nodes_
     std::vector<int32_t> shared_dnodes_; // stores all data for a node in patterns
