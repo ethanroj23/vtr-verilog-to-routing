@@ -4,9 +4,9 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
 # Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
-# md5sum of input file: be5a29eb1bc23cd17b5c54f289d60ee1
+# md5sum of input file: 0b1165cf086fca2848c8b32f1e261819
 
-@0xa0a315115df7e3f6;
+@0xd75deb593c092533;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -189,27 +189,40 @@ struct Metadata {
 
 struct Node {
 	capacity @0 :UInt32;
-	direction @1 :NodeDirection;
-	id @2 :UInt32;
-	ptnIdx @3 :UInt32;
-	type @4 :NodeType;
-	loc @5 :NodeLoc;
-	timing @6 :NodeTiming;
-	segment @7 :NodeSegment;
-	metadata @8 :Metadata;
+	dIdx @1 :UInt32;
+	direction @2 :NodeDirection;
+	id @3 :UInt32;
+	sIdx @4 :UInt32;
+	type @5 :NodeType;
+	loc @6 :NodeLoc;
+	timing @7 :NodeTiming;
+	segment @8 :NodeSegment;
+	metadata @9 :Metadata;
 }
 
 struct RrNodes {
 	nodes @0 :List(Node);
 }
 
-struct Edge {
-	dnode @0 :Int32;
-	switchId @1 :UInt32;
+struct Dnode {
+	val @0 :Int32;
+}
+
+struct SharedDnodes {
+	dnodes @0 :List(Dnode);
+}
+
+struct SSwitch {
+	id @0 :UInt32;
+}
+
+struct SharedSwitches {
+	sSwitches @0 :List(SSwitch);
 }
 
 struct RrEdges {
-	edges @0 :List(Edge);
+	sharedDnodes @0 :SharedDnodes;
+	sharedSwitches @1 :SharedSwitches;
 }
 
 struct RrGraph {

@@ -311,7 +311,7 @@ static bool check_adjacent(int from_node, int to_node) {
 
 
     const auto& num_edges = rr_graph.num_edges(RRNodeId(from_node));
-    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node)).dnode_;
     uint32_t last_idx = first_idx + num_edges;
 
     while (first_idx < last_idx) {

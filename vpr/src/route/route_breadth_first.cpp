@@ -390,7 +390,7 @@ static void breadth_first_expand_neighbours(BinaryHeap& heap, int inode, float p
     size_t first_edge = (size_t)rr_graph.node_first_edge(RRNodeId(inode));
     size_t k = 0;
     const auto& num_edges = rr_graph.num_edges(RRNodeId(inode));
-    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(inode));
+    uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(inode)).dnode_;
     uint32_t last_idx = first_idx + num_edges;
 
     while (first_idx < last_idx) {

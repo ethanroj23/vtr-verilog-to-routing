@@ -423,21 +423,21 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     size_t k = 0;
 
     const auto& num_edges = rr_graph_->num_edges(from_node);
-    uint32_t first_idx = rr_graph_->first_shared_idx(from_node);
-    uint32_t last_idx = first_idx + num_edges;
+    // const auto& both_idx = rr_graph_->first_shared_idx(from_node);
+    uint32_t first_idx = rr_graph_->first_shared_idx(from_node).dnode_;
+    uint32_t switch_idx = rr_graph_->first_shared_idx(from_node).switch_;
 
-    while (first_idx < last_idx) {
+    while (k < num_edges) {
         timing_driven_expand_neighbour(current,
                                        from_node_int,
                                        RREdgeId(k + first_edge),
-                                       from_node_int + rr_graph_->shared_dnode(first_idx),
+                                       from_node_int + rr_graph_->shared_dnode(first_idx+k),
                                        cost_params,
                                        bounding_box,
                                        target_node,
                                        target_bb,
-                                       rr_graph_->shared_switch(first_idx));
+                                       rr_graph_->shared_switch(switch_idx+k));
         k++;
-        first_idx++;
     }
 }
 

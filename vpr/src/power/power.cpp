@@ -821,7 +821,8 @@ static void power_usage_routing(t_power_usage* power_usage,
             }
 
             const auto& num_edges = rr_graph.num_edges(RRNodeId(trace->index));
-            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            const auto& both_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            uint32_t first_idx = both_idx.dnode_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
@@ -985,18 +986,21 @@ static void power_usage_routing(t_power_usage* power_usage,
                 switchbox_fanout = 0;
 
                 const auto& num_edges = rr_graph.num_edges(rr_id);
-                uint32_t first_idx = rr_graph.first_shared_idx(rr_id);
+                const auto& both_idx = rr_graph.first_shared_idx(rr_id);
+                uint32_t first_idx = both_idx.dnode_;
+                uint32_t switch_idx = both_idx.switch_;
                 uint32_t last_idx = first_idx + num_edges;
 
                 while (first_idx < last_idx) {
                     if (rr_graph.shared_switch(first_idx) == routing_arch->wire_to_rr_ipin_switch) {
                         connectionbox_fanout++;
-                    } else if (rr_graph.shared_switch(first_idx) == routing_arch->delayless_switch) {
+                    } else if (rr_graph.shared_switch(switch_idx) == routing_arch->delayless_switch) {
                         /* Do nothing */
                     } else {
                         switchbox_fanout++;
                     }
                     first_idx++;
+                    switch_idx++;
                 }
 
                 /* Buffer to next Switchbox */
@@ -1214,7 +1218,8 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
     max_IPIN_fanin = 0;
     max_seg_to_seg_fanout = 0;
     max_seg_to_IPIN_fanout = 0;
-    uint32_t first_idx, last_idx, num_edges;
+    uint32_t first_idx, last_idx, num_edges, switch_idx;
+    t_rr_node_idx both_idx;
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
         t_edge_size fanout_to_IPIN = 0;
         t_edge_size fanout_to_seg = 0;
@@ -1234,16 +1239,17 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
             case CHANY:
 
                 num_edges = rr_graph.num_edges(rr_node_idx);
-                first_idx = rr_graph.first_shared_idx(rr_node_idx);
-                last_idx = first_idx + num_edges;
+                both_idx = rr_graph.first_shared_idx(rr_node_idx);
+                switch_idx = both_idx.switch_;
+                last_idx = switch_idx + num_edges;
 
-                while (first_idx < last_idx) {
-                    if (rr_graph.shared_switch(first_idx) == routing_arch->wire_to_rr_ipin_switch) {
+                while (switch_idx < last_idx) {
+                    if (rr_graph.shared_switch(switch_idx) == routing_arch->wire_to_rr_ipin_switch) {
                         fanout_to_IPIN++;
-                    } else if (rr_graph.shared_switch(first_idx) != routing_arch->delayless_switch) {
+                    } else if (rr_graph.shared_switch(switch_idx) != routing_arch->delayless_switch) {
                         fanout_to_seg++;
                     }
-                    first_idx++;
+                    switch_idx++;
                 }
                 max_seg_to_IPIN_fanout = std::max(max_seg_to_IPIN_fanout,
                                                   fanout_to_IPIN);
@@ -1273,12 +1279,14 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
     for (const RRNodeId& rr_node_idx : device_ctx.rr_graph.nodes()) {
 
         const auto& num_edges = rr_graph.num_edges(rr_node_idx);
-        uint32_t first_idx = rr_graph.first_shared_idx(rr_node_idx);
+        const auto& both_idx = rr_graph.first_shared_idx(rr_node_idx);
+        uint32_t first_idx = both_idx.dnode_;
+        uint32_t switch_idx = both_idx.switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         while (first_idx < last_idx) {
             size_t dest = size_t(rr_node_idx) + rr_graph.shared_dnode(first_idx);
-            short switch_id = rr_graph.shared_switch(first_idx);
+            short switch_id = rr_graph.shared_switch(switch_idx);
             if (dest) {
                 if (rr_node_power[dest].driver_switch_type == OPEN) {
                     rr_node_power[dest].driver_switch_type = switch_id;
@@ -1287,6 +1295,7 @@ void power_routing_init(const t_det_routing_arch* routing_arch) {
                 }
             }
             first_idx++;
+            switch_idx++;
         }
     }
 

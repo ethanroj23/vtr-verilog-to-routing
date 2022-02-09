@@ -258,6 +258,14 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using RrEdgesWriteContext = int;
     using SharedEdgesReadContext = int;
     using SharedEdgesWriteContext = int;
+    using SharedDnodesReadContext = int;
+    using SharedDnodesWriteContext = int;
+    using DnodeWriteContext = int;
+    using DnodeReadContext = int;
+    using SSwitchReadContext = int;
+    using SSwitchWriteContext = int;
+    using SharedSwitchesReadContext = int;
+    using SharedSwitchesWriteContext = int;
 };
 
 class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
@@ -760,6 +768,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return itr != rr_node_metadata_->end();
     }
 
+    inline unsigned int get_node_d_idx(const t_rr_node& node) final {
+        return size_t(node.id()); //  not valid
+    }
+	inline unsigned int get_node_s_idx(const t_rr_node& node) final {
+        return size_t(node.id()); // not valid
+    }
+
+
     /** Generated for complex type "rr_nodes":
      * <xs:complexType name="rr_nodes">
      *   <xs:choice maxOccurs="unbounded">
@@ -770,7 +786,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void preallocate_rr_nodes_node(void*& /*ctx*/, size_t size) final {
         rr_graph_builder_->reserve_nodes(size);
     }
-    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, unsigned int ptn_idx, uxsd::enum_node_type type) final {
+    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int d_idx, unsigned int id, unsigned int s_idx, uxsd::enum_node_type type) final {
         // make_room_in_vector will not allocate if preallocate_rr_nodes_node
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
@@ -782,7 +798,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         rr_graph_builder_->set_node_type(node_id, from_uxsd_node_type(type));
         rr_graph_builder_->set_node_capacity(node_id, capacity);
-        rr_graph_builder_->set_node_pattern_idx(node_id, ptn_idx);
+        rr_graph_builder_->set_node_pattern_idx(node_id, d_idx, s_idx);
 
         switch (rr_graph.temp_node_type(node.id())) {
             case CHANX:
@@ -833,10 +849,6 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return to_uxsd_node_type(rr_graph.temp_node_type(node.id()));
     }
 
-    inline unsigned int get_node_ptn_idx(const t_rr_node& node) final {
-        (void)node;
-        return -1;
-    }
 
     inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
         const auto& rr_graph = (*rr_graph_);
@@ -963,6 +975,74 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline int init_rr_graph_rr_edges(void*& /*ctx*/) final {
         return -1;
     }
+
+
+    inline int init_rr_edges_shared_dnodes(int &ctx) {
+        return ctx;
+    }
+	inline void finish_rr_edges_shared_dnodes(int &ctx) {
+        (void) ctx;
+    }
+	inline int get_rr_edges_shared_dnodes(int &ctx) {
+        return ctx;
+    }
+	inline int init_rr_edges_shared_switches(int &ctx) {
+        return ctx;
+    }
+	inline void finish_rr_edges_shared_switches(int &ctx) {
+        (void) ctx;
+    }
+	inline int get_rr_edges_shared_switches(int &ctx) {
+        return ctx;
+    }
+
+    inline void preallocate_shared_switches_s_switch(int &ctx, size_t size){
+        (void) size;
+        (void) ctx;
+    }
+	inline int add_shared_switches_s_switch(int &ctx, unsigned int id){
+        rr_graph_builder_->add_sswitch(id);
+        return ctx;
+    }
+	inline void finish_shared_switches_s_switch(int &ctx){
+        (void) ctx;
+    }
+	inline size_t num_shared_switches_s_switch(int &ctx){
+        return ctx;
+    }
+	inline int get_shared_switches_s_switch(int n, int &ctx){
+        (void) n;
+        return ctx;
+    }
+	inline unsigned int get_s_switch_id(int &ctx){
+        return ctx;
+    }
+    inline void preallocate_shared_dnodes_dnode(int &ctx, size_t size){
+        (void) ctx;
+        (void) size;
+    }
+	inline int add_shared_dnodes_dnode(int &ctx, int val){
+        rr_graph_builder_->add_dnode(val);
+        return ctx;
+    }
+	inline void finish_shared_dnodes_dnode(int &ctx){
+       (void) ctx;
+    }
+	inline size_t num_shared_dnodes_dnode(int &ctx){
+        return ctx;
+    }
+	inline int get_shared_dnodes_dnode(int n, int &ctx){
+        (void) n;
+        return ctx;
+    }
+	inline int get_dnode_val(int &ctx){
+        return ctx;
+    }
+
+
+
+
+
 
     inline void finish_rr_graph_rr_edges(int& /*ctx*/) final {
         /*initialize a vector that keeps track of the number of wire to ipin switches

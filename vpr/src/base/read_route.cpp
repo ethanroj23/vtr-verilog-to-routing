@@ -511,7 +511,9 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     if (device_ctx.rr_graph.node_type(prev_node) == SINK) return true;
 
     const auto& num_edges = rr_graph.num_edges(prev_node);
-    uint32_t first_idx = rr_graph.first_shared_idx(prev_node);
+    const auto& both_idx = rr_graph.first_shared_idx(prev_node);
+    uint32_t first_idx = both_idx.dnode_;
+    uint32_t switch_idx = both_idx.switch_;
     uint32_t last_idx = first_idx + num_edges;
 
     while (first_idx < last_idx) {
@@ -521,9 +523,10 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
         }
 
         // If there are any non-configurable branches return true
-        short edge_switch = rr_graph.shared_switch(first_idx);
+        short edge_switch = rr_graph.shared_switch(switch_idx);
         if (!(rr_graph.rr_switch_inf(RRSwitchId(edge_switch)).configurable())) return true;
         first_idx++;
+        switch_idx++;
     }
 
     // If it's part of a non configurable node list, return true

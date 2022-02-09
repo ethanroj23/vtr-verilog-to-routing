@@ -302,7 +302,7 @@ class RRGraphView {
         node_storage_.edge_range_direct(node, return_edges);
     }
 
-    inline uint32_t first_shared_idx(RRNodeId node) const {
+    inline t_rr_node_idx first_shared_idx(RRNodeId node) const {
         return node_storage_.first_shared_idx(node);
     }
     inline int32_t shared_dnode(uint32_t idx) const {

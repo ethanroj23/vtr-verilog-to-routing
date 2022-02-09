@@ -650,13 +650,18 @@ static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNode
     RRNodeId parent = parent_entry.rr_node;
 
     const auto& num_edges = rr_graph.num_edges(parent);
-    uint32_t first_idx = rr_graph.first_shared_idx(parent);
-    uint32_t last_idx = first_idx + num_edges;  
+    // const auto& both_idx = rr_graph.first_shared_idx(parent);
+    uint32_t first_idx = rr_graph.first_shared_idx(parent).dnode_;
+    uint32_t switch_idx = rr_graph.first_shared_idx(parent).switch_;
+    uint32_t k = 0;
+    // uint32_t last_idx = first_idx + num_edges;  
 
-    while (first_idx < last_idx) {
-        RRNodeId child_node = RRNodeId(rr_graph.shared_dnode(first_idx)+(size_t)parent);
-        int switch_ind = rr_graph.shared_switch(first_idx);
-        first_idx++;
+    while (k < num_edges) {
+        RRNodeId child_node = RRNodeId(rr_graph.shared_dnode(first_idx+k)+(size_t)parent);
+        int switch_ind = rr_graph.shared_switch(switch_idx+k);
+        // first_idx++;
+        // switch_idx++;
+        k++;
 
         if (rr_graph.node_type(child_node) == SINK) return;
 

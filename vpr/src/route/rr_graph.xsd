@@ -283,15 +283,31 @@
       <xs:element name="metadata" type="metadata" minOccurs="0"/>
     </xs:all>
     <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
-    <xs:attribute name="ptn_idx" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="d_idx" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="s_idx" type="xs:unsignedInt" use="required"/>
     <xs:attribute name="type" type="node_type" use="required"/>
     <xs:attribute name="direction" type="node_direction"/>
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="edge">
-    <xs:attribute name="dnode" type="xs:int" use="required"/>
-    <xs:attribute name="switch_id" type="xs:unsignedInt" use="required"/>
+  <xs:complexType name="dnode">
+    <xs:attribute name="val" type="xs:int" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="s_switch"> <!-- s_switch = shared_switch -->
+    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="shared_dnodes">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="dnode" type="dnode" minOccurs="0"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="shared_switches">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="s_switch" type="s_switch" minOccurs="0"/>
+    </xs:choice>
   </xs:complexType>
 
   <xs:complexType name="switches">
@@ -326,9 +342,10 @@
 
 
   <xs:complexType name="rr_edges">
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="edge" type="edge" minOccurs="0"/>
-    </xs:choice>
+    <xs:all>
+      <xs:element name="shared_dnodes" type="shared_dnodes"/>
+      <xs:element name="shared_switches" type="shared_switches"/>
+    </xs:all>
   </xs:complexType>
 
   <!-- This last definition is the root tag definition.  The name of the

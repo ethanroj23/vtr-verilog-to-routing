@@ -111,7 +111,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     float *unsharable_switch_trans, *sharable_switch_trans; /* [0..num_switch-1] */
 
     t_rr_type from_rr_type, to_rr_type;
-    int iedge, maxlen;
+    int maxlen;
     int iswitch, i, j, iseg, max_inputs_to_cblock;
     float input_cblock_trans, shared_opin_buffer_trans;
 
@@ -157,7 +157,8 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     sharable_switch_trans = alloc_and_load_sharable_switch_trans(num_switch,
                                                                  R_minW_nmos, R_minW_pmos);
 
-    uint32_t num_edges, first_idx, last_idx;
+    uint32_t num_edges, first_idx, last_idx, switch_idx;
+    t_rr_node_idx both_idx;
     for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
         size_t from_node = (size_t)from_rr_node;
         from_rr_type = rr_graph.node_type(from_rr_node);
@@ -166,7 +167,9 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
             case CHANY:
 
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
-                first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+                both_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+                first_idx = both_idx.dnode_;
+                switch_idx = both_idx.switch_;
                 last_idx = first_idx + num_edges;
 
                 while (first_idx < last_idx) {
@@ -175,13 +178,15 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if (!rr_graph.node_is_initialized(to_node)) {
+                        first_idx++;
+                        switch_idx++;
                         continue;
                     }
 
                     switch (to_rr_type) {
                         case CHANX:
                         case CHANY:
-                            iswitch = rr_graph.shared_switch(first_idx);
+                            iswitch = rr_graph.shared_switch(switch_idx);
 
                             if (rr_graph.rr_switch_inf(RRSwitchId(iswitch)).buffered()) {
                                 iseg = seg_index_of_sblock(from_node, size_t(to_node));
@@ -223,6 +228,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
 
                     } /* End switch on to_rr_type. */
                     first_idx++;
+                    switch_idx++;
                 } /* End for each edge. */
 
                 /* Now add in the shared buffer transistors, and reset some flags. */
@@ -256,18 +262,19 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                 shared_opin_buffer_trans = 0.;
 
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
-                first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
-                last_idx = first_idx + num_edges;
+                both_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+                switch_idx = both_idx.switch_;
+                last_idx = switch_idx + num_edges;
 
-                while (first_idx < last_idx) {
-                    iswitch = rr_graph.shared_switch(first_idx);
+                while (switch_idx < last_idx) {
+                    iswitch = rr_graph.shared_switch(switch_idx);
                     ntrans_no_sharing += unsharable_switch_trans[iswitch]
                                          + sharable_switch_trans[iswitch];
                     ntrans_sharing += unsharable_switch_trans[iswitch];
 
                     shared_opin_buffer_trans = std::max(shared_opin_buffer_trans,
                                                         sharable_switch_trans[iswitch]);
-                    first_idx++;
+                    switch_idx++;
                 }
 
                 ntrans_sharing += shared_opin_buffer_trans;
@@ -317,7 +324,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     /* corresponding to IPINs will be 0.           */
 
     t_rr_type from_rr_type, to_rr_type;
-    int i, j, iseg, iedge, maxlen;
+    int i, j, iseg, maxlen;
     int max_inputs_to_cblock;
     float input_cblock_trans;
 
@@ -362,7 +369,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     cblock_counted = (bool*)vtr::calloc(maxlen, sizeof(bool));
 
     ntrans = 0;
-    uint32_t num_edges, first_idx, last_idx;
+    uint32_t num_edges, first_idx, last_idx, switch_idx;
+    t_rr_node_idx both_idx;
     for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
         size_t from_node = size_t(from_rr_node);
         from_rr_type = rr_graph.node_type(from_rr_node);
@@ -371,7 +379,9 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
             case CHANY:
 
                 num_edges = rr_graph.num_edges(RRNodeId(from_node));
-                first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+                both_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+                first_idx = both_idx.dnode_;
+                switch_idx = both_idx.switch_;
                 last_idx = first_idx + num_edges;
 
                 /* Increment number of inputs per cblock if IPIN */
@@ -381,6 +391,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                     /* Ignore any uninitialized rr_graph nodes */
                     if (!rr_graph.node_is_initialized(to_node)) {
+                        first_idx++;
+                        switch_idx++;
                         continue;
                     }
 
@@ -388,7 +400,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                         case CHANX:
                         case CHANY:
                             if (!chan_node_switch_done[size_t(to_node)]) {
-                                int switch_index = rr_graph.shared_switch(first_idx);
+                                int switch_index = rr_graph.shared_switch(switch_idx);
                                 auto switch_type = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).type();
 
                                 int fan_in = rr_graph.node_fan_in(to_node);
@@ -451,6 +463,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                     } /* End switch on to_rr_type. */
                     first_idx++;
+                    switch_idx++;
                 } /* End for each edge. */
 
                 /* Reset some flags */

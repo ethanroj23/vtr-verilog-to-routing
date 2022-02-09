@@ -1430,7 +1430,7 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             from_node = route_ctx.rr_blk_source[blk_id][iclass];
 
             const auto& num_edges = rr_graph.num_edges(RRNodeId(from_node));
-            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node));
+            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(from_node)).dnode_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
@@ -1574,7 +1574,9 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
             bool found = false;
 
             const auto& num_edges = rr_graph.num_edges(RRNodeId(trace->index));
-            uint32_t first_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            const auto& both_idx = rr_graph.first_shared_idx(RRNodeId(trace->index));
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
@@ -1584,7 +1586,7 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
                     found = true;
 
                     //Verify that the switch matches
-                    int rr_iswitch = rr_graph.shared_switch(first_idx);
+                    int rr_iswitch = rr_graph.shared_switch(switch_idx);
                     if (trace->iswitch != rr_iswitch) {
                         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Traceback mismatched switch type: traceback %d rr_graph %d (RR nodes %d -> %d)\n",
                                         trace->iswitch, rr_iswitch,
@@ -1593,6 +1595,7 @@ bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes) {
                     break;
                 }
                 first_idx++;
+                switch_idx++;
             }
 
             if (!found) {

@@ -333,14 +333,18 @@ void t_rr_graph_storage::assign_first_edges() {
 
     size_t cur_edge = 0;
     size_t num_edges;
-    size_t last_node = node_storage_.size() - 1;
-    auto starting_idx = node_pattern_;
+    // size_t last_node = node_storage_.size() - 1;
+    std::vector<int32_t> starting_idx;
+    starting_idx.reserve(node_pattern_.size());
+    for (int i=0; i<node_pattern_.size(); i++){
+        starting_idx.push_back(node_pattern_[RRNodeId(i)].dnode_);
+    }
     std::sort(starting_idx.begin(), starting_idx.end());
     std::map<int, int> ptn_edge_count;
     // ptn_edge_count.resize(shared_dnodes_.size());
     int prev_edge = 0;
     for (size_t idx = 0; idx < starting_idx.size(); idx++) {
-        int ptn = starting_idx[RRNodeId(idx)];
+        int ptn = starting_idx[idx];
         if (prev_edge != ptn){
             ptn_edge_count[prev_edge] = ptn - prev_edge;
             prev_edge = ptn;
@@ -350,7 +354,7 @@ void t_rr_graph_storage::assign_first_edges() {
 
     for (size_t node = 0; node < node_storage_.size(); node++) {
         node_first_edge_[RRNodeId(node)] = RREdgeId(cur_edge);
-        const auto& ptn_idx = node_pattern_[RRNodeId(node)];
+        const auto& ptn_idx = node_pattern_[RRNodeId(node)].dnode_;
         num_edges = ptn_edge_count[ptn_idx];
         cur_edge += num_edges;
     }
@@ -526,7 +530,7 @@ void t_rr_graph_storage::partition_edges() {
     edges_read_ = true;
     VTR_ASSERT(remapped_edges_);
 
-    const auto& device_ctx = g_vpr_ctx.device();
+    // const auto& device_ctx = g_vpr_ctx.device();
     // This sort ensures two things:
     //  - Edges are stored in ascending source node order.  This is required
     //    by assign_first_edges()

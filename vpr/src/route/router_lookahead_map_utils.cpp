@@ -265,16 +265,19 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
     size_t k = 0;
 
     const auto& num_edges = rr_graph.num_edges(parent);
-    uint32_t first_idx = rr_graph.first_shared_idx(parent);
+    const auto& both_idx = rr_graph.first_shared_idx(parent);
+    uint32_t first_idx = both_idx.dnode_;
+    uint32_t switch_idx = both_idx.switch_;
     uint32_t last_idx = first_idx + num_edges;
     
     while (first_idx < last_idx) {
         int child_node_ind = size_t(parent) + rr_graph.shared_dnode(first_idx);
-        int switch_ind = rr_graph.shared_switch(first_idx);
+        int switch_ind = rr_graph.shared_switch(switch_idx);
 
         /* skip this child if it has already been expanded from */
         if ((*node_expanded)[child_node_ind]) {
             first_idx++;
+            switch_idx++;
             k++;
             continue;
         }
@@ -291,6 +294,7 @@ void expand_dijkstra_neighbours(const RRGraphView& rr_graph,
             path = path_entry;
         }
         first_idx++;
+        switch_idx++;
         k++;
     }
 }
@@ -505,11 +509,13 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
             const auto& num_edges = rr_graph.num_edges(curr.node);
-            uint32_t first_idx = rr_graph.first_shared_idx(curr.node);
+            const auto& both_idx = rr_graph.first_shared_idx(curr.node);
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
-                int iswitch = rr_graph.shared_switch(first_idx);
+                int iswitch = rr_graph.shared_switch(switch_idx);
                 float incr_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
                 RRNodeId next_node = RRNodeId(size_t(curr.node) + rr_graph.shared_dnode(first_idx));
@@ -520,6 +526,7 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
                 next.node = next_node;
 
                 pq.push(next);
+                switch_idx++;
                 first_idx++;
             }
         } else {
@@ -604,11 +611,13 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
             const auto& num_edges = rr_graph.num_edges(curr.node);
-            uint32_t first_idx = rr_graph.first_shared_idx(curr.node);
+            const auto& both_idx = rr_graph.first_shared_idx(curr.node);
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
-                int iswitch = rr_graph.shared_switch(first_idx);
+                int iswitch = rr_graph.shared_switch(switch_idx);
                 float new_delay = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
                 RRNodeId next_node = RRNodeId(size_t(curr.node) + rr_graph.shared_dnode(first_idx));
@@ -621,6 +630,7 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
 
                 pq.push(next);
                 first_idx++;
+                switch_idx++;
             }
         } else {
             VPR_ERROR(VPR_ERROR_ROUTE, "Unrecognized RR type");

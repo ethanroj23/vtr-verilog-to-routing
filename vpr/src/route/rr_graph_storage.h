@@ -83,6 +83,11 @@ struct alignas(8) t_rr_node_core_data {
     uint16_t pattern_idx_ = 0;
 };
 
+struct alignas(8) t_rr_node_idx {
+    int32_t switch_ = -1;
+    int32_t dnode_ = -1;
+};
+
 // t_rr_node_data is a key data structure, so fail at compile time if the
 // structure gets bigger than expected (16 bytes right now). Developers
 // should only expand it after careful consideration and measurement.
@@ -428,7 +433,8 @@ class t_rr_graph_storage {
     inline void edge_range_direct(RRNodeId node, std::vector<t_dest_switch>& return_edges) const {
         // returns a vector of edge structs, which each include sink, switch
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - (size_t)node_first_edge_[node];
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         return_edges.reserve(num_edges);
@@ -436,9 +442,10 @@ class t_rr_graph_storage {
         while (first_idx < last_idx) {
             return_edges.push_back({
                 RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
-                shared_switches_[first_idx]  // switch
+                shared_switches_[first_switch]  // switch
             });
             first_idx++;
+            first_switch++;
         }
     }
 
@@ -448,7 +455,7 @@ class t_rr_graph_storage {
     inline short shared_switch(uint32_t idx) const {
         return shared_switches_[idx];
     }
-    inline uint32_t first_shared_idx(RRNodeId node) const {
+    inline t_rr_node_idx first_shared_idx(RRNodeId node) const {
         return node_pattern_[node];
     }
     
@@ -456,7 +463,8 @@ class t_rr_graph_storage {
     inline std::vector<t_dest_switch> edge_range_iter(RRNodeId node) const {
         // returns a vector of edge structs, which each include sink, switch
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - (size_t)node_first_edge_[node];
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         std::vector<t_dest_switch> return_edges;
@@ -465,9 +473,10 @@ class t_rr_graph_storage {
         while (first_idx < last_idx) {
             return_edges.push_back({
                 RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
-                shared_switches_[first_idx]  // switch
+                shared_switches_[first_switch]  // switch
             });
             first_idx++;
+            first_switch++;
         }
         return return_edges;
     }
@@ -476,7 +485,8 @@ class t_rr_graph_storage {
         // returns a vector of edge_with_id structs, which each include src, sink, switch, and edge_id
         const auto& first = (size_t)node_first_edge_[node];
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - first;
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         std::vector<t_edge_with_id> return_edges;
@@ -486,10 +496,11 @@ class t_rr_graph_storage {
         while (first_idx < last_idx) {
             t_edge_with_id add_edge = {
                 RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
-                shared_switches_[first_idx],  // switch
+                shared_switches_[first_switch],  // switch
                 RREdgeId(first + k)};
             return_edges.push_back(add_edge);
             first_idx++;
+            first_switch++;
             k++;
         }
         return return_edges;
@@ -501,13 +512,14 @@ class t_rr_graph_storage {
         // returns a vector of only non-configurable edge structs, which each include src, sink, switch
         const auto& first = (size_t)node_first_edge_[node];
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - first;
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         return_edges.reserve(num_edges);
 
         while (first_idx < last_idx) {
-            const auto& switch_id = shared_switches_[first_idx];  // switch
+            const auto& switch_id = shared_switches_[first_switch];  // switch
             if (!switch_is_configurable(switch_id)) { // only add if edge is non_configurable
                 t_dest_switch add_edge = {
                     RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
@@ -516,6 +528,7 @@ class t_rr_graph_storage {
                 return_edges.push_back(add_edge);
             }
             first_idx++;
+            first_switch++;
         }
     }
 
@@ -524,13 +537,14 @@ class t_rr_graph_storage {
         // edge id is actually a relative edge
         const auto& first = (size_t)node_first_edge_[node];
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - first;
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         return_edges.reserve(num_edges);
         size_t k = 0;
         while (first_idx < last_idx) {
-            const auto& switch_id = shared_switches_[first_idx];  // switch
+            const auto& switch_id = shared_switches_[first_switch];  // switch
             if (!switch_is_configurable(switch_id)) { // only add if edge is non_configurable
                 t_edge_with_id add_edge = {
                     RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
@@ -539,6 +553,7 @@ class t_rr_graph_storage {
                 return_edges.push_back(add_edge);
             }
             first_idx++;
+            first_switch++;
             k++;
         }
     }
@@ -546,7 +561,7 @@ class t_rr_graph_storage {
     inline bool directconnect_exists(RRNodeId src_rr_node, RRNodeId dest_rr_node) const {
         const auto& first = (size_t)node_first_edge_[src_rr_node];
         const auto& num_edges = (size_t)(&node_first_edge_[src_rr_node])[1] - first;
-        uint32_t first_idx = node_pattern_[src_rr_node];
+        uint32_t first_idx = node_pattern_[src_rr_node].dnode_;
         uint32_t last_idx = first_idx + num_edges;
 
         while (first_idx < last_idx) {
@@ -555,7 +570,7 @@ class t_rr_graph_storage {
 
             const auto& first2 = (size_t)node_first_edge_[opin_rr_node];
             const auto& num_edges2 = (size_t)(&node_first_edge_[opin_rr_node])[1] - first2;
-            uint32_t first_idx2 = node_pattern_[opin_rr_node];
+            uint32_t first_idx2 = node_pattern_[opin_rr_node].dnode_;
             uint32_t last_idx2 = first_idx2 + num_edges2;
             while (first_idx2 < last_idx2) {
                 RRNodeId ipin_rr_node = RRNodeId((size_t)opin_rr_node + shared_dnodes_[first_idx2]); // dest
@@ -563,7 +578,7 @@ class t_rr_graph_storage {
 
                 const auto& first3 = (size_t)node_first_edge_[ipin_rr_node];
                 const auto& num_edges3 = (size_t)(&node_first_edge_[ipin_rr_node])[1] - first3;
-                uint32_t first_idx3 = node_pattern_[ipin_rr_node];
+                uint32_t first_idx3 = node_pattern_[ipin_rr_node].dnode_;
                 uint32_t last_idx3 = first_idx3 + num_edges3;
 
                 while (first_idx3 < last_idx3) {
@@ -596,7 +611,7 @@ class t_rr_graph_storage {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     inline RRNodeId edge_sink_node(const RRNodeId& id, t_edge_size iedge) const {
-        return RRNodeId(size_t(id)+shared_dnodes_[node_pattern_[id] + iedge]);
+        return RRNodeId(size_t(id)+shared_dnodes_[node_pattern_[id].dnode_ + iedge]);
     }
 
     // Get the switch used for the iedge'th edge from specified RRNodeId.
@@ -604,7 +619,7 @@ class t_rr_graph_storage {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     inline short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
-        return (short)shared_switches_[node_pattern_[id] + iedge];
+        return (short)shared_switches_[node_pattern_[id].switch_ + iedge];
     }
     /*
      * Node proxy methods
@@ -746,9 +761,19 @@ class t_rr_graph_storage {
     void set_node_capacity(RRNodeId, short new_capacity);
     void set_node_direction(RRNodeId, Direction new_direction);
 
-    inline void set_node_pattern_idx(RRNodeId id, int new_idx) {
-        node_pattern_[id] = new_idx;
+    inline void set_node_pattern_idx(RRNodeId id, int d_idx, int s_idx) {
+        node_pattern_[id].switch_ = s_idx;
+        node_pattern_[id].dnode_ = d_idx;
     }
+
+    inline void add_dnode(int val) {
+        shared_dnodes_.push_back(val);
+    }
+
+    inline void add_sswitch(int id) {
+        shared_switches_.push_back(id);
+    }
+
     inline void reserve_nodes(int size) {
         node_storage_.reserve(size);
     }
@@ -837,11 +862,11 @@ class t_rr_graph_storage {
         std::map<t_folded_node_data, SharedNodeDataIdx> temp_node_patterns{};
         for (uint32_t i = 0; i < node_storage_.size(); i++) {
             RRNodeId node = RRNodeId(i);
-            auto current_type = node_storage_[node].type_;
+            // auto current_type = node_storage_[node].type_;
             t_folded_node_data cur_pattern = {//cost_index, rc_index, cap, type, dir_side
-                                              node_storage_[node].cost_index_,
+                                              (int8_t)node_storage_[node].cost_index_,
                                               node_storage_[node].rc_index_,
-                                              node_storage_[node].capacity_,
+                                              (uint8_t)node_storage_[node].capacity_,
                                               };
             // set direction if using CHANX or CHANY
             // if (current_type == CHANX || current_type == CHANY) {
@@ -893,7 +918,8 @@ class t_rr_graph_storage {
         // returns a vector of edge structs, which each include src, sink, switch
         const auto& first = (size_t)node_first_edge_[node];
         const auto& num_edges = (size_t)(&node_first_edge_[node])[1] - first;
-        uint32_t first_idx = node_pattern_[node];
+        uint32_t first_idx = node_pattern_[node].dnode_;
+        uint32_t first_switch = node_pattern_[node].switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         std::vector<t_edge_struct> return_edges; // initialize return vector
@@ -902,25 +928,27 @@ class t_rr_graph_storage {
             t_edge_struct add_edge = {
                 node,    // src
                 RRNodeId((size_t)node + shared_dnodes_[first_idx]), // dest
-                shared_switches_[first_idx]  // switch
+                shared_switches_[first_switch]  // switch
             };
             return_edges.push_back(add_edge);
             first_idx++;
+            first_switch++;
         }
         return return_edges;
     }
 
     inline RRNodeId node_first_sink(RRNodeId node) const {
         // returns a vector of edge structs, which each include src, sink, switch
-        return RRNodeId((size_t)node+shared_dnodes_[node_pattern_[node]]);
+        return RRNodeId((size_t)node+shared_dnodes_[node_pattern_[node].dnode_]);
     }
 
     inline t_edge_struct kth_edge_for_node(RRNodeId node, int k) const {
-        const auto& k_idx = node_pattern_[node] + k;
+        const auto& first_idx = node_pattern_[node].dnode_;
+        const auto& first_switch = node_pattern_[node].switch_;
         return {
             node,                                                                     // src
-            RRNodeId(size_t(node)+shared_dnodes_[k_idx]),
-            (short)shared_switches_[k_idx]                                                 // switch
+            RRNodeId(size_t(node)+shared_dnodes_[first_idx+k]),
+            (short)shared_switches_[first_switch+k]                                                 // switch
         };
     }
 
@@ -1214,7 +1242,7 @@ class t_rr_graph_storage {
     // hot.
     vtr::vector<RRNodeId, t_rr_node_data, vtr::aligned_allocator<t_rr_node_data>> node_storage_;
     vtr::vector<RRNodeId, t_rr_node_core_data, vtr::aligned_allocator<t_rr_node_core_data>> node_core_;
-    vtr::vector<RRNodeId, uint32_t> node_pattern_;
+    vtr::vector<RRNodeId, t_rr_node_idx> node_pattern_;
 
     // The PTC data is cold data, and is generally not used during the inner
     // loop of either the placer or router.
@@ -1244,13 +1272,14 @@ class t_rr_graph_storage {
     std::vector<t_folded_edge_data> shared_edges_;       // goes from NodePatternIdx to array of edges
     std::vector<t_folded_edge_data_xy> shared_edges_xy_; // goes from NodePatternIdx to array of edges
 
+    std::vector<int32_t> shared_dnodes_;
+    std::vector<short> shared_switches_;
+
     uint16_t xy_bitmask_ [2] = {0, 65535};
 
     // std::vector<uint8_t> node_type_;
 
     std::vector<t_folded_node_data> shared_nodes_; // stores index into shared_nodes_
-    std::vector<int32_t> shared_dnodes_; // stores all data for a node in patterns
-    std::vector<uint16_t> shared_switches_; // stores all data for a node in patterns
 
     /***************
      * State flags *

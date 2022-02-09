@@ -94,7 +94,7 @@ std::tuple<size_t, size_t, int> find_source_and_sink() {
                 break;
             }
             // sink = rr_graph.edge_sink_node(edge);
-            sink = RRNodeId((size_t)sink+rr_graph.shared_dnode(rr_graph.first_shared_idx(sink)));
+            sink = RRNodeId((size_t)sink+rr_graph.shared_dnode(rr_graph.first_shared_idx(sink).dnode_));
             // sink = rr_graph.node_first_sink(sink);
 
 

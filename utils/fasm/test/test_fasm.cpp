@@ -257,12 +257,14 @@ TEST_CASE("fasm_integration_test", "[fasm]") {
         for (const RRNodeId& inode : rr_graph.nodes()){
 
             const auto& num_edges = rr_graph.num_edges(inode);
-            uint32_t first_idx = rr_graph.first_shared_idx(inode);
+            const auto& both_idx = rr_graph.first_shared_idx(inode);
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
                 auto sink_inode = size_t(inode) + rr_graph.shared_dnode(first_idx);
-                auto switch_id = rr_graph.shared_switch(first_idx);
+                auto switch_id = rr_graph.shared_switch(switch_idx);
                 auto value = vtr::string_fmt("%d_%d_%zu",
                             (size_t)inode, sink_inode, switch_id);
 
@@ -277,6 +279,7 @@ TEST_CASE("fasm_integration_test", "[fasm]") {
                 vpr::add_rr_edge_metadata((size_t)inode, sink_inode, switch_id,
                         vtr::string_view("fasm_features"), vtr::string_view(value.data(), value.size()));
                 first_idx++;
+                switch_idx++;
             }
         }
 

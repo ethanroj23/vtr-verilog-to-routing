@@ -57,7 +57,9 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         if (from_rr_type == CHANX || from_rr_type == CHANY) {
 
             const auto& num_edges = rr_graph.num_edges(rr_id);
-            uint32_t first_idx = rr_graph.first_shared_idx(rr_id);
+            const auto& both_idx = rr_graph.first_shared_idx(rr_id);
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
 
             while (first_idx < last_idx) {
@@ -65,7 +67,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
                 if (to_rr_type == CHANX || to_rr_type == CHANY) {
-                    switch_index = rr_graph.shared_switch(first_idx);
+                    switch_index = rr_graph.shared_switch(switch_idx);
                     Cin = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).Cin;
                     Cout = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).Cout;
                     buffered = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).buffered();
@@ -121,6 +123,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
                     }
                 }
                 first_idx++;
+                switch_idx++;
             } /* End loop over all edges of a node. */
 
             /* Reset the cblock_counted and buffer_Cin arrays, and add buf Cin. */
@@ -157,10 +160,12 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
         /* End node is CHANX or CHANY */
         else if (from_rr_type == OPIN) {
             const auto& num_edges = rr_graph.num_edges(rr_id);
-            uint32_t first_idx = rr_graph.first_shared_idx(rr_id);
+            const auto& both_idx = rr_graph.first_shared_idx(rr_id);
+            uint32_t first_idx = both_idx.dnode_;
+            uint32_t switch_idx = both_idx.switch_;
             uint32_t last_idx = first_idx + num_edges;
             while (first_idx < last_idx) {
-                switch_index = rr_graph.shared_switch(first_idx);
+                switch_index = rr_graph.shared_switch(switch_idx);
                 to_node = size_t(rr_id) + rr_graph.shared_dnode(first_idx);
                 to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
@@ -173,6 +178,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
                     rr_node_C[to_node] += Cout;
                 }
                 first_idx++;
+                switch_idx++;
             }
         }
         /* End node is OPIN. */
@@ -186,11 +192,13 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
 
         const auto& num_edges = rr_graph.num_edges(inode);
-        uint32_t first_idx = rr_graph.first_shared_idx(inode);
+        const auto& both_idx = rr_graph.first_shared_idx(inode);
+        uint32_t first_idx = both_idx.dnode_;
+        uint32_t switch_idx = both_idx.switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         while (first_idx < last_idx) {
-            switch_index = rr_graph.shared_switch(first_idx);
+            switch_index = rr_graph.shared_switch(switch_idx);
             to_node = size_t(inode) + rr_graph.shared_dnode(first_idx);
             to_rr_type = rr_graph.node_type(RRNodeId(to_node));
             if (to_rr_type == CHANX || to_rr_type == CHANY) {
@@ -200,6 +208,7 @@ void add_rr_graph_C_from_switches(float C_ipin_cblock) {
                 }
             }
             first_idx++;
+            switch_idx++;
         }
     }
     for (const RRNodeId& rr_id : device_ctx.rr_graph.nodes()) {

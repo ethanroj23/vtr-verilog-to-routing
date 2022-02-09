@@ -44,9 +44,16 @@ class RRGraphBuilder {
     inline void set_node_type(RRNodeId id, t_rr_type type) {
         node_storage_.set_node_type(id, type);
     }
-    inline void set_node_pattern_idx(RRNodeId id, int idx) {
-        node_storage_.set_node_pattern_idx(id, idx);
+    inline void set_node_pattern_idx(RRNodeId id, int d_idx, int s_idx) {
+        node_storage_.set_node_pattern_idx(id, d_idx, s_idx);
     }
+    inline void add_dnode(int val) {
+        node_storage_.add_dnode(val);
+    }
+    inline void add_sswitch(int id) {
+        node_storage_.add_sswitch(id);
+    }
+
     /**
      * @brief Add an existing rr_node in the node storage to the node look-up
      *

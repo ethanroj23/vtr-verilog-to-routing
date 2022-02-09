@@ -1803,11 +1803,13 @@ void print_switch_usage() {
     for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
 
         const auto& num_edges = rr_graph.num_edges(inode);
-        uint32_t first_idx = rr_graph.first_shared_idx(inode);
+        const auto& both_idx = rr_graph.first_shared_idx(inode);
+        uint32_t first_idx = both_idx.dnode_;
+        uint32_t switch_idx = both_idx.switch_;
         uint32_t last_idx = first_idx + num_edges;
 
         while (first_idx < last_idx) {
-            int switch_index = rr_graph.shared_switch(first_idx);
+            int switch_index = rr_graph.shared_switch(switch_idx);
             int to_node_index = size_t(inode) + rr_graph.shared_dnode(first_idx);
             // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).
             //             physically, the switch driving from point 1 & 3 should be the same. But we will assign then different switch
@@ -1817,6 +1819,7 @@ void print_switch_usage() {
             //VTR_ASSERT(from_node.type != OPIN);
             inward_switch_inf[to_node_index][switch_index]++;
             first_idx++;
+            switch_idx++;
         }
     }
     for (const RRNodeId& rr_id : device_ctx.rr_graph.nodes()) {
