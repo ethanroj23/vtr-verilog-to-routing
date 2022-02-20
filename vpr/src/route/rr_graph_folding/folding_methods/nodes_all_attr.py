@@ -1,4 +1,42 @@
 import os
+import re
+
+'''
+------------------------------- NODES_ALL_ATTR folding method --------------------------------------
+
+Every attribute of a node is stored into a node pattern
+
+Data stored for each NODE:
+ptn_idx
+
+Data stored for each NODE PATTERN:
+xlow
+ylow
+xhigh
+yhigh
+type
+capacity
+R
+C
+Segment Id
+Direction
+Side
+
+Example NODE in xml:
+<node id="11626" ptn_idx="0"/>
+
+Example NODE PATTERN in xml:
+<node_ptn capacity="1" direction="INC_DIR" id="11626" type="CHANX"><loc ptc="0" xhigh="8" xlow="5" yhigh="8" ylow="8"/>
+<timing C="1.1619003e-13" R="404"/>
+<segment segment_id="0"/>
+</node_ptn>
+
+
+------------------------------- NODES_ALL_ATTR folding method --------------------------------------
+
+'''
+
+
 
 # Indices into flat_graph object
 NODE = 0
@@ -22,6 +60,7 @@ SEGMENT = 11
 F_NODE_TO_PATTERN = 0
 F_NODE_PATTERNS = 1
 F_EDGES = 2
+F_SEGMENT = 9 # segment is the only index that is different from flat -> folded
 
 # Size constants
 FLAT_NODE_BYTES = 16 # bytes per node
@@ -37,8 +76,8 @@ def fold(graph):
     node_to_pattern = [] # mapping from node_id -> node pattern idx
     p_idx = 0
     for i, node in enumerate(graph[NODE]):
-        cur_p = (node[XLOW], node[YLOW], node[XHIGH], node[YHIGH], node[R],
-                node[C], node[CAPACITY], node[SEGMENT], node[TYPE])
+        cur_p = (node[XLOW], node[YLOW], node[XHIGH], node[YHIGH], node[TYPE], node[R],
+                node[C], node[CAPACITY], node[SIDE], node[SEGMENT], node[DIRECTION],)
         if cur_p not in np:
             np[cur_p] = p_idx
             p_idx += 1
@@ -48,8 +87,40 @@ def fold(graph):
     return folded_graph
 
 def save(graph, graph_name):
+    '''
+    Saves the folded graph into an xml file with nodes and node_patterns
+    '''
     save_file = f'{os.getcwd()}/folded_graphs/{name()}_{graph_name}.xml'
-    # print(f'Saving graph to {save_file}')
+    flat_file = f'{os.getcwd()}/flat_graphs/{graph_name}.xml'
+    print(f'Saving graph to {save_file}')
+    with open(save_file, 'w') as folded_file:
+        with open(flat_file, 'r') as file:
+            for line in file:
+                write_line = line
+                if '<node' in line:
+                    node = int(re.findall('id="([0-9]+)"', line)[0])
+                    ptc = int(re.findall('ptc="([0-9]+)"', line)[0])
+                    pattern_idx = graph[F_NODE_TO_PATTERN][node]
+                    write_line = f'<node id="{node}" ptn_idx="{pattern_idx}" ptc="{ptc}"/>\n'
+                if '</node>' in line:
+                    continue
+                if '<timing C="' in line or '<segment segment_id="' in line:
+                    continue
+                if '<rr_nodes>' in line:
+                    folded_file.write('<rr_node_patterns>\n')
+                    for ptn_idx, ptn in enumerate(graph[F_NODE_PATTERNS]):
+                        print(ptn)
+                        direction = f'direction="{ptn[DIRECTION]}" ' if ptn[DIRECTION] else ''
+                        side = f'side="{ptn[SIDE]}" ' if ptn[SIDE] else ''
+                        ptn_line = f'<node_ptn capacity="{ptn[CAPACITY]}" {direction}id="{ptn_idx}" type="{ptn[TYPE]}"><loc {side}xhigh="{ptn[XHIGH]}" xlow="{ptn[XLOW]}" yhigh="{ptn[YHIGH]}" ylow="{ptn[YLOW]}"/>\n'
+                        if ptn[R] is not None:
+                            ptn_line += f'<timing C="{ptn[C]}" R="{ptn[R]}"/>\n'
+                        if ptn[F_SEGMENT] is not None:
+                            ptn_line += f'<segment segment_id="{ptn[F_SEGMENT]}"/>\n'
+                        ptn_line += '</node_ptn>\n'
+                        folded_file.write(ptn_line)
+                    folded_file.write('</rr_node_patterns>\n')
+                folded_file.write(write_line)
 
 
 

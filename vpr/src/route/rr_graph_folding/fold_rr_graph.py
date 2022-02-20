@@ -61,12 +61,12 @@ def read_flat_graph(graph_name):
                 if direction:
                     direction = direction[0]
                 else:
-                    direction = "NONE"
+                    direction = None
                 side = re.findall('side="(.*?)"', line)
                 if side:
                     side = side[0]
                 else:
-                    side = "NONE"
+                    side = None
                 node_type = re.findall('type="([A-Z]+)"', line)[0]
                 # retrieve node
                 flat_graph[NODE][id] = [xlow, ylow, xhigh, yhigh, node_type, None,  None, #R and C will be filled in later
