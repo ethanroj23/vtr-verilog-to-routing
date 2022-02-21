@@ -751,6 +751,12 @@ void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction
     }
     node_storage_[id].dir_side_.direction = new_direction;
 }
+void t_rr_graph_storage::set_node_direction_ptn(int ptn_id, Direction new_direction) {
+    if (node_type_ptn(ptn_id) != CHANX && node_type_ptn(ptn_id) != CHANY) {
+        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string_ptn(ptn_id));
+    }
+    node_ptn_[ptn_id].dir_side_.direction = new_direction;
+}
 
 void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
     if (node_type(id) != IPIN && node_type(id) != OPIN) {

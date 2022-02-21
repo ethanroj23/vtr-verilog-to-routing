@@ -145,6 +145,9 @@ class RRGraphBuilder {
     inline void set_node_direction(RRNodeId id, Direction new_direction) {
         node_storage_.set_node_direction(id, new_direction);
     }
+    inline void set_node_direction_ptn(int id, Direction new_direction) {
+        node_storage_.set_node_direction_ptn(id, new_direction);
+    }
 
     /** @brief Reserve the lists of edges to be memory efficient.
      * This function is mainly used to reserve memory space inside RRGraph,

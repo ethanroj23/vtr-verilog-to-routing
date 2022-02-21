@@ -756,10 +756,20 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 	inline unsigned int get_node_ptn_capacity(const t_rr_node &node) { (void) node; return 0; }
 	inline uxsd::enum_node_direction get_node_ptn_direction(const t_rr_node &node) {(void) node; return uxsd::enum_node_direction::UXSD_INVALID; }
 
-	inline void set_node_ptn_direction(uxsd::enum_node_direction direction, int &ctx) {
-         (void) ctx;
-         (void) direction;
-         return; }
+	inline void set_node_ptn_direction(uxsd::enum_node_direction direction, int &ptn_idx) {
+        const auto& rr_graph = (*rr_graph_);
+        if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
+            if (rr_graph.node_type_ptn(ptn_idx) == CHANX || rr_graph.node_type_ptn(ptn_idx) == CHANY) {
+                report_error(
+                    "inode %d is type %d, which requires a direction, but no direction was supplied.",
+                    ptn_idx, rr_graph.node_type_ptn(ptn_idx));
+            }
+        } else {
+            rr_graph_builder_->set_node_direction_ptn(ptn_idx, from_uxsd_node_direction(direction));
+        }
+    }
+
+
 
 	inline unsigned int get_node_ptn_id(const t_rr_node &node) { (void) node; return 0; }
 

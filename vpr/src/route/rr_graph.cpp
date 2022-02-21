@@ -332,7 +332,7 @@ void create_rr_graph(const t_graph_type graph_type,
                                                                   router_opts.reorder_rr_graph_nodes_threshold,
                                                                   router_opts.reorder_rr_graph_nodes_seed);
             }
-            device_ctx.rr_graph.print();
+            // device_ctx.rr_graph.print();
         }
     } else {
         if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
