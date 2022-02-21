@@ -109,7 +109,6 @@ def save(graph, graph_name):
                 if '<rr_nodes>' in line:
                     folded_file.write('<rr_node_patterns>\n')
                     for ptn_idx, ptn in enumerate(graph[F_NODE_PATTERNS]):
-                        print(ptn)
                         direction = f'direction="{ptn[DIRECTION]}" ' if ptn[DIRECTION] else ''
                         side = f'side="{ptn[SIDE]}" ' if ptn[SIDE] else ''
                         ptn_line = f'<node_ptn capacity="{ptn[CAPACITY]}" {direction}id="{ptn_idx}" type="{ptn[TYPE]}"><loc {side}xhigh="{ptn[XHIGH]}" xlow="{ptn[XLOW]}" yhigh="{ptn[YHIGH]}" ylow="{ptn[YLOW]}"/>\n'

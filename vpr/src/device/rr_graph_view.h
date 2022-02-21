@@ -80,6 +80,11 @@ class RRGraphView {
         return node_storage_.node_type(node);
     }
 
+    /** @brief Get the type of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_type node_type_ptn(int node) const {
+        return node_storage_.node_type_ptn(node);
+    }
+
     /** @brief Get the type string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
         return node_storage_.node_type_string(node);
@@ -372,12 +377,19 @@ class RRGraphView {
     RRIndexedDataId node_cost_index(RRNodeId node) const {
         return node_storage_.node_cost_index(node);
     }
+    RRIndexedDataId node_cost_index_ptn(int node) const {
+        return node_storage_.node_cost_index_ptn(node);
+    }
     /** @brief Return detailed routing segment information with a given id* @note The routing segments here may not be exactly same as those defined in architecture file. They have been
      * adapted to fit the context of routing resource graphs.
      */
 
     inline const t_segment_inf& rr_segments(RRSegmentId seg_id) const {
         return rr_segments_[seg_id];
+    }
+
+    void print() const {
+        node_storage_.print();
     }
     /** @brief  Return the switch information that is categorized in the rr_switch_inf with a given id
      * rr_switch_inf is created to minimize memory footprint of RRGraph classs

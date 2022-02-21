@@ -2,11 +2,11 @@
 # https://github.com/duck2/uxsdcxx
 # Modify only if your build process doesn't involve regenerating this file.
 #
-# Cmdline: uxsdcxx/uxsdcap.py /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# Input file: /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# md5sum of input file: cd57d47fc9dfa62c7030397ca759217e
+# Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# md5sum of input file: 632b2a08c17be3a8e70c16bb9a97b532
 
-@0xe4650d345d47589d;
+@0xb5a351a1c7c8d674;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -161,12 +161,11 @@ struct GridLocs {
 }
 
 struct NodeLoc {
-	ptc @0 :Int32;
-	side @1 :LocSide;
-	xhigh @2 :Int32;
-	xlow @3 :Int32;
-	yhigh @4 :Int32;
-	ylow @5 :Int32;
+	side @0 :LocSide;
+	xhigh @1 :Int32;
+	xlow @2 :Int32;
+	yhigh @3 :Int32;
+	ylow @4 :Int32;
 }
 
 struct NodeTiming {
@@ -187,7 +186,7 @@ struct Metadata {
 	metas @0 :List(Meta);
 }
 
-struct Node {
+struct NodePtn {
 	capacity @0 :UInt32;
 	direction @1 :NodeDirection;
 	id @2 :UInt32;
@@ -196,6 +195,16 @@ struct Node {
 	timing @5 :NodeTiming;
 	segment @6 :NodeSegment;
 	metadata @7 :Metadata;
+}
+
+struct RrNodePatterns {
+	nodePtns @0 :List(NodePtn);
+}
+
+struct Node {
+	id @0 :UInt32;
+	ptc @1 :Int32;
+	ptnIdx @2 :UInt32;
 }
 
 struct RrNodes {
@@ -222,6 +231,7 @@ struct RrGraph {
 	segments @5 :Segments;
 	blockTypes @6 :BlockTypes;
 	grid @7 :GridLocs;
-	rrNodes @8 :RrNodes;
-	rrEdges @9 :RrEdges;
+	rrNodePatterns @8 :RrNodePatterns;
+	rrNodes @9 :RrNodes;
+	rrEdges @10 :RrEdges;
 }

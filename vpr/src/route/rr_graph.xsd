@@ -257,13 +257,15 @@
     </xs:restriction>
   </xs:simpleType>
 
+
+
   <xs:complexType name="node_loc">
     <xs:attribute name="xlow" type="xs:int" use="required"/>
     <xs:attribute name="ylow" type="xs:int" use="required"/>
     <xs:attribute name="xhigh" type="xs:int" use="required"/>
     <xs:attribute name="yhigh" type="xs:int" use="required"/>
     <xs:attribute name="side" type="loc_side"/>
-    <xs:attribute name="ptc" type="xs:int" use="required"/>
+    <!-- <xs:attribute name="ptc" type="xs:int" use="required"/> -->
   </xs:complexType>
 
   <xs:complexType name="node_timing">
@@ -275,7 +277,7 @@
     <xs:attribute name="segment_id" type="xs:int" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="node">
+  <xs:complexType name="node_ptn">  
     <xs:all>
       <xs:element name="loc" type="node_loc"/>
       <xs:element name="timing" type="node_timing" minOccurs="0"/>
@@ -287,6 +289,12 @@
     <xs:attribute name="direction" type="node_direction"/>
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
+
+  <xs:complexType name="node">
+    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="ptn_idx" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="ptc" type="xs:int" use="required"/>
+  </xs:complexType>  
 
   <xs:complexType name="edge">
     <xs:all>
@@ -321,6 +329,12 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="rr_node_patterns">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="node_ptn" type="node_ptn"/>
+    </xs:choice>
+  </xs:complexType>
+
   <xs:complexType name="rr_nodes">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="node" type="node"/>
@@ -345,6 +359,7 @@
         <xs:element name="segments" type="segments"/>
         <xs:element name="block_types" type="block_types"/>
         <xs:element name="grid" type="grid_locs"/>
+        <xs:element name="rr_node_patterns" type="rr_node_patterns"/>
         <xs:element name="rr_nodes" type="rr_nodes"/>
         <xs:element name="rr_edges" type="rr_edges"/>
       </xs:all>

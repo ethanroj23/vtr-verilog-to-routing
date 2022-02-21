@@ -159,50 +159,113 @@ class t_rr_graph_storage {
      ****************/
 
     t_rr_type node_type(RRNodeId id) const {
-        return node_storage_[id].type_;
+        return node_ptn_[node_to_ptn_[id]].type_;
+    }
+    t_rr_type node_type_ptn(int ptn_id) const {
+        return node_ptn_[ptn_id].type_;
     }
     const char* node_type_string(RRNodeId id) const;
+    const char* node_type_string_ptn(int id) const;
 
     int16_t node_rc_index(RRNodeId id) const {
-        return node_storage_[id].rc_index_;
+        return node_ptn_[node_to_ptn_[id]].rc_index_;
     }
     float node_R(RRNodeId id) const;
     float node_C(RRNodeId id) const;
 
     short node_xlow(RRNodeId id) const {
-        return node_storage_[id].xlow_;
+        return node_ptn_[node_to_ptn_[id]].xlow_;
     }
     short node_ylow(RRNodeId id) const {
-        return node_storage_[id].ylow_;
+        return node_ptn_[node_to_ptn_[id]].ylow_;
     }
     short node_xhigh(RRNodeId id) const {
-        return node_storage_[id].xhigh_;
+        return node_ptn_[node_to_ptn_[id]].xhigh_;
     }
     short node_yhigh(RRNodeId id) const {
-        return node_storage_[id].yhigh_;
+        return node_ptn_[node_to_ptn_[id]].yhigh_;
     }
 
     short node_capacity(RRNodeId id) const {
-        return node_storage_[id].capacity_;
+        return node_ptn_[node_to_ptn_[id]].capacity_;
     }
     RRIndexedDataId node_cost_index(RRNodeId id) const {
-        return RRIndexedDataId(node_storage_[id].cost_index_);
+        return RRIndexedDataId(node_ptn_[node_to_ptn_[id]].cost_index_);
+    }
+    RRIndexedDataId node_cost_index_ptn(int id) const {
+        return RRIndexedDataId(node_ptn_[id].cost_index_);
     }
 
-    Direction node_direction(RRNodeId id) const {
-        return get_node_direction(
-            vtr::array_view_id<RRNodeId, const t_rr_node_data>(
-                node_storage_.data(), node_storage_.size()),
-            id);
-    }
+    // Direction node_direction(RRNodeId id) const {
+    //     return get_node_direction(
+    //         vtr::array_view_id<RRNodeId, const t_rr_node_data>(
+    //             node_storage_.data(), node_storage_.size()),
+    //         id);
+    // }
     const std::string& node_direction_string(RRNodeId id) const;
 
     /* Find if the given node appears on a specific side */
+    // bool is_node_on_specific_side(RRNodeId id, e_side side) const {
+    //     return is_node_on_specific_side(
+    //         vtr::array_view_id<RRNodeId, const t_rr_node_data>(
+    //             node_storage_.data(), node_storage_.size()),
+    //         id, side);
+    // }
+
+    Direction node_direction(RRNodeId id) const {
+        auto& node_data = node_ptn_[node_to_ptn_[id]];
+        if (node_data.type_ != CHANX && node_data.type_ != CHANY) {
+            VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+                            "Attempted to access RR node 'direction' for non-channel type '%s'",
+                            rr_node_typename[node_data.type_]);
+        }
+        return node_data.dir_side_.direction;
+    }
+
+    /* Find if the given node appears on a specific side */
     bool is_node_on_specific_side(RRNodeId id, e_side side) const {
-        return is_node_on_specific_side(
-            vtr::array_view_id<RRNodeId, const t_rr_node_data>(
-                node_storage_.data(), node_storage_.size()),
-            id, side);
+        auto& node_data = node_ptn_[node_to_ptn_[id]];
+        if (node_data.type_ != IPIN && node_data.type_ != OPIN) {
+            VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+                            "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
+                            rr_node_typename[node_data.type_]);
+        }
+        // Return a vector showing only the sides that the node appears
+        std::bitset<NUM_SIDES> side_tt = node_data.dir_side_.sides;
+        return side_tt[size_t(side)];
+    }
+
+    void print() const {
+        for (int i=0; i<size(); i++){
+            RRNodeId node = RRNodeId(i);
+            // xlow, ylow, xhigh, yhigh, type, capacity, side, direction, cost_index, rc_index
+
+            t_rr_type cur_type = node_type(node);
+            int dir = -1;
+            const char* side = "NONE";
+            if (cur_type == CHANX || cur_type == CHANY){
+                dir = (size_t)node_direction(node);
+            }
+            if (cur_type == IPIN || cur_type == OPIN){
+                side = node_side_string(node);
+            }
+
+
+
+            printf("%d: %d %d %d %d %s %d %s %d %lu %lu\n",
+                    i,
+                    node_xlow(node),
+                    node_ylow(node),
+                    node_xhigh(node),
+                    node_yhigh(node),
+                    node_type_string(node),
+                    node_capacity(node),
+                    side,
+                    dir,
+                    (size_t)node_cost_index(node),
+                    (size_t)node_rc_index(node)
+                    );
+        }
     }
 
     /* FIXME: This function should be DEPRECATED!
@@ -388,8 +451,13 @@ class t_rr_graph_storage {
     // was not preallocated.
     void make_room_for_node(RRNodeId elem_position) {
         make_room_in_vector(&node_storage_, size_t(elem_position));
+        make_room_in_vector(&node_to_ptn_, size_t(elem_position));
         node_ptc_.reserve(node_storage_.capacity());
         node_ptc_.resize(node_storage_.size());
+    }
+
+    void make_room_for_node_ptn(int elem_position) {
+        make_room_in_vector(&node_ptn_, size_t(elem_position));
     }
 
     // Reserve storage for RR nodes.
@@ -397,6 +465,7 @@ class t_rr_graph_storage {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
         node_storage_.reserve(size);
+        node_ptn_.reserve(size);
         node_ptc_.reserve(size);
     }
 
@@ -405,6 +474,7 @@ class t_rr_graph_storage {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
         node_storage_.resize(size);
+        node_ptn_.resize(size);
         node_ptc_.resize(size);
     }
 
@@ -477,10 +547,25 @@ class t_rr_graph_storage {
     void set_node_capacity(RRNodeId, short new_capacity);
     void set_node_direction(RRNodeId, Direction new_direction);
 
+    void set_node_type_ptn(int id, t_rr_type new_type);
+    void set_node_coordinates_ptn(int id, short x1, short y1, short x2, short y2);
+    void set_node_cost_index_ptn(int, RRIndexedDataId new_cost_index);
+    void set_node_rc_index_ptn(int, NodeRCIndex new_rc_index);
+    void set_node_capacity_ptn(int, short new_capacity);
+    void set_node_direction_ptn(int, Direction new_direction);
+
+    inline void set_node_ptn(RRNodeId id, int ptn_idx){
+        node_to_ptn_[id] = ptn_idx;
+    }
+
+
+
+
     /* Add a side to the node abbributes
      * This is the function to use when you just add a new side WITHOUT reseting side attributes
      */
     void add_node_side(RRNodeId, e_side new_side);
+    void add_node_side_ptn(int, e_side new_side);
 
     /****************
      * Edge methods *
@@ -652,6 +737,12 @@ class t_rr_graph_storage {
     // The PTC data is cold data, and is generally not used during the inner
     // loop of either the placer or router.
     vtr::vector<RRNodeId, t_rr_node_ptc_data> node_ptc_;
+
+
+    // Every node has an index into this data structure. This is where the data is stored in patterns
+    vtr::vector<RRNodeId, int32_t> node_to_ptn_;
+    // Every node has an index into this data structure. This is where the data is stored in patterns
+    std::vector<t_rr_node_data> node_ptn_;
 
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is

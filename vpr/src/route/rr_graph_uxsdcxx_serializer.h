@@ -225,7 +225,7 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using BlockTypeReadContext = const t_physical_tile_type*;
     using GridLocReadContext = const t_grid_tile*;
     using NodeLocReadContext = const t_rr_node;
-    using NodeTimingReadContext = const t_rr_node;
+    using NodeTimingReadContext = const t_rr_node; 
     using NodeSegmentReadContext = const t_rr_node;
     using MetaReadContext = const t_metadata_dict::value_type*;
     using MetadataReadContext = t_metadata_dict_iterator;
@@ -247,6 +247,10 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using MetadataWriteContext = MetadataBind;
     using NodeWriteContext = int;
     using EdgeWriteContext = MetadataBind;
+    using RrNodePatternsWriteContext = int;
+    using RrNodePatternsReadContext = const t_rr_node;
+    using NodePtnReadContext = const t_rr_node;
+    using NodePtnWriteContext = int;
 };
 
 class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
@@ -601,22 +605,22 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      * </xs:complexType>
      */
 
-    inline int init_node_loc(int& inode, int ptc, int xhigh, int xlow, int yhigh, int ylow) final {
-        auto node = (*rr_nodes_)[inode];
-        RRNodeId node_id = node.id();
+    // inline int init_node_loc(int& inode, int ptc, int xhigh, int xlow, int yhigh, int ylow) final {
+    //     auto node = (*rr_nodes_)[inode];
+    //     RRNodeId node_id = node.id();
 
-        rr_graph_builder_->set_node_coordinates(node_id, xlow, ylow, xhigh, yhigh);
-        rr_graph_builder_->set_node_ptc_num(node_id, ptc);
-        return inode;
-    }
-    inline void finish_node_loc(int& /*inode*/) final {}
-    inline const t_rr_node get_node_loc(const t_rr_node& node) final {
-        return node;
-    }
+    //     rr_graph_builder_->set_node_coordinates(node_id, xlow, ylow, xhigh, yhigh);
+    //     rr_graph_builder_->set_node_ptc_num(node_id, ptc);
+    //     return inode;
+    // }
+    // inline void finish_node_loc(int& /*inode*/) final {}
+    // inline const t_rr_node get_node_loc(const t_rr_node& node) final {
+    //     return node;
+    // }
 
-    inline int get_node_loc_ptc(const t_rr_node& node) final {
-        return rr_graph_->node_ptc_num(node.id());
-    }
+    // inline int get_node_loc_ptc(const t_rr_node& node) final {
+    //     return rr_graph_->node_ptc_num(node.id());
+    // }
     inline int get_node_loc_xhigh(const t_rr_node& node) final {
         return rr_graph_->node_xhigh(node.id());
     }
@@ -630,6 +634,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return rr_graph_->node_ylow(node.id());
     }
 
+    // Now this is based on node pattern and not node id
     inline void set_node_loc_side(uxsd::enum_loc_side side, int& inode) final {
         auto node = (*rr_nodes_)[inode];
         RRNodeId node_id = node.id();
@@ -646,7 +651,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
             std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
             for (const e_side& side_to_add : SIDES) {
                 if (sides_to_add[side_to_add]) {
-                    rr_graph_builder_->add_node_side(node_id, side_to_add);
+                    rr_graph_builder_->add_node_side_ptn(inode, side_to_add);
                 }
             }
         }
@@ -672,19 +677,19 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      *   <xs:attribute name="C" type="xs:float" use="required" />
      * </xs:complexType>
      */
-    inline int init_node_timing(int& inode, float C, float R) final {
-        auto node = (*rr_nodes_)[inode];
-        RRNodeId node_id = node.id();
-        rr_graph_builder_->set_node_rc_index(node_id, NodeRCIndex(find_create_rr_rc_data(R, C)));
-        return inode;
-    }
-    inline void finish_node_timing(int& /*inode*/) final {}
-    inline const t_rr_node get_node_timing(const t_rr_node& node) final {
-        return node;
-    }
-    inline bool has_node_timing(const t_rr_node& /*node*/) final {
-        return true;
-    }
+    // inline int init_node_timing(int& inode, float C, float R) final {
+    //     auto node = (*rr_nodes_)[inode];
+    //     RRNodeId node_id = node.id();
+    //     rr_graph_builder_->set_node_rc_index(node_id, NodeRCIndex(find_create_rr_rc_data(R, C)));
+    //     return inode;
+    // }
+    // inline void finish_node_timing(int& /*inode*/) final {}
+    // inline const t_rr_node get_node_timing(const t_rr_node& node) final {
+    //     return node;
+    // }
+    // inline bool has_node_timing(const t_rr_node& /*node*/) final {
+    //     return true;
+    // }
 
     inline float get_node_timing_C(const t_rr_node& node) final {
         return rr_graph_->node_C(node.id());
@@ -698,7 +703,91 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
      *   <xs:attribute name="segment_id" type="xs:int" use="required" />
      * </xs:complexType>
      */
-    inline int init_node_segment(int& inode, int segment_id) final {
+    // inline int init_node_segment(int& inode, int segment_id) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     if (segment_id > (ssize_t)segment_inf_.size()) {
+    //         report_error(
+    //             "Specified segment %d is larger than number of known segments %zu",
+    //             segment_inf_.size());
+    //     }
+
+    //     auto node = (*rr_nodes_)[inode];
+    //     RRNodeId node_id = node.id();
+
+    //     if (GRAPH_GLOBAL == graph_type_) {
+    //         rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(0));
+    //     } else if (rr_graph.node_type(node.id()) == CHANX) {
+    //         rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_id));
+    //         seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
+    //     } else if (rr_graph.node_type(node.id()) == CHANY) {
+    //         rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_inf_.size() + segment_id));
+    //         seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
+    //     }
+    //     return inode;
+    // }
+    // inline void finish_node_segment(int& /*inode*/) final {}
+    inline int get_node_segment_segment_id(const t_rr_node& node) final {
+        return (*rr_indexed_data_)[(*rr_graph_).node_cost_index(node.id())].seg_index;
+    }
+
+    // inline const t_rr_node get_node_segment(const t_rr_node& node) final {
+    //     return node;
+    // }
+    // inline bool has_node_segment(const t_rr_node& node) final {
+    //     return (*rr_indexed_data_)[(*rr_graph_).node_cost_index(node.id())].seg_index != -1;
+    // }
+
+    /* --- New functions for nodes_all_attr are included below --- (Some functions are still in progress) */
+
+    /** Generated for complex type "node_ptn":
+	 * <xs:complexType name="node_ptn">
+	 *   <xs:all>
+	 *     <xs:element name="loc" type="node_loc" />
+	 *     <xs:element minOccurs="0" name="timing" type="node_timing" />
+	 *     <xs:element minOccurs="0" name="segment" type="node_segment" />
+	 *     <xs:element minOccurs="0" name="metadata" type="metadata" />
+	 *   </xs:all>
+	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+	 *   <xs:attribute name="type" type="node_type" use="required" />
+	 *   <xs:attribute name="direction" type="node_direction" />
+	 *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
+	 * </xs:complexType>
+	*/
+	inline unsigned int get_node_ptn_capacity(const t_rr_node &node) { (void) node; return 0; }
+	inline uxsd::enum_node_direction get_node_ptn_direction(const t_rr_node &node) {(void) node; return uxsd::enum_node_direction::UXSD_INVALID; }
+
+	inline void set_node_ptn_direction(uxsd::enum_node_direction direction, int &ctx) {
+         (void) ctx;
+         (void) direction;
+         return; }
+
+	inline unsigned int get_node_ptn_id(const t_rr_node &node) { (void) node; return 0; }
+
+	inline uxsd::enum_node_type get_node_ptn_type(const t_rr_node &node) {
+         (void) node;
+         return uxsd::enum_node_type::CHANX; }
+
+	inline int init_node_ptn_loc(int &ptn_idx, int xhigh, int xlow, int yhigh, int ylow) {
+         rr_graph_builder_->set_node_coordinates_ptn(ptn_idx, xlow, ylow, xhigh, yhigh);
+         return ptn_idx; 
+         }
+
+
+	inline void finish_node_ptn_loc(int &ctx) { (void) ctx; return; }
+
+	inline const t_rr_node get_node_ptn_loc(const t_rr_node &node) { return node; }
+
+	inline int init_node_ptn_timing(int &ptn_idx, float C, float R) {
+        rr_graph_builder_->set_node_rc_index_ptn(ptn_idx, NodeRCIndex(find_create_rr_rc_data(R, C)));
+        return ptn_idx; }
+
+	inline void finish_node_ptn_timing(int &node) { (void) node; return; }
+
+	inline const t_rr_node get_node_ptn_timing(const t_rr_node &node) { return node; }
+
+	inline bool has_node_ptn_timing(const t_rr_node &node) { (void) node; return false; }
+
+    inline int init_node_ptn_segment(int& ptn_idx, int segment_id) final {
         const auto& rr_graph = (*rr_graph_);
         if (segment_id > (ssize_t)segment_inf_.size()) {
             report_error(
@@ -706,48 +795,132 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
                 segment_inf_.size());
         }
 
-        auto node = (*rr_nodes_)[inode];
-        RRNodeId node_id = node.id();
-
         if (GRAPH_GLOBAL == graph_type_) {
-            rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(0));
-        } else if (rr_graph.node_type(node.id()) == CHANX) {
-            rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_id));
-            seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
-        } else if (rr_graph.node_type(node.id()) == CHANY) {
-            rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(CHANX_COST_INDEX_START + segment_inf_.size() + segment_id));
-            seg_index_[rr_graph.node_cost_index(node.id())] = segment_id;
+            rr_graph_builder_->set_node_cost_index_ptn(ptn_idx, RRIndexedDataId(0));
+        } else if (rr_graph.node_type_ptn(ptn_idx) == CHANX) {
+            rr_graph_builder_->set_node_cost_index_ptn(ptn_idx, RRIndexedDataId(CHANX_COST_INDEX_START + segment_id));
+            seg_index_[rr_graph.node_cost_index_ptn(ptn_idx)] = segment_id;
+        } else if (rr_graph.node_type_ptn(ptn_idx) == CHANY) {
+            rr_graph_builder_->set_node_cost_index_ptn(ptn_idx, RRIndexedDataId(CHANX_COST_INDEX_START + segment_inf_.size() + segment_id));
+            seg_index_[rr_graph.node_cost_index_ptn(ptn_idx)] = segment_id;
         }
-        return inode;
-    }
-    inline void finish_node_segment(int& /*inode*/) final {}
-    inline int get_node_segment_segment_id(const t_rr_node& node) final {
-        return (*rr_indexed_data_)[(*rr_graph_).node_cost_index(node.id())].seg_index;
+        return ptn_idx;
     }
 
-    inline const t_rr_node get_node_segment(const t_rr_node& node) final {
-        return node;
-    }
-    inline bool has_node_segment(const t_rr_node& node) final {
-        return (*rr_indexed_data_)[(*rr_graph_).node_cost_index(node.id())].seg_index != -1;
-    }
+	inline void finish_node_ptn_segment(int &ctx) { (void) ctx; }
 
-    inline MetadataBind init_node_metadata(int& inode) final {
+	inline const t_rr_node get_node_ptn_segment(const t_rr_node &node) { return node; }
+
+	inline bool has_node_ptn_segment(const t_rr_node &node) { (void) node; return false; }
+
+    inline MetadataBind init_node_ptn_metadata(int& inode) final {
         MetadataBind bind(strings_, empty_);
         bind.set_node_target(inode);
         return bind;
     }
-    inline void finish_node_metadata(MetadataBind& bind) final {
+
+    inline void finish_node_ptn_metadata(MetadataBind& bind) final {
         bind.finish();
     }
-    inline t_metadata_dict_iterator get_node_metadata(const t_rr_node& node) final {
+
+    inline t_metadata_dict_iterator get_node_ptn_metadata(const t_rr_node& node) final {
         const auto itr = rr_node_metadata_->find(get_node_id(node));
         return t_metadata_dict_iterator(&itr->second, report_error_);
     }
-    inline bool has_node_metadata(const t_rr_node& node) final {
+    inline bool has_node_ptn_metadata(const t_rr_node& node) final {
         const auto itr = rr_node_metadata_->find(get_node_id(node));
         return itr != rr_node_metadata_->end();
     }
+
+    /** Generated for complex type "rr_node_patterns":
+	 * <xs:complexType name="rr_node_patterns">
+	 *   <xs:choice maxOccurs="unbounded">
+	 *     <xs:element name="node_ptn" type="node_ptn" />
+	 *   </xs:choice>
+	 * </xs:complexType>
+	*/
+	inline void preallocate_rr_node_patterns_node_ptn(int &ctx, size_t size) {
+         rr_graph_builder_->reserve_nodes(size);
+         }
+	inline int add_rr_node_patterns_node_ptn(int &ctx, unsigned int capacity, unsigned int id, uxsd::enum_node_type type) {
+        (void) ctx;
+        (void) capacity;
+        (void) type;
+        rr_nodes_->make_room_for_node_ptn(id);
+        rr_graph_builder_->set_node_type_ptn(id, from_uxsd_node_type(type));
+        rr_graph_builder_->set_node_capacity_ptn(id, capacity);
+        switch (type) {
+                    case uxsd::enum_node_type::CHANX:
+                        break;
+                    case uxsd::enum_node_type::CHANY:
+                        break;
+                    case uxsd::enum_node_type::SOURCE:
+                        rr_graph_builder_->set_node_cost_index_ptn(id, RRIndexedDataId(SOURCE_COST_INDEX));
+                        break;
+                    case uxsd::enum_node_type::SINK:
+                        rr_graph_builder_->set_node_cost_index_ptn(id, RRIndexedDataId(SINK_COST_INDEX));
+                        break;
+                    case uxsd::enum_node_type::OPIN:
+                        rr_graph_builder_->set_node_cost_index_ptn(id, RRIndexedDataId(OPIN_COST_INDEX));
+                        break;
+                    case uxsd::enum_node_type::IPIN:
+                        rr_graph_builder_->set_node_cost_index_ptn(id, RRIndexedDataId(IPIN_COST_INDEX));
+                        break;
+                    default:
+                        report_error("Invalid node type");
+                        // report_error(
+                        //     "Invalid node type %d",
+                        //     type);
+                }
+
+        rr_graph_builder_->set_node_rc_index_ptn(id, NodeRCIndex(find_create_rr_rc_data(0, 0)));        
+        return id;}
+
+	inline void finish_rr_node_patterns_node_ptn(int &ctx) { (void) ctx; return; }
+
+	inline size_t num_rr_node_patterns_node_ptn(const t_rr_node &node) { (void) node; return 0; }
+
+	inline const t_rr_node get_rr_node_patterns_node_ptn(int n, const t_rr_node &node) { (void) n; return node; }
+
+	/** Generated for complex type "node":
+	 * <xs:complexType name="node">
+	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+	 *   <xs:attribute name="ptn_idx" type="xs:unsignedInt" use="required" />
+	 *   <xs:attribute name="ptc" type="xs:int" use="required" />
+	 * </xs:complexType>
+	*/
+    inline unsigned int get_node_id(const t_rr_node& node) final {
+        return size_t(node.id());
+    }
+    inline int get_node_ptc(const t_rr_node& node) final {
+        return rr_graph_->node_ptc_num(node.id());
+    }
+	inline unsigned int get_node_ptn_idx(const t_rr_node &ctx) {
+        (void) ctx;
+         return 0; 
+         }
+
+
+    /* --- End New functions for nodes_all_attr --- */
+
+
+
+    // inline MetadataBind init_node_metadata(int& inode) final {
+    //     MetadataBind bind(strings_, empty_);
+    //     bind.set_node_target(inode);
+    //     return bind;
+    // }
+    // inline void finish_node_metadata(MetadataBind& bind) final {
+    //     bind.finish();
+    // }
+    // inline t_metadata_dict_iterator get_node_metadata(const t_rr_node& node) final {
+    //     const auto itr = rr_node_metadata_->find(get_node_id(node));
+    //     return t_metadata_dict_iterator(&itr->second, report_error_);
+    // }
+    // inline bool has_node_metadata(const t_rr_node& node) final {
+    //     const auto itr = rr_node_metadata_->find(get_node_id(node));
+    //     return itr != rr_node_metadata_->end();
+    // }
 
     /** Generated for complex type "rr_nodes":
      * <xs:complexType name="rr_nodes">
@@ -759,7 +932,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void preallocate_rr_nodes_node(void*& /*ctx*/, size_t size) final {
         rr_graph_builder_->reserve_nodes(size);
     }
-    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, uxsd::enum_node_type type) final {
+
+    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int id, int ptc, unsigned int ptn_idx) final {
         // make_room_in_vector will not allocate if preallocate_rr_nodes_node
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
@@ -769,33 +943,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         auto node = (*rr_nodes_)[id];
         RRNodeId node_id = node.id();
 
-        rr_graph_builder_->set_node_type(node_id, from_uxsd_node_type(type));
-        rr_graph_builder_->set_node_capacity(node_id, capacity);
+        rr_graph_builder_->set_node_ptn(node_id, ptn_idx);
+        rr_graph_builder_->set_node_ptc_num(node_id, ptc);
 
-        switch (rr_graph.node_type(node.id())) {
-            case CHANX:
-                break;
-            case CHANY:
-                break;
-            case SOURCE:
-                rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(SOURCE_COST_INDEX));
-                break;
-            case SINK:
-                rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(SINK_COST_INDEX));
-                break;
-            case OPIN:
-                rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(OPIN_COST_INDEX));
-                break;
-            case IPIN:
-                rr_graph_builder_->set_node_cost_index(node_id, RRIndexedDataId(IPIN_COST_INDEX));
-                break;
-            default:
-                report_error(
-                    "Invalid node type %d",
-                    type);
-        }
-
-        rr_graph_builder_->set_node_rc_index(node_id, NodeRCIndex(find_create_rr_rc_data(0, 0)));
+        // rr_graph_builder_->set_node_capacity(node_id, capacity);
 
         return id;
     }
@@ -808,42 +959,59 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return (*rr_nodes_)[n];
     }
 
-    inline unsigned int get_node_capacity(const t_rr_node& node) final {
-        const auto& rr_graph = (*rr_graph_);
-        return rr_graph.node_capacity(node.id());
+    // inline unsigned int get_node_capacity(const t_rr_node& node) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     return rr_graph.node_capacity(node.id());
+    // }
+
+    // inline unsigned int get_node_id(const t_rr_node& node) final {
+    //     return size_t(node.id());
+    // }
+    // inline uxsd::enum_node_type get_node_type(const t_rr_node& node) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     return to_uxsd_node_type(rr_graph.node_type(node.id()));
+    // }
+
+    // inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     auto node = (*rr_nodes_)[inode];
+    //     RRNodeId node_id = node.id();
+
+    //     if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
+    //         if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+    //             report_error(
+    //                 "inode %d is type %d, which requires a direction, but no direction was supplied.",
+    //                 inode, rr_graph.node_type(node.id()));
+    //         }
+    //     } else {
+    //         rr_graph_builder_->set_node_direction(node_id, from_uxsd_node_direction(direction));
+    //     }
+    // }
+    // inline uxsd::enum_node_direction get_node_direction(const t_rr_node& node) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+    //         return to_uxsd_node_direction(rr_graph.node_direction(node.id()));
+    //     } else {
+    //         return uxsd::enum_node_direction::UXSD_INVALID;
+    //     }
+    // }
+
+    inline int init_rr_graph_rr_node_patterns(void*& /*ctx*/){
+        rr_nodes_->clear();
+        seg_index_.resize(CHANX_COST_INDEX_START + 2 * segment_inf_.size(), -1);
+        return 0;
+    }
+	inline void finish_rr_graph_rr_node_patterns(int &ctx){
+        (void) ctx;
+        return;
+    }
+	inline const t_rr_node get_rr_graph_rr_node_patterns(void*& /*ctx*/){
+        return (*rr_nodes_)[0];
     }
 
-    inline unsigned int get_node_id(const t_rr_node& node) final {
-        return size_t(node.id());
-    }
-    inline uxsd::enum_node_type get_node_type(const t_rr_node& node) final {
-        const auto& rr_graph = (*rr_graph_);
-        return to_uxsd_node_type(rr_graph.node_type(node.id()));
-    }
-
-    inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
-        const auto& rr_graph = (*rr_graph_);
-        auto node = (*rr_nodes_)[inode];
-        RRNodeId node_id = node.id();
-
-        if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
-            if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
-                report_error(
-                    "inode %d is type %d, which requires a direction, but no direction was supplied.",
-                    inode, rr_graph.node_type(node.id()));
-            }
-        } else {
-            rr_graph_builder_->set_node_direction(node_id, from_uxsd_node_direction(direction));
-        }
-    }
-    inline uxsd::enum_node_direction get_node_direction(const t_rr_node& node) final {
-        const auto& rr_graph = (*rr_graph_);
-        if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
-            return to_uxsd_node_direction(rr_graph.node_direction(node.id()));
-        } else {
-            return uxsd::enum_node_direction::UXSD_INVALID;
-        }
-    }
+    // inline void* get_rr_graph_rr_nodes(void*& /*ctx*/) final {
+    //     return nullptr;
+    // }
 
     inline void* init_rr_graph_rr_nodes(void*& /*ctx*/) final {
         rr_nodes_->clear();
