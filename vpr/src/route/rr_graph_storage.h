@@ -159,6 +159,7 @@ class t_rr_graph_storage {
      ****************/
 
     t_rr_type node_type(RRNodeId id) const {
+        // return node_ptn_[get_node_ptn(id)].type_;
         return node_ptn_[node_to_ptn_[id]].type_;
     }
     t_rr_type node_type_ptn(int ptn_id) const {
@@ -236,8 +237,10 @@ class t_rr_graph_storage {
     }
 
     void print() const {
+        return;
         for (int i=0; i<size(); i++){
             RRNodeId node = RRNodeId(i);
+            // printf("%d -> %d\n", i, get_node_ptn(node));
             // xlow, ylow, xhigh, yhigh, type, capacity, side, direction, cost_index, rc_index
 
             t_rr_type cur_type = node_type(node);
@@ -556,6 +559,30 @@ class t_rr_graph_storage {
 
     inline void set_node_ptn(RRNodeId id, int ptn_idx){
         node_to_ptn_[id] = ptn_idx;
+        if (ptn_to_first_node_.size() > ptn_idx)
+            return;
+        ptn_to_first_node_.push_back(id);
+    }
+
+    // Get the switch used for the specified edge.
+    int get_node_ptn(const RRNodeId& node) const {
+        size_t inode = size_t(node);
+        int l = 0;                        // start left index at 0
+        int r = ptn_to_first_node_.size() - 1; // start right index at end of node patterns
+        while (r >= l) {
+            int mid = l + (r - l) / 2; //  mid is pattern id
+            int first = (size_t)ptn_to_first_node_[mid];
+            int last = (size_t)ptn_to_first_node_[mid+1];
+
+            if (inode < first) // try again with left half of patterns
+                r = mid - 1;
+            else if (last <= inode) // try again with right half of patterns
+                l = mid + 1;
+            else if (first != last) { // node has this pattern idx
+                return mid;
+            }
+        }
+        return -1; // INVALID
     }
 
 
@@ -740,9 +767,10 @@ class t_rr_graph_storage {
 
 
     // Every node has an index into this data structure. This is where the data is stored in patterns
-    vtr::vector<RRNodeId, int32_t> node_to_ptn_;
+    std::vector<RRNodeId> ptn_to_first_node_;
     // Every node has an index into this data structure. This is where the data is stored in patterns
     std::vector<t_rr_node_data> node_ptn_;
+    vtr::vector<RRNodeId, int> node_to_ptn_;
 
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is
