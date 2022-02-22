@@ -138,8 +138,14 @@ class RRGraphBuilder {
 
     /** @brief emplace_back_edge; It add one edge. This method is efficient if reserve_edges was called with
      * the number of edges present in the graph. */
-    inline void emplace_back_edge(RRNodeId src, RRNodeId dest, short edge_switch) {
-        node_storage_.emplace_back_edge(src, dest, edge_switch);
+    inline void emplace_back_edge(RRNodeId src, RRNodeId dest) {
+        node_storage_.emplace_back_edge(src, dest);
+    }
+    inline void add_rr_switch(int id){
+        node_storage_.add_rr_switch(id);
+    }
+    inline void set_node_s_idx(RRNodeId id, int s_idx){
+        node_storage_.set_node_s_idx(id, s_idx);
     }
 
     /** @brief alloc_and_load_edges; It adds a batch of edges.  */

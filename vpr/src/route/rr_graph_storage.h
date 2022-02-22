@@ -48,6 +48,12 @@
  * side: The side of a grid location where an IPIN or OPIN is located.       *
  *       This field is valid only for IPINs and OPINs and should be ignored  *
  *       otherwise.                                                          */
+
+struct t_edge_switch {
+        RREdgeId edge;
+        int s_idx;
+    };
+
 struct alignas(16) t_rr_node_data {
     int16_t cost_index_ = -1;
     int16_t rc_index_ = -1;
@@ -277,7 +283,7 @@ class t_rr_graph_storage {
     //
     // If first_edge == last_edge, then a RRNodeId has no edges.
     RREdgeId first_edge(const RRNodeId& id) const {
-        return node_first_edge_[id];
+        return node_first_edge_[id].edge;
     }
 
     // Return the first_edge of the next rr_node, which is one past the edge
@@ -287,7 +293,7 @@ class t_rr_graph_storage {
     // we always allocate that dummy node. We also assume that the edges have
     // been sorted by rr_node, which is true after partition_edges().
     RREdgeId last_edge(const RRNodeId& id) const {
-        return (&node_first_edge_[id])[1];
+        return (&node_first_edge_[id])[1].edge;
     }
 
     // Returns a range of RREdgeId's belonging to RRNodeId id.
@@ -331,7 +337,25 @@ class t_rr_graph_storage {
 
     // Get the switch used for the specified edge.
     short edge_switch(const RREdgeId& edge) const {
-        return edge_switch_[edge];
+        size_t edge_id_size = size_t(edge);
+        int l = 0;                        // start left index at 0
+        int r = node_storage_.size() - 1; // start right index at end of nodes
+        while (r >= l) {
+            int mid = l + (r - l) / 2; //  mid is node id
+            RRNodeId node = RRNodeId(mid);
+            size_t first = (size_t)first_edge(node);
+            size_t last = (size_t)last_edge(node);
+
+            if (edge_id_size < first) // try again with left half of nodes
+                r = mid - 1;
+            else if (last <= edge_id_size) // try again with right half of nodes
+                l = mid + 1;
+            else if (first != last) { // edge is a part of this node
+                int edge_idx = edge_id_size - first;
+                return rr_switches_[node_first_edge_[node].s_idx+edge_idx];
+            }
+        }
+        return -1; // INVALID
     }
 
     // Get the switch used for the iedge'th edge from specified RRNodeId.
@@ -339,7 +363,14 @@ class t_rr_graph_storage {
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
     short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
-        return edge_switch(edge_id(id, iedge));
+        return rr_switches_[node_first_edge_[id].s_idx+iedge];
+        // return edge_switch(edge_id(id, iedge));
+    }
+
+    short edge_switch(const RRNodeId& id, RREdgeId iedge) const {
+        auto offset = (size_t)iedge - (size_t)node_first_edge_[id].edge;
+        return rr_switches_[node_first_edge_[id].s_idx+offset];
+        // return edge_switch(edge_id(id, iedge));
     }
 
     /*
@@ -390,6 +421,7 @@ class t_rr_graph_storage {
         make_room_in_vector(&node_storage_, size_t(elem_position));
         node_ptc_.reserve(node_storage_.capacity());
         node_ptc_.resize(node_storage_.size());
+        node_first_edge_.resize(node_storage_.size());
     }
 
     // Reserve storage for RR nodes.
@@ -542,7 +574,14 @@ class t_rr_graph_storage {
     // the number of edges present in the graph.  This method is still
     // amortized O(1), like std::vector::emplace_back, but both runtime and
     // peak memory usage will be higher if reallocation is required.
-    void emplace_back_edge(RRNodeId src, RRNodeId dest, short edge_switch);
+    void emplace_back_edge(RRNodeId src, RRNodeId dest);
+
+    inline void add_rr_switch(short id){
+        rr_switches_.push_back(id);
+    }
+    inline void set_node_s_idx(RRNodeId id, int s_idx){
+        node_first_edge_[id].s_idx = s_idx;
+    }
 
     // Adds a batch of edges.
     void alloc_and_load_edges(const t_rr_edge_info_set* rr_edges_to_create);
@@ -653,10 +692,13 @@ class t_rr_graph_storage {
     // loop of either the placer or router.
     vtr::vector<RRNodeId, t_rr_node_ptc_data> node_ptc_;
 
+    
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is
     // always equal to the number of edges in the final graph.
-    vtr::vector<RRNodeId, RREdgeId> node_first_edge_;
+    vtr::vector<RRNodeId, t_edge_switch> node_first_edge_;
+
+    std::vector<short> rr_switches_;
 
     // Fan in counts for each RR node.
     vtr::vector<RRNodeId, t_edge_size> node_fan_in_;
@@ -706,7 +748,7 @@ class t_rr_graph_view {
     t_rr_graph_view(
         const vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage,
         const vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc,
-        const vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge,
+        const vtr::array_view_id<RRNodeId, const t_edge_switch> node_first_edge,
         const vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in,
         const vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node,
         const vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node,
@@ -794,22 +836,22 @@ class t_rr_graph_view {
     }
 
     // Get the switch used for the specified edge.
-    short edge_switch(RREdgeId edge) const {
-        return edge_switch_[edge];
-    }
+    // short edge_switch(RREdgeId edge) const {
+    //     return edge_switch_[edge];
+    // }
 
   private:
     RREdgeId first_edge(RRNodeId id) const {
-        return node_first_edge_[id];
+        return node_first_edge_[id].edge;
     }
 
     RREdgeId last_edge(RRNodeId id) const {
-        return (&node_first_edge_[id])[1];
+        return (&node_first_edge_[id])[1].edge;
     }
 
     vtr::array_view_id<RRNodeId, const t_rr_node_data> node_storage_;
     vtr::array_view_id<RRNodeId, const t_rr_node_ptc_data> node_ptc_;
-    vtr::array_view_id<RRNodeId, const RREdgeId> node_first_edge_;
+    vtr::array_view_id<RRNodeId, const t_edge_switch> node_first_edge_;
     vtr::array_view_id<RRNodeId, const t_edge_size> node_fan_in_;
     vtr::array_view_id<RREdgeId, const RRNodeId> edge_src_node_;
     vtr::array_view_id<RREdgeId, const RRNodeId> edge_dest_node_;

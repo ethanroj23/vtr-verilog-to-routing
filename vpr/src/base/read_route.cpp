@@ -511,6 +511,7 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
     // If it's starting a new sub branch this is ok
     if (device_ctx.rr_graph.node_type(prev_node) == SINK) return true;
 
+    int k = 0;
     for (RREdgeId edge : rr_graph.edge_range(prev_node)) {
         //If the sink node is reachable by previous node return true
         if (rr_graph.edge_sink_node(edge) == node) {
@@ -518,7 +519,8 @@ static bool check_rr_graph_connectivity(RRNodeId prev_node, RRNodeId node) {
         }
 
         // If there are any non-configurable branches return true
-        short edge_switch = rr_graph.edge_switch(edge);
+        short edge_switch = rr_graph.edge_switch(prev_node, k);
+        k++;
         if (!(temp_rr_graph.rr_switch_inf(RRSwitchId(edge_switch)).configurable())) return true;
     }
 

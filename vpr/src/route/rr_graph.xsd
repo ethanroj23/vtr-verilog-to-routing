@@ -286,6 +286,7 @@
     <xs:attribute name="type" type="node_type" use="required"/>
     <xs:attribute name="direction" type="node_direction"/>
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="s_idx" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="edge">
@@ -294,7 +295,11 @@
     </xs:all>
     <xs:attribute name="src_node" type="xs:unsignedInt" use="required"/>
     <xs:attribute name="sink_node" type="xs:unsignedInt" use="required"/>
-    <xs:attribute name="switch_id" type="xs:unsignedInt" use="required"/>
+    <!-- <xs:attribute name="switch_id" type="xs:unsignedInt" use="required"/> -->
+  </xs:complexType>
+
+  <xs:complexType name="rr_switch">
+    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="switches">
@@ -321,6 +326,12 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="rr_switches">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="rr_switch" type="rr_switch"/>
+    </xs:choice>
+  </xs:complexType>
+
   <xs:complexType name="rr_nodes">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="node" type="node"/>
@@ -337,6 +348,12 @@
        xs:element is the root tag, and the contents of the xs:complexType
        defines what attributes and subtags are expected.
     -->
+    <!-- <rr_switches>
+<rr_switch id="1"/>
+<rr_switch id="1"/>
+<rr_switch id="1"/>
+<rr_switch id="1"/>
+<rr_switch id="1"/> -->
   <xs:element name="rr_graph">
     <xs:complexType>
       <xs:all>
@@ -345,6 +362,7 @@
         <xs:element name="segments" type="segments"/>
         <xs:element name="block_types" type="block_types"/>
         <xs:element name="grid" type="grid_locs"/>
+        <xs:element name="rr_switches" type="rr_switches"/>
         <xs:element name="rr_nodes" type="rr_nodes"/>
         <xs:element name="rr_edges" type="rr_edges"/>
       </xs:all>

@@ -494,9 +494,10 @@ static void dijkstra_flood_to_wires(int itile, RRNodeId node, util::t_src_opin_d
             //We allow expansion through SOURCE/OPIN/IPIN types
             auto cost_index = temp_rr_graph.node_cost_index(curr.node);
             float incr_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
-
+            int k = 0;
             for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
-                int iswitch = rr_graph.edge_switch(edge);
+                int iswitch = rr_graph.edge_switch(curr.node, k);
+                k++;
                 float incr_delay = temp_rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
                 RRNodeId next_node = rr_graph.edge_sink_node(edge);
@@ -590,8 +591,10 @@ static void dijkstra_flood_to_ipins(RRNodeId node, util::t_chan_ipins_delays& ch
             auto cost_index = temp_rr_graph.node_cost_index(curr.node);
             float new_cong = device_ctx.rr_indexed_data[cost_index].base_cost; //Current nodes congestion cost
 
+            int k = 0;
             for (RREdgeId edge : rr_graph.edge_range(curr.node)) {
-                int iswitch = rr_graph.edge_switch(edge);
+                int iswitch = rr_graph.edge_switch(curr.node, k);
+                k++;
                 float new_delay = temp_rr_graph.rr_switch_inf(RRSwitchId(iswitch)).Tdel;
 
                 RRNodeId next_node = rr_graph.edge_sink_node(edge);

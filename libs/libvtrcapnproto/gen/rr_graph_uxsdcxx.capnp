@@ -2,11 +2,11 @@
 # https://github.com/duck2/uxsdcxx
 # Modify only if your build process doesn't involve regenerating this file.
 #
-# Cmdline: uxsdcxx/uxsdcap.py /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# Input file: /research/ece/lnis/USERS/tang/github/vtr-verilog-to-routing/vpr/src/route/rr_graph.xsd
-# md5sum of input file: cd57d47fc9dfa62c7030397ca759217e
+# Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
+# md5sum of input file: af77dfa3aea913b74b8daaa8398c52ea
 
-@0xe4650d345d47589d;
+@0xfb81e4653f3534c5;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -160,6 +160,14 @@ struct GridLocs {
 	gridLocs @0 :List(GridLoc);
 }
 
+struct RrSwitch {
+	id @0 :UInt32;
+}
+
+struct RrSwitches {
+	rrSwitches @0 :List(RrSwitch);
+}
+
 struct NodeLoc {
 	ptc @0 :Int32;
 	side @1 :LocSide;
@@ -191,11 +199,12 @@ struct Node {
 	capacity @0 :UInt32;
 	direction @1 :NodeDirection;
 	id @2 :UInt32;
-	type @3 :NodeType;
-	loc @4 :NodeLoc;
-	timing @5 :NodeTiming;
-	segment @6 :NodeSegment;
-	metadata @7 :Metadata;
+	sIdx @3 :UInt32;
+	type @4 :NodeType;
+	loc @5 :NodeLoc;
+	timing @6 :NodeTiming;
+	segment @7 :NodeSegment;
+	metadata @8 :Metadata;
 }
 
 struct RrNodes {
@@ -205,8 +214,7 @@ struct RrNodes {
 struct Edge {
 	sinkNode @0 :UInt32;
 	srcNode @1 :UInt32;
-	switchId @2 :UInt32;
-	metadata @3 :Metadata;
+	metadata @2 :Metadata;
 }
 
 struct RrEdges {
@@ -222,6 +230,7 @@ struct RrGraph {
 	segments @5 :Segments;
 	blockTypes @6 :BlockTypes;
 	grid @7 :GridLocs;
-	rrNodes @8 :RrNodes;
-	rrEdges @9 :RrEdges;
+	rrSwitches @8 :RrSwitches;
+	rrNodes @9 :RrNodes;
+	rrEdges @10 :RrEdges;
 }

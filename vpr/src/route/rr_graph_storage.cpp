@@ -10,12 +10,12 @@ void t_rr_graph_storage::reserve_edges(size_t num_edges) {
     edge_switch_.reserve(num_edges);
 }
 
-void t_rr_graph_storage::emplace_back_edge(RRNodeId src, RRNodeId dest, short edge_switch) {
+void t_rr_graph_storage::emplace_back_edge(RRNodeId src, RRNodeId dest) {
     // Cannot mutate edges once edges have been read!
     VTR_ASSERT(!edges_read_);
     edge_src_node_.emplace_back(src);
     edge_dest_node_.emplace_back(dest);
-    edge_switch_.emplace_back(edge_switch);
+    // edge_switch_.emplace_back(edge_switch);
 }
 
 // Typical node to edge ratio.  This allows a preallocation guess for the edges
@@ -44,8 +44,8 @@ void t_rr_graph_storage::alloc_and_load_edges(const t_rr_edge_info_set* rr_edges
     for (const auto& new_edge : *rr_edges_to_create) {
         emplace_back_edge(
             new_edge.from_node,
-            new_edge.to_node,
-            new_edge.switch_type);
+            new_edge.to_node);
+            // new_edge.switch_type);
     }
 }
 
@@ -317,7 +317,7 @@ class edge_compare_dest_node {
 };
 
 void t_rr_graph_storage::assign_first_edges() {
-    VTR_ASSERT(node_first_edge_.empty());
+    // VTR_ASSERT(node_first_edge_.empty());
 
     // Last element is a dummy element
     node_first_edge_.resize(node_storage_.size() + 1);
@@ -331,7 +331,7 @@ void t_rr_graph_storage::assign_first_edges() {
     size_t second_id = 0;
     size_t num_edges = edge_src_node_.size();
     VTR_ASSERT(edge_dest_node_.size() == num_edges);
-    VTR_ASSERT(edge_switch_.size() == num_edges);
+    // VTR_ASSERT(edge_switch_.size() == num_edges);
     while (true) {
         VTR_ASSERT(first_id < num_edges);
         VTR_ASSERT(second_id < num_edges);
@@ -340,14 +340,14 @@ void t_rr_graph_storage::assign_first_edges() {
             // All edges belonging to node_id are assigned.
             while (node_id < current_node_id) {
                 // Store any edges belongs to node_id.
-                node_first_edge_[RRNodeId(node_id)] = RREdgeId(first_id);
+                node_first_edge_[RRNodeId(node_id)].edge = RREdgeId(first_id);
                 first_id = second_id;
                 node_id += 1;
                 VTR_ASSERT(node_first_edge_.size());
             }
 
             VTR_ASSERT(node_id == current_node_id);
-            node_first_edge_[RRNodeId(node_id)] = RREdgeId(second_id);
+            node_first_edge_[RRNodeId(node_id)].edge = RREdgeId(second_id);
         } else {
             second_id += 1;
             if (second_id == num_edges) {
@@ -358,7 +358,7 @@ void t_rr_graph_storage::assign_first_edges() {
 
     // All remaining nodes have no edges, set as such.
     for (size_t inode = node_id + 1; inode < node_first_edge_.size(); ++inode) {
-        node_first_edge_[RRNodeId(inode)] = RREdgeId(second_id);
+        node_first_edge_[RRNodeId(inode)].edge = RREdgeId(second_id);
     }
 
     VTR_ASSERT_SAFE(verify_first_edges());
@@ -366,14 +366,14 @@ void t_rr_graph_storage::assign_first_edges() {
 
 bool t_rr_graph_storage::verify_first_edges() const {
     size_t num_edges = edge_src_node_.size();
-    VTR_ASSERT(node_first_edge_[RRNodeId(node_storage_.size())] == RREdgeId(num_edges));
+    VTR_ASSERT(node_first_edge_[RRNodeId(node_storage_.size())].edge == RREdgeId(num_edges));
 
     // Each edge should belong with the edge range defined by
     // [node_first_edge_[src_node], node_first_edge_[src_node+1]).
     for (size_t iedge = 0; iedge < num_edges; ++iedge) {
         RRNodeId src_node = edge_src_node_.at(RREdgeId(iedge));
-        RREdgeId first_edge = node_first_edge_.at(src_node);
-        RREdgeId second_edge = node_first_edge_.at(RRNodeId(size_t(src_node) + 1));
+        RREdgeId first_edge = node_first_edge_.at(src_node).edge;
+        RREdgeId second_edge = node_first_edge_.at(RRNodeId(size_t(src_node) + 1)).edge;
         VTR_ASSERT(iedge >= size_t(first_edge));
         VTR_ASSERT(iedge < size_t(second_edge));
     }
@@ -502,10 +502,10 @@ void t_rr_graph_storage::partition_edges() {
     //    by assign_first_edges()
     //  - Edges within a source node have the configurable edges before the
     //    non-configurable edges.
-    std::sort(
-        edge_sort_iterator(this, 0),
-        edge_sort_iterator(this, edge_src_node_.size()),
-        edge_compare_src_node_and_configurable_first(device_ctx.rr_switch_inf));
+    // std::sort(
+    //     edge_sort_iterator(this, 0),
+    //     edge_sort_iterator(this, edge_src_node_.size()),
+    //     edge_compare_src_node_and_configurable_first(device_ctx.rr_switch_inf));
 
     partitioned_ = true;
 
@@ -519,10 +519,14 @@ t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const
 
     const auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
-    auto first_id = size_t(node_first_edge_[id]);
-    auto last_id = size_t((&node_first_edge_[id])[1]);
+    auto first_id = size_t(node_first_edge_[id].edge);
+    auto last_id = size_t((&node_first_edge_[id])[1].edge);
+    int switch_offset = 0;
     for (size_t idx = first_id; idx < last_id; ++idx) {
-        auto switch_idx = edge_switch_[RREdgeId(idx)];
+        // auto switch_idx = edge_switch_[RREdgeId(idx)];
+        auto switch_idx = rr_switches_[node_first_edge_[id].s_idx+switch_offset];
+        switch_offset++;
+
         if (!rr_graph.rr_switch_inf(RRSwitchId(switch_idx)).configurable()) {
             return idx - first_id;
         }
@@ -782,10 +786,10 @@ void t_rr_graph_storage::reorder(const vtr::vector<RRNodeId, RRNodeId>& order,
 
         // Reorder edges by source node
         for (size_t i = 0; i < node_storage_.size(); i++) {
-            node_first_edge_[RRNodeId(i)] = cur_edge;
+            node_first_edge_[RRNodeId(i)].edge = cur_edge;
             auto n = inverse_order[RRNodeId(i)];
-            for (auto e = old_node_first_edge[n];
-                 e < old_node_first_edge[RRNodeId(size_t(n) + 1)];
+            for (auto e = old_node_first_edge[n].edge;
+                 e < old_node_first_edge[RRNodeId(size_t(n) + 1)].edge;
                  e = RREdgeId(size_t(e) + 1)) {
                 edge_src_node_[cur_edge] = order[old_edge_src_node[e]]; // == n?
                 edge_dest_node_[cur_edge] = order[old_edge_dest_node[e]];

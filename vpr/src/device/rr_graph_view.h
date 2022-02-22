@@ -285,6 +285,11 @@ class RRGraphView {
     inline short edge_switch(RRNodeId id, t_edge_size iedge) const {
         return node_storage_.edge_switch(id, iedge);
     }
+
+    inline short edge_switch(RREdgeId edge) const {
+        return node_storage_.edge_switch(edge);
+    }
+    
     /** @brief Get the destination node for the iedge'th edge from specified RRNodeId.
      *  This method should generally not be used, and instead first_edge and
      *  last_edge should be used.*/

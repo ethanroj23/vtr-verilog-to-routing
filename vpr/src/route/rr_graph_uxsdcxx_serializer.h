@@ -53,14 +53,13 @@ class MetadataBind {
         inode_ = inode;
     }
 
-    void set_edge_target(int source_node, int sink_node, int switch_id) {
+    void set_edge_target(int source_node, int sink_node) {
         VTR_ASSERT(!is_node_);
         VTR_ASSERT(!is_edge_);
 
         is_edge_ = true;
         inode_ = source_node;
         sink_node_ = sink_node;
-        switch_id_ = switch_id;
     }
 
     void set_ignore() {
@@ -247,6 +246,10 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using MetadataWriteContext = MetadataBind;
     using NodeWriteContext = int;
     using EdgeWriteContext = MetadataBind;
+    using RrSwitchesWriteContext = int;
+    using RrSwitchesReadContext = int;
+    using RrSwitchWriteContext = int;
+    using RrSwitchReadContext = int;
 };
 
 class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
@@ -759,7 +762,8 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline void preallocate_rr_nodes_node(void*& /*ctx*/, size_t size) final {
         rr_graph_builder_->reserve_nodes(size);
     }
-    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, uxsd::enum_node_type type) final {
+    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int capacity, unsigned int id, unsigned int s_idx,  uxsd::enum_node_type type) final {
+
         // make_room_in_vector will not allocate if preallocate_rr_nodes_node
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
@@ -768,7 +772,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_nodes_->make_room_for_node(RRNodeId(id));
         auto node = (*rr_nodes_)[id];
         RRNodeId node_id = node.id();
-
+        rr_graph_builder_->set_node_s_idx(node_id, s_idx);
         rr_graph_builder_->set_node_type(node_id, from_uxsd_node_type(type));
         rr_graph_builder_->set_node_capacity(node_id, capacity);
 
@@ -811,6 +815,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     inline unsigned int get_node_capacity(const t_rr_node& node) final {
         const auto& rr_graph = (*rr_graph_);
         return rr_graph.node_capacity(node.id());
+    }
+	inline unsigned int get_node_s_idx(const t_rr_node& node){
+        (void) node;
+        return 0;
     }
 
     inline unsigned int get_node_id(const t_rr_node& node) final {
@@ -879,7 +887,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
             rr_edge_metadata_->reserve(size);
         }
     }
-    inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node, unsigned int switch_id) final {
+    inline MetadataBind add_rr_edges_edge(void*& /*ctx*/, unsigned int sink_node, unsigned int src_node) final {
         if (src_node >= rr_nodes_->size()) {
             report_error(
                 "source_node %d is larger than rr_nodes.size() %d",
@@ -888,12 +896,13 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 
         MetadataBind bind(strings_, empty_);
         if (read_edge_metadata_) {
-            bind.set_edge_target(src_node, sink_node, switch_id);
+            bind.set_edge_target(src_node, sink_node);
         } else {
             bind.set_ignore();
         }
 
-        rr_graph_builder_->emplace_back_edge(RRNodeId(src_node), RRNodeId(sink_node), switch_id);
+        // rr_graph_builder_->emplace_back_edge(RRNodeId(src_node), RRNodeId(sink_node), switch_id);
+        rr_graph_builder_->emplace_back_edge(RRNodeId(src_node), RRNodeId(sink_node));
         return bind;
     }
     inline void finish_rr_edges_edge(MetadataBind& bind) final {
@@ -910,14 +919,62 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return &walker;
     }
 
+    /* --- Functions added with SWITCHES_SUBSETS folded rr_graph --- */
+    inline int init_rr_graph_rr_switches(void*& /*ctx*/){
+        return 0;
+    }
+
+	inline void finish_rr_graph_rr_switches(int &ctx){
+        (void) ctx;
+        return;
+    }
+	inline int get_rr_graph_rr_switches(void*& /*ctx*/){
+        return 0;
+    }
+
+    /** Generated for complex type "rr_switch":
+	 * <xs:complexType name="rr_switch">
+	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+	 * </xs:complexType>
+	*/
+	inline unsigned int get_rr_switch_id(int &ctx){
+        return ctx;
+    }
+
+	/** Generated for complex type "rr_switches":
+	 * <xs:complexType name="rr_switches">
+	 *   <xs:choice maxOccurs="unbounded">
+	 *     <xs:element name="rr_switch" type="rr_switch" />
+	 *   </xs:choice>
+	 * </xs:complexType>
+	*/
+	inline void preallocate_rr_switches_rr_switch(int &ctx, size_t size){
+        (void) ctx;
+        (void) size;
+        return;
+    }
+	inline int add_rr_switches_rr_switch(int &ctx, unsigned int id){
+        rr_graph_builder_->add_rr_switch(id);
+        return ctx;
+    }
+	inline void finish_rr_switches_rr_switch(int &ctx){
+        (void) ctx;
+        return;
+    }
+	inline size_t num_rr_switches_rr_switch(int &ctx){
+        return ctx;
+    }
+	inline int get_rr_switches_rr_switch(int n, int &ctx){
+        (void) n;
+        return ctx;
+    }
+
+
     inline unsigned int get_edge_sink_node(const EdgeWalker*& walker) final {
         return walker->current_sink_node();
     }
     inline unsigned int get_edge_src_node(const EdgeWalker*& walker) final {
         return walker->current_src_node();
-    }
-    inline unsigned int get_edge_switch_id(const EdgeWalker*& walker) final {
-        return walker->current_switch_id_node();
     }
 
     inline MetadataBind init_edge_metadata(MetadataBind& bind) final {
