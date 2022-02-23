@@ -2136,6 +2136,7 @@ static void init_net_delay_from_lookahead(const RouterLookahead& router_lookahea
                                           ClbNetPinsMatrix<float>& net_delay) {
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& route_ctx = g_vpr_ctx.routing();
+    const auto& rr_graph = g_vpr_ctx.device().rr_graph;
 
     t_conn_cost_params cost_params;
     cost_params.criticality = 1.; //Ensures lookahead returns delay value
@@ -2148,7 +2149,7 @@ static void init_net_delay_from_lookahead(const RouterLookahead& router_lookahea
         for (size_t ipin = 1; ipin < cluster_ctx.clb_nlist.net_pins(net_id).size(); ++ipin) {
             int sink_rr = route_ctx.net_rr_terminals[net_id][ipin];
 
-            float est_delay = router_lookahead.get_expected_cost(RRNodeId(source_rr), RRNodeId(sink_rr), cost_params, /*R_upstream=*/0.);
+            float est_delay = router_lookahead.get_expected_cost(RRNodeId(source_rr), RRNodeId(sink_rr), cost_params, /*R_upstream=*/0., rr_graph.get_node_ptn(RRNodeId(source_rr)), rr_graph.get_node_ptn(RRNodeId(sink_rr)));
             VTR_ASSERT(std::isfinite(est_delay) && est_delay < std::numeric_limits<float>::max());
 
             net_delay[net_id][ipin] = est_delay;

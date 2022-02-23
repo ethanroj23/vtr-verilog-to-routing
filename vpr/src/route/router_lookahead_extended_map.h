@@ -52,19 +52,20 @@ class ExtendedMapLookahead : public RouterLookahead {
     std::pair<float, int> run_dijkstra(RRNodeId start_node,
                                        std::vector<bool>* node_expanded,
                                        std::vector<util::Search_Path>* paths,
-                                       util::RoutingCosts* routing_costs);
+                                       util::RoutingCosts* routing_costs,
+                                       int start_node_ptn);
 
     CostMap cost_map_; ///<Cost map containing all data to extract the entry cost when querying the lookahead.
   public:
     /**
      * @brief Returns the expected cost to get to a destination node
      */
-    float get_expected_cost(RRNodeId node, RRNodeId target_node, const t_conn_cost_params& params, float R_upstream) const override;
+    float get_expected_cost(RRNodeId node, RRNodeId target_node, const t_conn_cost_params& params, float R_upstream, int node_ptn, int target_node_ptn) const override;
 
     /**
      * @brief Returns a pair of expected delay and congestion
      */
-    std::pair<float, float> get_expected_delay_and_cong(RRNodeId inode, RRNodeId target_node, const t_conn_cost_params& params, float R_upstream) const override;
+    std::pair<float, float> get_expected_delay_and_cong(RRNodeId inode, RRNodeId target_node, const t_conn_cost_params& params, float R_upstream, int inode_ptn, int target_node_ptn) const override;
 
     /**
      * @brief Computes the extended lookahead map

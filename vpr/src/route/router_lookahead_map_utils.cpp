@@ -66,7 +66,8 @@ PQ_Entry::PQ_Entry(
     float parent_R_upstream,
     float parent_congestion_upstream,
     bool starting_node,
-    float Tsw_adjust) {
+    float Tsw_adjust,
+    int set_rr_node_ptn) {
     this->rr_node = set_rr_node;
 
     auto& device_ctx = g_vpr_ctx.device();
@@ -79,8 +80,8 @@ PQ_Entry::PQ_Entry(
         Tsw += Tsw_adjust;
         VTR_ASSERT(Tsw >= 0.f);
         float Rsw = rr_graph.rr_switch_inf(RRSwitchId(switch_ind)).R;
-        float Cnode = rr_graph.node_C(set_rr_node);
-        float Rnode = rr_graph.node_R(set_rr_node);
+        float Cnode = rr_graph.node_C_ptn(set_rr_node_ptn);
+        float Rnode = rr_graph.node_R_ptn(set_rr_node_ptn);
 
         float T_linear = 0.f;
         if (rr_graph.rr_switch_inf(RRSwitchId(switch_ind)).buffered()) {
@@ -91,7 +92,7 @@ PQ_Entry::PQ_Entry(
 
         float base_cost = 0.f;
         if (rr_graph.rr_switch_inf(RRSwitchId(switch_ind)).configurable()) {
-            base_cost = get_single_rr_cong_base_cost(size_t(set_rr_node));
+            base_cost = get_single_rr_cong_base_cost(set_rr_node_ptn);
         }
 
         VTR_ASSERT(T_linear >= 0.);
@@ -143,7 +144,7 @@ util::PQ_Entry_Base_Cost::PQ_Entry_Base_Cost(
         auto& device_ctx = g_vpr_ctx.device();
         const auto& rr_graph = device_ctx.rr_graph;
         if (rr_graph.rr_switch_inf(RRSwitchId(switch_ind)).configurable()) {
-            this->base_cost = parent->base_cost + get_single_rr_cong_base_cost(size_t(set_rr_node));
+            this->base_cost = parent->base_cost + get_single_rr_cong_base_cost(rr_graph.get_node_ptn(set_rr_node));
         } else {
             this->base_cost = parent->base_cost;
         }

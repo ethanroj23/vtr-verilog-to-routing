@@ -62,7 +62,8 @@ template<typename Entry>
 static std::pair<float, int> run_dijkstra(RRNodeId start_node,
                                           std::vector<bool>* node_expanded,
                                           std::vector<util::Search_Path>* paths,
-                                          util::RoutingCosts* routing_costs);
+                                          util::RoutingCosts* routing_costs,
+                                          int start_node_ptn);
 
 std::pair<float, float> ExtendedMapLookahead::get_src_opin_cost(RRNodeId from_node, int delta_x, int delta_y, const t_conn_cost_params& params) const {
     auto& device_ctx = g_vpr_ctx.device();
@@ -169,7 +170,7 @@ float ExtendedMapLookahead::get_chan_ipin_delays(RRNodeId to_node) const {
 //
 //  The from_node can be of one of the following types: CHANX, CHANY, SOURCE, OPIN
 //  The to_node is always a SINK
-std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNodeId from_node, RRNodeId to_node, const t_conn_cost_params& params, float /*R_upstream*/) const {
+std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNodeId from_node, RRNodeId to_node, const t_conn_cost_params& params, float /*R_upstream*/, int from_node_ptn, int to_node_ptn) const {
     if (from_node == to_node) {
         return std::make_pair(0., 0.);
     }
@@ -177,17 +178,17 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    int from_x = rr_graph.node_xlow(from_node);
-    int from_y = rr_graph.node_ylow(from_node);
+    int from_x = rr_graph.node_xlow_ptn(from_node_ptn);
+    int from_y = rr_graph.node_ylow_ptn(from_node_ptn);
 
-    int to_x = rr_graph.node_xlow(to_node);
-    int to_y = rr_graph.node_ylow(to_node);
+    int to_x = rr_graph.node_xlow_ptn(to_node_ptn);
+    int to_y = rr_graph.node_ylow_ptn(to_node_ptn);
 
     int dx, dy;
     dx = to_x - from_x;
     dy = to_y - from_y;
 
-    e_rr_type from_type = rr_graph.node_type(from_node);
+    e_rr_type from_type = rr_graph.node_type_ptn(from_node_ptn);
     if (from_type == SOURCE || from_type == OPIN) {
         return this->get_src_opin_cost(from_node, dx, dy, params);
     } else if (from_type == IPIN) {
@@ -357,7 +358,8 @@ template<typename Entry>
 std::pair<float, int> ExtendedMapLookahead::run_dijkstra(RRNodeId start_node,
                                                          std::vector<bool>* node_expanded,
                                                          std::vector<util::Search_Path>* paths,
-                                                         util::RoutingCosts* routing_costs) {
+                                                         util::RoutingCosts* routing_costs,
+                                                         int start_node_ptn) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
     int path_count = 0;
@@ -412,7 +414,7 @@ void ExtendedMapLookahead::compute(const std::vector<t_segment_inf>& segment_inf
     this->chan_ipins_delays = util::compute_router_chan_ipin_lookahead();
 
     vtr::ScopedStartFinishTimer timer("Computing connection box lookahead map");
-
+    const auto& rr_graph = g_vpr_ctx.device().rr_graph;
     // Initialize rr_node_route_inf if not already
     alloc_and_load_rr_node_route_structs();
 
@@ -461,12 +463,12 @@ void ExtendedMapLookahead::compute(const std::vector<t_segment_inf>& segment_inf
                 //       Experiments have shown that the having two separate expansions lead to better results for Series 7 devices, but
                 //       this might not be true for Stratix ones.
                 {
-                    auto result = run_dijkstra<util::PQ_Entry_Delay>(node, &node_expanded, &paths, &delay_costs);
+                    auto result = run_dijkstra<util::PQ_Entry_Delay>(node, &node_expanded, &paths, &delay_costs, rr_graph.get_node_ptn(node));
                     max_delay_cost = std::max(max_delay_cost, result.first);
                     path_count += result.second;
                 }
                 {
-                    auto result = run_dijkstra<util::PQ_Entry_Base_Cost>(node, &node_expanded, &paths, &base_costs);
+                    auto result = run_dijkstra<util::PQ_Entry_Base_Cost>(node, &node_expanded, &paths, &base_costs, rr_graph.get_node_ptn(node));
                     max_base_cost = std::max(max_base_cost, result.first);
                     path_count += result.second;
                 }
@@ -568,17 +570,19 @@ float ExtendedMapLookahead::get_expected_cost(
     RRNodeId current_node,
     RRNodeId target_node,
     const t_conn_cost_params& params,
-    float R_upstream) const {
+    float R_upstream,
+    int current_node_ptn,
+    int target_node_ptn) const {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    t_rr_type rr_type = rr_graph.node_type(current_node);
+    t_rr_type rr_type = rr_graph.node_type_ptn(current_node_ptn);
 
     if (rr_type == CHANX || rr_type == CHANY || rr_type == SOURCE || rr_type == OPIN) {
         float delay_cost, cong_cost;
 
         // Get the total cost using the combined delay and congestion costs
-        std::tie(delay_cost, cong_cost) = get_expected_delay_and_cong(current_node, target_node, params, R_upstream);
+        std::tie(delay_cost, cong_cost) = get_expected_delay_and_cong(current_node, target_node, params, R_upstream, current_node_ptn, target_node_ptn);
         return delay_cost + cong_cost;
     } else if (rr_type == IPIN) { /* Change if you're allowing route-throughs */
         // This is to return only the cost between the IPIN and SINK. No need to

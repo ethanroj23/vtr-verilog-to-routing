@@ -29,12 +29,12 @@ t_trace* update_traceback(t_heap* hptr, int target_net_pin_index, ClusterNetId n
 
 void reset_path_costs(const std::vector<int>& visited_rr_nodes);
 
-float get_rr_cong_cost(int inode, float pres_fac);
+float get_rr_cong_cost(int inode, float pres_fac, int inode_ptn);
 
 /* Returns the base cost of using this rr_node */
-inline float get_single_rr_cong_base_cost(int inode) {
+inline float get_single_rr_cong_base_cost(int inode_ptn) {
     auto& device_ctx = g_vpr_ctx.device();
-    auto cost_index = device_ctx.rr_graph.node_cost_index(RRNodeId(inode));
+    auto cost_index = device_ctx.rr_graph.node_cost_index_ptn(inode_ptn);
 
     return device_ctx.rr_indexed_data[cost_index].base_cost;
 }
@@ -47,13 +47,13 @@ inline float get_single_rr_cong_acc_cost(int inode) {
 }
 
 /* Returns the present congestion cost of using this rr_node */
-inline float get_single_rr_cong_pres_cost(int inode, float pres_fac) {
+inline float get_single_rr_cong_pres_cost(int inode, float pres_fac, int inode_ptn) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
     int occ = route_ctx.rr_node_route_inf[inode].occ();
-    int capacity = rr_graph.node_capacity(RRNodeId(inode));
+    int capacity = rr_graph.node_capacity_ptn(inode_ptn);
 
     if (occ >= capacity) {
         return (1. + pres_fac * (occ + 1 - capacity));
@@ -64,13 +64,13 @@ inline float get_single_rr_cong_pres_cost(int inode, float pres_fac) {
 
 /* Returns the congestion cost of using this rr_node,
  * *ignoring* non-configurable edges */
-inline float get_single_rr_cong_cost(int inode, float pres_fac) {
+inline float get_single_rr_cong_cost(int inode, float pres_fac, int inode_ptn) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
     auto& route_ctx = g_vpr_ctx.routing();
 
     float pres_cost;
-    int overuse = route_ctx.rr_node_route_inf[inode].occ() - rr_graph.node_capacity(RRNodeId(inode));
+    int overuse = route_ctx.rr_node_route_inf[inode].occ() - rr_graph.node_capacity_ptn(inode_ptn);
 
     if (overuse >= 0) {
         pres_cost = (1. + pres_fac * (overuse + 1));
@@ -78,12 +78,12 @@ inline float get_single_rr_cong_cost(int inode, float pres_fac) {
         pres_cost = 1.;
     }
 
-    auto cost_index = rr_graph.node_cost_index(RRNodeId(inode));
+    auto cost_index = rr_graph.node_cost_index_ptn(inode_ptn);
 
     float cost = device_ctx.rr_indexed_data[cost_index].base_cost * route_ctx.rr_node_route_inf[inode].acc_cost * pres_cost;
 
     VTR_ASSERT_DEBUG_MSG(
-        cost == get_single_rr_cong_base_cost(inode) * get_single_rr_cong_acc_cost(inode) * get_single_rr_cong_pres_cost(inode, pres_fac),
+        cost == get_single_rr_cong_base_cost(inode_ptn) * get_single_rr_cong_acc_cost(inode) * get_single_rr_cong_pres_cost(inode, pres_fac, inode_ptn),
         "Single rr node congestion cost is inaccurate");
 
     return cost;

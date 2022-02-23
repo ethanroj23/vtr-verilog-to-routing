@@ -430,11 +430,12 @@ static float evaluate_node_cost(const float prev_path_cost, const float bend_cos
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    float tot_cost = prev_path_cost + get_rr_cong_cost(to_node, pres_fac);
+    int to_node_ptn = rr_graph.get_node_ptn(RRNodeId(to_node));
+    float tot_cost = prev_path_cost + get_rr_cong_cost(to_node, pres_fac, to_node_ptn);
 
     if (bend_cost != 0.) {
         t_rr_type from_type = rr_graph.node_type(RRNodeId(from_node));
-        t_rr_type to_type = rr_graph.node_type(RRNodeId(to_node));
+        t_rr_type to_type = rr_graph.node_type_ptn(to_node_ptn);
         if ((from_type == CHANX && to_type == CHANY)
             || (from_type == CHANY && to_type == CHANX))
             tot_cost += bend_cost;
@@ -452,7 +453,7 @@ static void breadth_first_add_source_to_heap(BinaryHeap& heap, ClusterNetId net_
     auto& route_ctx = g_vpr_ctx.routing();
 
     inode = route_ctx.net_rr_terminals[net_id][0]; /* SOURCE */
-    cost = get_rr_cong_cost(inode, pres_fac);
+    cost = get_rr_cong_cost(inode, pres_fac, g_vpr_ctx.device().rr_graph.get_node_ptn(RRNodeId(inode)));
 
 #ifdef ROUTER_DEBUG
     VTR_LOG("  Adding Source node %d to heap\n", inode);

@@ -709,11 +709,11 @@ void reset_path_costs(const std::vector<int>& visited_rr_nodes) {
 
 /* Returns the congestion cost of using this rr-node plus that of any      *
  * non-configurably connected rr_nodes that must be used when it is used.  */
-float get_rr_cong_cost(int inode, float pres_fac) {
+float get_rr_cong_cost(int inode, float pres_fac, int inode_ptn) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    float cost = get_single_rr_cong_cost(inode, pres_fac);
+    float cost = get_single_rr_cong_cost(inode, pres_fac, inode_ptn);
 
     if (route_ctx.non_configurable_bitset.get(inode)) {
         // Access unordered_map only when the node is part of a non-configurable set
@@ -724,7 +724,7 @@ float get_rr_cong_cost(int inode, float pres_fac) {
                     continue; //Already included above
                 }
 
-                cost += get_single_rr_cong_cost(node, pres_fac);
+                cost += get_single_rr_cong_cost(node, pres_fac, device_ctx.rr_graph.get_node_ptn(RRNodeId(node)));
             }
         }
     }
@@ -1430,10 +1430,11 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
             for (iconn = 0; iconn < num_edges; iconn++) {
                 to_node = size_t(rr_graph.edge_sink_node(RRNodeId(from_node), iconn));
 
-                VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
+                int to_node_ptn = rr_graph.get_node_ptn(RRNodeId(to_node));
+                VTR_ASSERT(rr_graph.node_type_ptn(to_node_ptn) == OPIN);
 
                 //Add the OPIN to the heap according to it's congestion cost
-                cost = get_rr_cong_cost(to_node, pres_fac);
+                cost = get_rr_cong_cost(to_node, pres_fac, to_node_ptn);
                 add_node_to_heap(heap, route_ctx.rr_node_route_inf,
                                  to_node, cost, OPEN, RREdgeId::INVALID(),
                                  0., 0.);

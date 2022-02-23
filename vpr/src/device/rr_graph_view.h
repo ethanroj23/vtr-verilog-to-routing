@@ -94,6 +94,9 @@ class RRGraphView {
     inline short node_capacity(RRNodeId node) const {
         return node_storage_.node_capacity(node);
     }
+    inline short node_capacity_ptn(int ptn_id) const {
+        return node_storage_.node_capacity_ptn(ptn_id);
+    }
 
     /** @brief Get the direction of a routing resource node. This function is inlined for runtime optimization.
      * Direction::INC: wire driver is positioned at the low-coordinate end of the wire.
@@ -103,6 +106,9 @@ class RRGraphView {
      */
     inline Direction node_direction(RRNodeId node) const {
         return node_storage_.node_direction(node);
+    }
+    inline Direction node_direction_ptn(int ptn_id) const {
+        return node_storage_.node_direction_ptn(ptn_id);
     }
 
     /** @brief Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
@@ -114,15 +120,24 @@ class RRGraphView {
     inline float node_C(RRNodeId node) const {
         return node_storage_.node_C(node);
     }
+    inline float node_C_ptn(int ptn_id) const {
+        return node_storage_.node_C_ptn(ptn_id);
+    }
 
     /** @brief Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_R(RRNodeId node) const {
         return node_storage_.node_R(node);
     }
+    inline float node_R_ptn(int ptn_id) const {
+        return node_storage_.node_R_ptn(ptn_id);
+    }
 
     /** @brief Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
     inline int16_t node_rc_index(RRNodeId node) const {
         return node_storage_.node_rc_index(node);
+    }
+    inline int16_t node_rc_index_ptn(int ptn_id) const {
+        return node_storage_.node_rc_index_ptn(ptn_id);
     }
 
     /** @brief Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
@@ -130,24 +145,40 @@ class RRGraphView {
         return node_storage_.fan_in(node);
     }
 
+    int get_node_ptn(const RRNodeId& node) const {
+        return node_storage_.get_node_ptn(node);
+    }
+
     /** @brief Get the minimum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xlow(RRNodeId node) const {
         return node_storage_.node_xlow(node);
+    }
+    inline short node_xlow_ptn(int ptn_id) const {
+        return node_storage_.node_xlow_ptn(ptn_id);
     }
 
     /** @brief Get the maximum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xhigh(RRNodeId node) const {
         return node_storage_.node_xhigh(node);
     }
+    inline short node_xhigh_ptn(int ptn_id) const {
+        return node_storage_.node_xhigh_ptn(ptn_id);
+    }
 
     /** @brief Get the minimum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_ylow(RRNodeId node) const {
         return node_storage_.node_ylow(node);
     }
+    inline short node_ylow_ptn(int ptn_id) const {
+        return node_storage_.node_ylow_ptn(ptn_id);
+    }
 
     /** @brief Get the maximum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_yhigh(RRNodeId node) const {
         return node_storage_.node_yhigh(node);
+    }
+    inline short node_yhigh_ptn(int ptn_id) const {
+        return node_storage_.node_yhigh_ptn(ptn_id);
     }
 
     /** @brief Get the first out coming edge of resource node. This function is inlined for runtime optimization. */
@@ -279,6 +310,9 @@ class RRGraphView {
     inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
         return node_storage_.is_node_on_specific_side(node, side);
     }
+    inline bool is_node_on_specific_side_ptn(int ptn_id, e_side side) const {
+        return node_storage_.is_node_on_specific_side_ptn(ptn_id, side);
+    }
 
     /** @brief Get the side string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_side_string(RRNodeId node) const {
@@ -388,9 +422,9 @@ class RRGraphView {
         return rr_segments_[seg_id];
     }
 
-    void print() const {
-        node_storage_.print();
-    }
+    // void print() {
+    //     node_storage_.print();
+    // }
     /** @brief  Return the switch information that is categorized in the rr_switch_inf with a given id
      * rr_switch_inf is created to minimize memory footprint of RRGraph classs
      * While the RRG could contain millions (even much larger) of edges, there are only
