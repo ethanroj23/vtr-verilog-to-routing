@@ -278,7 +278,6 @@ class t_rr_graph_storage {
     }
 
     void add_last_node_ptn(){
-        ptn_to_first_node_.push_back(RRNodeId(node_storage_.size()));
     }
     void print() {
         return;
@@ -605,31 +604,12 @@ class t_rr_graph_storage {
     void set_node_direction_ptn(int, Direction new_direction);
 
     inline void set_node_ptn(RRNodeId id, int ptn_idx){
-        // get_node_ptn(id) = ptn_idx;
-        if (ptn_to_first_node_.size() > (size_t)ptn_idx)
-            return;
-        ptn_to_first_node_.push_back(id);
+        node_to_ptn_[id] = ptn_idx;
     }
 
     // Get the switch used for the specified edge.
     int get_node_ptn(const RRNodeId& node) const {
-        size_t inode = size_t(node);
-        int l = 0;                        // start left index at 0
-        int r = ptn_to_first_node_.size() - 1; // start right index at end of node patterns
-        while (r >= l) {
-            size_t mid = l + (r - l) / 2; //  mid is pattern id
-            size_t first = (size_t)ptn_to_first_node_[mid];
-            size_t last = (size_t)ptn_to_first_node_[mid+1];
-
-            if (inode < first) // try again with left half of patterns
-                r = mid - 1;
-            else if (last <= inode) // try again with right half of patterns
-                l = mid + 1;
-            else if (first != last) { // node has this pattern idx
-                return mid;
-            }
-        }
-        return -1; // INVALID
+        return node_to_ptn_[node];
     }
 
 
@@ -813,8 +793,6 @@ class t_rr_graph_storage {
     vtr::vector<RRNodeId, t_rr_node_ptc_data> node_ptc_;
 
 
-    // Every node has an index into this data structure. This is where the data is stored in patterns
-    std::vector<RRNodeId> ptn_to_first_node_;
     // Every node has an index into this data structure. This is where the data is stored in patterns
     std::vector<t_rr_node_data> node_ptn_;
     vtr::vector<RRNodeId, int> node_to_ptn_;
