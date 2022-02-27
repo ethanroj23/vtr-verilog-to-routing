@@ -907,16 +907,17 @@ t_bb ConnectionRouter<Heap>::add_high_fanout_route_tree_to_heap(
     //Determine which bin the target node is located in
     RRNodeId target_node_id(target_node);
 
-    int target_bin_x = grid_to_bin_x(rr_graph_->node_xlow(target_node_id), spatial_rt_lookup);
-    int target_bin_y = grid_to_bin_y(rr_graph_->node_ylow(target_node_id), spatial_rt_lookup);
+    int target_node_id_ptn = rr_graph_->get_node_ptn(target_node_id);
+    int target_bin_x = grid_to_bin_x(rr_graph_->node_xlow_ptn(target_node_id_ptn), spatial_rt_lookup);
+    int target_bin_y = grid_to_bin_y(rr_graph_->node_ylow_ptn(target_node_id_ptn), spatial_rt_lookup);
 
     int nodes_added = 0;
 
     t_bb highfanout_bb;
-    highfanout_bb.xmin = rr_graph_->node_xlow(target_node_id);
-    highfanout_bb.xmax = rr_graph_->node_xhigh(target_node_id);
-    highfanout_bb.ymin = rr_graph_->node_ylow(target_node_id);
-    highfanout_bb.ymax = rr_graph_->node_yhigh(target_node_id);
+    highfanout_bb.xmin = rr_graph_->node_xlow_ptn(target_node_id_ptn);
+    highfanout_bb.xmax = rr_graph_->node_xhigh_ptn(target_node_id_ptn);
+    highfanout_bb.ymin = rr_graph_->node_ylow_ptn(target_node_id_ptn);
+    highfanout_bb.ymax = rr_graph_->node_yhigh_ptn(target_node_id_ptn);
 
     //Add existing routing starting from the target bin.
     //If the target's bin has insufficient existing routing add from the surrounding bins
@@ -939,10 +940,11 @@ t_bb ConnectionRouter<Heap>::add_high_fanout_route_tree_to_heap(
 
                 //Update Bounding Box
                 RRNodeId node(rt_node->inode);
-                highfanout_bb.xmin = std::min<int>(highfanout_bb.xmin, rr_graph_->node_xlow(node));
-                highfanout_bb.ymin = std::min<int>(highfanout_bb.ymin, rr_graph_->node_ylow(node));
-                highfanout_bb.xmax = std::max<int>(highfanout_bb.xmax, rr_graph_->node_xhigh(node));
-                highfanout_bb.ymax = std::max<int>(highfanout_bb.ymax, rr_graph_->node_yhigh(node));
+                int node_ptn = rr_graph_->get_node_ptn(node);
+                highfanout_bb.xmin = std::min<int>(highfanout_bb.xmin, rr_graph_->node_xlow_ptn(node_ptn));
+                highfanout_bb.ymin = std::min<int>(highfanout_bb.ymin, rr_graph_->node_ylow_ptn(node_ptn));
+                highfanout_bb.xmax = std::max<int>(highfanout_bb.xmax, rr_graph_->node_xhigh_ptn(node_ptn));
+                highfanout_bb.ymax = std::max<int>(highfanout_bb.ymax, rr_graph_->node_yhigh_ptn(node_ptn));
 
                 ++nodes_added;
             }

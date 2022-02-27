@@ -243,7 +243,8 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
         tptr = route_ctx.trace[net_id].head;
         while (tptr != nullptr) {
             inode = tptr->index;
-            rr_type = rr_graph.node_type(RRNodeId(inode));
+            int inode_ptn = rr_graph.get_node_ptn(RRNodeId(inode));
+            rr_type = rr_graph.node_type_ptn(inode_ptn);
 
             if (rr_type == SINK) {
                 tptr = tptr->next; /* Skip next segment. */
@@ -252,14 +253,14 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
             }
 
             else if (rr_type == CHANX) {
-                j = rr_graph.node_ylow(RRNodeId(inode));
-                for (i = rr_graph.node_xlow(RRNodeId(inode)); i <= rr_graph.node_xhigh(RRNodeId(inode)); i++)
+                j = rr_graph.node_ylow_ptn(inode_ptn);
+                for (i = rr_graph.node_xlow_ptn(inode_ptn); i <= rr_graph.node_xhigh_ptn(inode_ptn); i++)
                     chanx_occ[i][j]++;
             }
 
             else if (rr_type == CHANY) {
-                i = rr_graph.node_xlow(RRNodeId(inode));
-                for (j = rr_graph.node_ylow(RRNodeId(inode)); j <= rr_graph.node_yhigh(RRNodeId(inode)); j++)
+                i = rr_graph.node_xlow_ptn(inode_ptn);
+                for (j = rr_graph.node_ylow_ptn(inode_ptn); j <= rr_graph.node_yhigh_ptn(inode_ptn); j++)
                     chany_occ[i][j]++;
             }
 

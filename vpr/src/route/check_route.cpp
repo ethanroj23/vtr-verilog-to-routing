@@ -326,18 +326,20 @@ static bool check_adjacent(int from_node, int to_node) {
     num_adj = 0;
 
     auto from_rr = RRNodeId(from_node);
+    int from_rr_ptn = rr_graph.get_node_ptn(from_rr);
     auto to_rr = RRNodeId(to_node);
-    from_type = rr_graph.node_type(from_rr);
-    from_xlow = rr_graph.node_xlow(from_rr);
-    from_ylow = rr_graph.node_ylow(from_rr);
-    from_xhigh = rr_graph.node_xhigh(from_rr);
-    from_yhigh = rr_graph.node_yhigh(from_rr);
+    int to_rr_ptn = rr_graph.get_node_ptn(to_rr);
+    from_type = rr_graph.node_type_ptn(from_rr_ptn);
+    from_xlow = rr_graph.node_xlow_ptn(from_rr_ptn);
+    from_ylow = rr_graph.node_ylow_ptn(from_rr_ptn);
+    from_xhigh = rr_graph.node_xhigh_ptn(from_rr_ptn);
+    from_yhigh = rr_graph.node_yhigh_ptn(from_rr_ptn);
     from_ptc = rr_graph.node_ptc_num(from_rr);
-    to_type = rr_graph.node_type(to_rr);
-    to_xlow = rr_graph.node_xlow(to_rr);
-    to_ylow = rr_graph.node_ylow(to_rr);
-    to_xhigh = rr_graph.node_xhigh(to_rr);
-    to_yhigh = rr_graph.node_yhigh(to_rr);
+    to_type = rr_graph.node_type_ptn(to_rr_ptn);
+    to_xlow = rr_graph.node_xlow_ptn(to_rr_ptn);
+    to_ylow = rr_graph.node_ylow_ptn(to_rr_ptn);
+    to_xhigh = rr_graph.node_xhigh_ptn(to_rr_ptn);
+    to_yhigh = rr_graph.node_yhigh_ptn(to_rr_ptn);
     to_ptc = rr_graph.node_ptc_num(to_rr);
 
     switch (from_type) {
@@ -395,8 +397,8 @@ static bool check_adjacent(int from_node, int to_node) {
             if (to_type == IPIN) {
                 num_adj += 1; //adjacent
             } else if (to_type == CHANX) {
-                from_xhigh = rr_graph.node_xhigh(from_rr);
-                to_xhigh = rr_graph.node_xhigh(to_rr);
+                from_xhigh = rr_graph.node_xhigh_ptn(from_rr_ptn);
+                to_xhigh = rr_graph.node_xhigh_ptn(to_rr_ptn);
                 if (from_ylow == to_ylow) {
                     /* UDSD Modification by WMF Begin */
                     /*For Fs > 3, can connect to overlapping wire segment */
@@ -428,8 +430,8 @@ static bool check_adjacent(int from_node, int to_node) {
             if (to_type == IPIN) {
                 num_adj += 1; //adjacent
             } else if (to_type == CHANY) {
-                from_yhigh = rr_graph.node_yhigh(from_rr);
-                to_yhigh = rr_graph.node_yhigh(to_rr);
+                from_yhigh = rr_graph.node_yhigh_ptn(from_rr_ptn);
+                to_yhigh = rr_graph.node_yhigh_ptn(to_rr_ptn);
                 if (from_xlow == to_xlow) {
                     /* UDSD Modification by WMF Begin */
                     if (to_yhigh == from_ylow - 1 || from_yhigh == to_ylow - 1) {

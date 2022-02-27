@@ -89,6 +89,10 @@ class RRGraphView {
     inline const char* node_type_string(RRNodeId node) const {
         return node_storage_.node_type_string(node);
     }
+    inline const char* node_type_string_ptn(int node) const {
+        return node_storage_.node_type_string_ptn(node);
+    }
+
 
     /** @brief Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
@@ -394,6 +398,10 @@ class RRGraphView {
     inline short node_pin_num(RRNodeId node) const {
         return node_storage_.node_pin_num(node);
     }
+    inline short node_pin_num_ptn(RRNodeId node, int ptn) const {
+        return node_storage_.node_pin_num_ptn(node, ptn);
+    }
+
 
     /** @brief Get the track num of a routing resource node. This is designed for routing tracks, 
      * which are CHANX and CHANY nodes. This function is inlined for runtime optimization. */

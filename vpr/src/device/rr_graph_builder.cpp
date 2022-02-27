@@ -24,10 +24,11 @@ RRSpatialLookup& RRGraphBuilder::node_lookup() {
 }
 
 void RRGraphBuilder::add_node_to_all_locs(RRNodeId node) {
-    t_rr_type node_type = node_storage_.node_type(node);
+    int node_ptn = node_storage_.get_node_ptn(node);
+    t_rr_type node_type = node_storage_.node_type_ptn(node_ptn);
     short node_ptc_num = node_storage_.node_ptc_num(node);
-    for (int ix = node_storage_.node_xlow(node); ix <= node_storage_.node_xhigh(node); ix++) {
-        for (int iy = node_storage_.node_ylow(node); iy <= node_storage_.node_yhigh(node); iy++) {
+    for (int ix = node_storage_.node_xlow_ptn(node_ptn); ix <= node_storage_.node_xhigh_ptn(node_ptn); ix++) {
+        for (int iy = node_storage_.node_ylow_ptn(node_ptn); iy <= node_storage_.node_yhigh_ptn(node_ptn); iy++) {
             switch (node_type) {
                 case SOURCE:
                 case SINK:
@@ -44,7 +45,7 @@ void RRGraphBuilder::add_node_to_all_locs(RRNodeId node) {
                 case OPIN:
                 case IPIN:
                     for (const e_side& side : SIDES) {
-                        if (node_storage_.is_node_on_specific_side(node, side)) {
+                        if (node_storage_.is_node_on_specific_side_ptn(node_ptn, side)) {
                             node_lookup_.add_node(node, ix, iy, node_type, node_ptc_num, side);
                         }
                     }

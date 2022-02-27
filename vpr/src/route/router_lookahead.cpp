@@ -6,7 +6,7 @@
 #include "globals.h"
 #include "route_timing.h"
 
-static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int* num_segs_ortho_dir_ptr);
+static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int* num_segs_ortho_dir_ptr, int inode_ptn, int target_node_ptn);
 static int round_up(float x);
 
 static std::unique_ptr<RouterLookahead> make_router_lookahead_object(e_router_lookahead router_lookahead_type) {
@@ -59,7 +59,7 @@ std::pair<float, float> ClassicLookahead::get_expected_delay_and_cong(RRNodeId n
 
     if (rr_type == CHANX || rr_type == CHANY) {
         int num_segs_ortho_dir = 0;
-        int num_segs_same_dir = get_expected_segs_to_target(node, target_node, &num_segs_ortho_dir);
+        int num_segs_same_dir = get_expected_segs_to_target(node, target_node, &num_segs_ortho_dir, node_ptn, target_node_ptn);
 
         auto cost_index = rr_graph.node_cost_index_ptn(node_ptn);
         int ortho_cost_index = device_ctx.rr_indexed_data[cost_index].ortho_cost_index;
@@ -104,7 +104,7 @@ static int round_up(float x) {
     return std::ceil(x - 0.001);
 }
 
-static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int* num_segs_ortho_dir_ptr) {
+static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int* num_segs_ortho_dir_ptr, int inode_ptn, int target_node_ptn) {
     /* Returns the number of segments the same type as inode that will be needed *
      * to reach target_node (not including inode) in each direction (the same    *
      * direction (horizontal or vertical) as inode and the orthogonal direction).*/
@@ -118,19 +118,19 @@ static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int
     int no_need_to_pass_by_clb;
     float inv_length, ortho_inv_length, ylow, yhigh, xlow, xhigh;
 
-    target_x = rr_graph.node_xlow(target_node);
-    target_y = rr_graph.node_ylow(target_node);
+    target_x = rr_graph.node_xlow_ptn(target_node_ptn);
+    target_y = rr_graph.node_ylow_ptn(target_node_ptn);
 
-    cost_index = rr_graph.node_cost_index(inode);
+    cost_index = rr_graph.node_cost_index_ptn(inode_ptn);
     inv_length = device_ctx.rr_indexed_data[cost_index].inv_length;
     ortho_cost_index = device_ctx.rr_indexed_data[cost_index].ortho_cost_index;
     ortho_inv_length = device_ctx.rr_indexed_data[RRIndexedDataId(ortho_cost_index)].inv_length;
-    rr_type = rr_graph.node_type(inode);
+    rr_type = rr_graph.node_type_ptn(inode_ptn);
 
     if (rr_type == CHANX) {
-        ylow = rr_graph.node_ylow(inode);
-        xhigh = rr_graph.node_xhigh(inode);
-        xlow = rr_graph.node_xlow(inode);
+        ylow = rr_graph.node_ylow_ptn(inode_ptn);
+        xhigh = rr_graph.node_xhigh_ptn(inode_ptn);
+        xlow = rr_graph.node_xlow_ptn(inode_ptn);
 
         /* Count vertical (orthogonal to inode) segs first. */
 
@@ -155,9 +155,9 @@ static int get_expected_segs_to_target(RRNodeId inode, RRNodeId target_node, int
             num_segs_same_dir = 0;
         }
     } else { /* inode is a CHANY */
-        ylow = rr_graph.node_ylow(inode);
-        yhigh = rr_graph.node_yhigh(inode);
-        xlow = rr_graph.node_xlow(inode);
+        ylow = rr_graph.node_ylow_ptn(inode_ptn);
+        yhigh = rr_graph.node_yhigh_ptn(inode_ptn);
+        xlow = rr_graph.node_xlow_ptn(inode_ptn);
 
         /* Count horizontal (orthogonal to inode) segs first. */
 
