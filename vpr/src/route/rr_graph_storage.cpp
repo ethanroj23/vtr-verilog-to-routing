@@ -327,10 +327,11 @@ void t_rr_graph_storage::assign_first_edges() {
     for (int i=0; i < node_storage_.size(); i++){
         RRNodeId node = RRNodeId(i);
         node_first_edge_[node] = RREdgeId(edge_number);
-        int edge_count = 0;
-        for (auto p : node_to_edge_ptns_[node]){
-            // edge_number += edge_ptn_[ptn].edge_count;
-            edge_number += p.edge_count;
+        int patterns_added = 0;
+        int first_pattern = node_to_edge_ptns_[node];
+        while (patterns_added < node_num_edge_patterns_[node]){
+            edge_number += edge_ptns_[first_pattern + patterns_added].edge_count;
+            patterns_added++;
         }
     }
     node_first_edge_[(RRNodeId)node_storage_.size()] = RREdgeId(edge_number);
@@ -432,19 +433,21 @@ void t_rr_graph_storage::init_fan_in() {
         RRNodeId node = RRNodeId(i);
         size_t dest = (size_t)node_first_dest_[node];
         int k = 0;
-        short cur_switch;
-        for (auto p : node_to_edge_ptns_[node]){
-            // const auto p = edge_ptn_[ptn];
-            cur_switch = p.switch_id;
+        int patterns_added = 0;
+        int e_ptn_idx = node_to_edge_ptns_[node]; 
+        t_switch_edge_ptn p = edge_ptns_[e_ptn_idx];
+        while (patterns_added < node_num_edge_patterns_[node]){
             while (k < p.edge_count){
                 node_fan_in_[RRNodeId(dest+edge_ptn_data_[p.ptn_idx+k])] += 1;
                 k++;
             }
             k = 0;
+            patterns_added++;
+            e_ptn_idx++;
+            p = edge_ptns_[e_ptn_idx];
         }
     }
-    
-
+   
 }
 
 size_t t_rr_graph_storage::count_rr_switches(
@@ -573,11 +576,18 @@ t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const
     int edge_count = 0;
     short cur_switch;
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
-    for (auto p : node_to_edge_ptns_[id]){
-        // const auto p = edge_ptn_[ptn];
+    int patterns_added = 0;
+    int e_ptn_idx = node_to_edge_ptns_[id]; 
+    t_switch_edge_ptn p = edge_ptns_[e_ptn_idx];
+
+    while (patterns_added < node_num_edge_patterns_[id]){
         edge_count += rr_graph.rr_switch_inf(RRSwitchId(p.switch_id)).configurable()*p.edge_count;
+        patterns_added++;
+        e_ptn_idx++;
+        p = edge_ptns_[e_ptn_idx];
     }
     return edge_count;
+
 
     // for (size_t idx = first_id; idx < last_id; ++idx) {
     //     auto switch_idx = edge_switch_[RREdgeId(idx)];
