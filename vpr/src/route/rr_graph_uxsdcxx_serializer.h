@@ -621,55 +621,54 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     // inline int get_node_loc_ptc(const t_rr_node& node) final {
     //     return rr_graph_->node_ptc_num(node.id());
     // }
-    inline int get_node_loc_xhigh(const t_rr_node& node) final {
-        return rr_graph_->node_xhigh(node.id());
-    }
-    inline int get_node_loc_xlow(const t_rr_node& node) final {
-        return rr_graph_->node_xlow(node.id());
-    }
-    inline int get_node_loc_yhigh(const t_rr_node& node) final {
-        return rr_graph_->node_yhigh(node.id());
-    }
-    inline int get_node_loc_ylow(const t_rr_node& node) final {
-        return rr_graph_->node_ylow(node.id());
-    }
+    // inline int get_node_loc_dx(const t_rr_node& node) final {
+    //     return 0;
+    // }
+	// inline int get_node_loc_dy(const t_rr_node& node) final {
+    //     return 0;
+    // }
+
+    // inline int get_node_loc_xhigh(const t_rr_node& node) final {
+    //     return rr_graph_->node_xhigh(node.id());
+    // }
 
     // Now this is based on node pattern and not node id
-    inline void set_node_loc_side(uxsd::enum_loc_side side, int& inode) final {
-        auto node = (*rr_nodes_)[inode];
-        RRNodeId node_id = node.id();
-        const auto& rr_graph = (*rr_graph_);
+    // inline void set_node_loc_side(uxsd::enum_loc_side side, int& inode) final {
+    //     auto node = (*rr_nodes_)[inode];
+    //     RRNodeId node_id = node.id();
+    //     const auto& rr_graph = (*rr_graph_);
 
-        if (uxsd::enum_loc_side::UXSD_INVALID == side) {
-            // node_loc.side is only expected on IPIN/OPIN.
-            if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
-                report_error(
-                    "inode %d is type %d, which requires a side, but no side was supplied.",
-                    inode, rr_graph.node_type(node.id()));
-            }
-        } else {
-            std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
-            for (const e_side& side_to_add : SIDES) {
-                if (sides_to_add[side_to_add]) {
-                    rr_graph_builder_->add_node_side_ptn(inode, side_to_add);
-                }
-            }
-        }
-    }
-    inline uxsd::enum_loc_side get_node_loc_side(const t_rr_node& node) final {
-        const auto& rr_graph = (*rr_graph_);
-        if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
-            std::bitset<NUM_SIDES> sides_bitset;
-            for (const e_side& side : SIDES) {
-                if (rr_graph.is_node_on_specific_side(node.id(), side)) {
-                    sides_bitset.set(side);
-                }
-            }
-            return to_uxsd_loc_side(sides_bitset);
-        } else {
-            return uxsd::enum_loc_side::UXSD_INVALID;
-        }
-    }
+    //     if (uxsd::enum_loc_side::UXSD_INVALID == side) {
+    //         // node_loc.side is only expected on IPIN/OPIN.
+    //         if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+    //             report_error(
+    //                 "inode %d is type %d, which requires a side, but no side was supplied.",
+    //                 inode, rr_graph.node_type(node.id()));
+    //         }
+    //     } else {
+    //         std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
+    //         for (const e_side& side_to_add : SIDES) {
+    //             if (sides_to_add[side_to_add]) {
+    //                 rr_graph_builder_->add_node_side_ptn(inode, side_to_add);
+    //             }
+    //         }
+    //     }
+    // }
+    // inline uxsd::enum_loc_side get_node_loc_side(const t_rr_node& node) final {
+    //     const auto& rr_graph = (*rr_graph_);
+    //     if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+    //         std::bitset<NUM_SIDES> sides_bitset;
+    //         for (const e_side& side : SIDES) {
+    //             if (rr_graph.is_node_on_specific_side(node.id(), side)) {
+    //                 sides_bitset.set(side);
+    //             }
+    //         }
+    //         return to_uxsd_loc_side(sides_bitset);
+    //     } else {
+    //         return uxsd::enum_loc_side::UXSD_INVALID;
+    //     }
+    // }
+
 
     /** Generated for complex type "node_timing":
      * <xs:complexType name="node_timing">
@@ -754,31 +753,24 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 	 * </xs:complexType>
 	*/
 	inline unsigned int get_node_ptn_capacity(const t_rr_node &node) { (void) node; return 0; }
+	inline int get_node_ptn_dx(const t_rr_node &node) { (void) node; return 0; }
+	inline int get_node_ptn_dy(const t_rr_node &node) { (void) node; return 0; }
+    inline uxsd::enum_node_type get_node_ptn_type(const t_rr_node &node){
+        const auto& rr_graph = (*rr_graph_);
+        return to_uxsd_node_type(rr_graph.node_type(node.id()));
+    }
+
 	inline uxsd::enum_node_direction get_node_ptn_direction(const t_rr_node &node) {(void) node; return uxsd::enum_node_direction::UXSD_INVALID; }
 
-	inline void set_node_ptn_direction(uxsd::enum_node_direction direction, int &ptn_idx) {
-        const auto& rr_graph = (*rr_graph_);
-        if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
-            if (rr_graph.node_type_ptn(ptn_idx) == CHANX || rr_graph.node_type_ptn(ptn_idx) == CHANY) {
-                report_error(
-                    "inode %d is type %d, which requires a direction, but no direction was supplied.",
-                    ptn_idx, rr_graph.node_type_ptn(ptn_idx));
-            }
-        } else {
-            rr_graph_builder_->set_node_direction_ptn(ptn_idx, from_uxsd_node_direction(direction));
-        }
-    }
+
 
 
 
 	inline unsigned int get_node_ptn_id(const t_rr_node &node) { (void) node; return 0; }
 
-	inline uxsd::enum_node_type get_node_ptn_type(const t_rr_node &node) {
-         (void) node;
-         return uxsd::enum_node_type::CHANX; }
-
-	inline int init_node_ptn_loc(int &ptn_idx, int xhigh, int xlow, int yhigh, int ylow) {
-         rr_graph_builder_->set_node_coordinates_ptn(ptn_idx, xlow, ylow, xhigh, yhigh);
+	
+	inline int init_node_ptn_loc(int &ptn_idx, int dx, int dy) {
+        //  rr_graph_builder_->set_node_coordinates_ptn(ptn_idx, xlow, ylow, xhigh, yhigh);
          return ptn_idx; 
          }
 
@@ -852,13 +844,14 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 	inline void preallocate_rr_node_patterns_node_ptn(int &ctx, size_t size) {
          rr_graph_builder_->reserve_nodes(size);
          }
-	inline int add_rr_node_patterns_node_ptn(int &ctx, unsigned int capacity, unsigned int id, uxsd::enum_node_type type) {
+
+	inline int add_rr_node_patterns_node_ptn(int &ctx, unsigned int capacity, int dx, int dy, unsigned int id, uxsd::enum_node_type type) {
         (void) ctx;
         (void) capacity;
-        (void) type;
         rr_nodes_->make_room_for_node_ptn(id);
         rr_graph_builder_->set_node_type_ptn(id, from_uxsd_node_type(type));
         rr_graph_builder_->set_node_capacity_ptn(id, capacity);
+        rr_graph_builder_->set_node_dx_dy_ptn(id, dx, dy);
         switch (type) {
                     case uxsd::enum_node_type::CHANX:
                         break;
@@ -909,6 +902,81 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         (void) ctx;
          return 0; 
          }
+    inline unsigned int get_node_xlow(const t_rr_node &ctx) {
+        (void) ctx;
+        return 0;
+    }
+	inline unsigned int get_node_ylow(const t_rr_node &ctx) {
+        (void) ctx;
+        return 0;
+    }
+
+    inline void set_node_direction(uxsd::enum_node_direction direction, int& inode) final {
+        const auto& rr_graph = (*rr_graph_);
+        auto node = (*rr_nodes_)[inode];
+        RRNodeId node_id = node.id();
+
+        if (direction == uxsd::enum_node_direction::UXSD_INVALID) {
+            if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+                report_error(
+                    "inode %d is type %d, which requires a direction, but no direction was supplied.",
+                    inode, rr_graph.node_type(node.id()));
+            }
+        } else {
+            rr_graph_builder_->set_node_direction(node_id, from_uxsd_node_direction(direction));
+        }
+    }
+
+    inline uxsd::enum_node_direction get_node_direction(const t_rr_node& node) final {
+        const auto& rr_graph = (*rr_graph_);
+        if (rr_graph.node_type(node.id()) == CHANX || rr_graph.node_type(node.id()) == CHANY) {
+            return to_uxsd_node_direction(rr_graph.node_direction(node.id()));
+        } else {
+            return uxsd::enum_node_direction::UXSD_INVALID;
+        }
+    }
+
+    inline uxsd::enum_loc_side get_node_side(const t_rr_node& node) final {
+        const auto& rr_graph = (*rr_graph_);
+        if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+            std::bitset<NUM_SIDES> sides_bitset;
+            for (const e_side& side : SIDES) {
+                if (rr_graph.is_node_on_specific_side(node.id(), side)) {
+                    sides_bitset.set(side);
+                }
+            }
+            return to_uxsd_loc_side(sides_bitset);
+        } else {
+            return uxsd::enum_loc_side::UXSD_INVALID;
+        }
+    }
+
+    inline void set_node_side(uxsd::enum_loc_side side, int& inode) final {
+        auto node = (*rr_nodes_)[inode];
+        RRNodeId node_id = node.id();
+        const auto& rr_graph = (*rr_graph_);
+
+        if (uxsd::enum_loc_side::UXSD_INVALID == side) {
+            // node_loc.side is only expected on IPIN/OPIN.
+            if (rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN) {
+                report_error(
+                    "inode %d is type %d, which requires a side, but no side was supplied.",
+                    inode, rr_graph.node_type(node.id()));
+            }
+        } else {
+            std::bitset<NUM_SIDES> sides_to_add = from_uxsd_loc_side(side);
+            for (const e_side& side_to_add : SIDES) {
+                if (sides_to_add[side_to_add]) {
+                    rr_graph_builder_->add_node_side((RRNodeId)inode, side_to_add);
+                }
+            }
+        }
+    }
+
+	inline uxsd::enum_node_type get_node_type(const t_rr_node& node) final {
+        const auto& rr_graph = (*rr_graph_);
+        return to_uxsd_node_type(rr_graph.node_type(node.id()));
+    }
 
 
     /* --- End New functions for nodes_all_attr --- */
@@ -943,7 +1011,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_graph_builder_->reserve_nodes(size);
     }
 
-    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int id, int ptc, unsigned int ptn_idx) final {
+    inline int add_rr_nodes_node(void*& /*ctx*/, unsigned int id, int ptc, unsigned int ptn_idx, uxsd::enum_node_type type, unsigned int xlow, unsigned int ylow) final {
         // make_room_in_vector will not allocate if preallocate_rr_nodes_node
         // was invoked, but on formats that lack size on read,
         // make_room_in_vector will use an allocation pattern that is
@@ -952,6 +1020,10 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         rr_nodes_->make_room_for_node(RRNodeId(id));
         auto node = (*rr_nodes_)[id];
         RRNodeId node_id = node.id();
+
+        rr_graph_builder_->set_node_type(RRNodeId(id), from_uxsd_node_type(type));
+        rr_graph_builder_->set_node_x_y(RRNodeId(id), xlow, ylow);
+
 
         rr_graph_builder_->set_node_ptn(node_id, ptn_idx);
         rr_graph_builder_->set_node_ptc_num(node_id, ptc);

@@ -44,10 +44,16 @@ class RRGraphBuilder {
     inline void set_node_type(RRNodeId id, t_rr_type type) {
         node_storage_.set_node_type(id, type);
     }
-
     inline void set_node_type_ptn(int id, t_rr_type type) {
         node_storage_.set_node_type_ptn(id, type);
     }
+    inline void set_node_dx_dy_ptn(int id, int dx, int dy) {
+        node_storage_.set_node_dx_dy_ptn(id, dx, dy);
+    }
+    inline void set_node_x_y(RRNodeId id, int x, int y) {
+        node_storage_.set_node_x_y(id, x, y);
+    }
+
 
     /** @brief Set the node ptn index of a node with a given valid id */
     inline void set_node_ptn(RRNodeId id, int ptn_idx) {
@@ -148,9 +154,7 @@ class RRGraphBuilder {
     inline void set_node_direction(RRNodeId id, Direction new_direction) {
         node_storage_.set_node_direction(id, new_direction);
     }
-    inline void set_node_direction_ptn(int id, Direction new_direction) {
-        node_storage_.set_node_direction_ptn(id, new_direction);
-    }
+
 
     /** @brief Reserve the lists of edges to be memory efficient.
      * This function is mainly used to reserve memory space inside RRGraph,
@@ -196,9 +200,6 @@ class RRGraphBuilder {
         node_storage_.add_node_side(id, new_side);
     }
 
-    inline void add_node_side_ptn(int ptn_id, e_side new_side) {
-        node_storage_.add_node_side_ptn(ptn_id, new_side);
-    }
 
     /** @brief It maps arch_switch_inf indicies to rr_switch_inf indicies. */
     inline void remap_rr_node_switch_indices(const t_arch_switch_fanin& switch_fanin) {

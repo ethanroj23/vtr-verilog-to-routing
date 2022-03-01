@@ -1431,7 +1431,7 @@ void reserve_locally_used_opins(HeapInterface* heap, float pres_fac, float acc_f
                 to_node = size_t(rr_graph.edge_sink_node(RRNodeId(from_node), iconn));
 
                 int to_node_ptn = rr_graph.get_node_ptn(RRNodeId(to_node));
-                VTR_ASSERT(rr_graph.node_type_ptn(to_node_ptn) == OPIN);
+                VTR_ASSERT(rr_graph.node_type(RRNodeId(to_node)) == OPIN);
 
                 //Add the OPIN to the heap according to it's congestion cost
                 cost = get_rr_cong_cost(to_node, pres_fac, to_node_ptn);

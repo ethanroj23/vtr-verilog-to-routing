@@ -207,7 +207,7 @@ void check_rr_graph(const t_graph_type graph_type,
     for (const RRNodeId& rr_node : device_ctx.rr_graph.nodes()) {
         size_t inode = (size_t)rr_node;
         int rr_node_ptn = rr_graph.get_node_ptn(rr_node);
-        t_rr_type rr_type = rr_graph.node_type_ptn(rr_node_ptn);
+        t_rr_type rr_type = rr_graph.node_type(rr_node);
 
         if (rr_type != SOURCE) {
             if (total_edges_to_node[inode] < 1 && !rr_node_is_global_clb_ipin(rr_node)) {
@@ -217,7 +217,7 @@ void check_rr_graph(const t_graph_type graph_type,
                  */
                 bool is_chain = false;
                 if (rr_type == IPIN) {
-                    t_physical_tile_type_ptr type = device_ctx.grid[rr_graph.node_xlow_ptn(rr_node_ptn)][rr_graph.node_ylow_ptn(rr_node_ptn)].type;
+                    t_physical_tile_type_ptr type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
                     for (const t_fc_specification& fc_spec : types[type->index].fc_specs) {
                         if (fc_spec.fc_value == 0 && fc_spec.seg_index == 0) {
                             is_chain = true;
@@ -227,36 +227,36 @@ void check_rr_graph(const t_graph_type graph_type,
 
                 const auto& node = device_ctx.rr_nodes[inode];
 
-                bool is_fringe = ((rr_graph.node_xlow_ptn(rr_node_ptn) == 1)
-                                  || (rr_graph.node_ylow_ptn(rr_node_ptn) == 1)
-                                  || (rr_graph.node_xhigh_ptn(rr_node_ptn) == int(grid.width()) - 2)
-                                  || (rr_graph.node_yhigh_ptn(rr_node_ptn) == int(grid.height()) - 2));
-                bool is_wire = (rr_graph.node_type_ptn(rr_node_ptn) == CHANX
-                                || rr_graph.node_type_ptn(rr_node_ptn) == CHANY);
+                bool is_fringe = ((rr_graph.node_xlow(rr_node) == 1)
+                                  || (rr_graph.node_ylow(rr_node) == 1)
+                                  || (rr_graph.node_xhigh_ptn(rr_node, rr_node_ptn) == int(grid.width()) - 2)
+                                  || (rr_graph.node_yhigh_ptn(rr_node, rr_node_ptn) == int(grid.height()) - 2));
+                bool is_wire = (rr_graph.node_type(rr_node) == CHANX
+                                || rr_graph.node_type(rr_node) == CHANY);
 
                 if (!is_chain && !is_fringe && !is_wire) {
-                    if (rr_graph.node_type_ptn(rr_node_ptn) == IPIN || rr_graph.node_type_ptn(rr_node_ptn) == OPIN) {
+                    if (rr_graph.node_type(rr_node) == IPIN || rr_graph.node_type(rr_node) == OPIN) {
                         if (has_adjacent_channel(node, device_ctx.grid)) {
-                            auto block_type = device_ctx.grid[rr_graph.node_xlow_ptn(rr_node_ptn)][rr_graph.node_ylow_ptn(rr_node_ptn)].type;
-                            std::string pin_name = block_type_pin_index_to_name(block_type, rr_graph.node_pin_num_ptn(rr_node, rr_node_ptn));
+                            auto block_type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+                            std::string pin_name = block_type_pin_index_to_name(block_type, rr_graph.node_pin_num(rr_node));
                             /* Print error messages for all the sides that a node may appear */
                             for (const e_side& node_side : SIDES) {
                                 if (!rr_graph.is_node_on_specific_side(rr_node, node_side)) {
                                     continue;
                                 }
                                 VTR_LOG_ERROR("in check_rr_graph: node %d (%s) at (%d,%d) block=%s side=%s pin=%s has no fanin.\n",
-                                              inode, rr_graph.node_type_string_ptn(rr_node_ptn), rr_graph.node_xlow_ptn(rr_node_ptn), rr_graph.node_ylow_ptn(rr_node_ptn), block_type->name, SIDE_STRING[node_side], pin_name.c_str());
+                                              inode, rr_graph.node_type_string(rr_node), rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node), block_type->name, SIDE_STRING[node_side], pin_name.c_str());
                             }
                         }
                     } else {
                         VTR_LOG_ERROR("in check_rr_graph: node %d (%s) has no fanin.\n",
-                                      inode, rr_graph.node_type_string_ptn(rr_node_ptn));
+                                      inode, rr_graph.node_type_string(rr_node));
                     }
                 } else if (!is_chain && !is_fringe_warning_sent) {
                     VTR_LOG_WARN(
                         "in check_rr_graph: fringe node %d %s at (%d,%d) has no fanin.\n"
                         "\t This is possible on a fringe node based on low Fc_out, N, and certain lengths.\n",
-                        inode, rr_graph.node_type_string_ptn(rr_node_ptn), rr_graph.node_xlow_ptn(rr_node_ptn), rr_graph.node_ylow_ptn(rr_node_ptn));
+                        inode, rr_graph.node_type_string(rr_node), rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node));
                     is_fringe_warning_sent = true;
                 }
             }
@@ -278,13 +278,12 @@ static bool rr_node_is_global_clb_ipin(RRNodeId inode) {
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    int inode_ptn = rr_graph.get_node_ptn(inode);
-    type = device_ctx.grid[rr_graph.node_xlow_ptn(inode_ptn)][rr_graph.node_ylow_ptn(inode_ptn)].type;
+    type = device_ctx.grid[rr_graph.node_xlow(inode)][rr_graph.node_ylow(inode)].type;
 
-    if (rr_graph.node_type_ptn(inode_ptn) != IPIN)
+    if (rr_graph.node_type(inode) != IPIN)
         return (false);
 
-    ipin = rr_graph.node_pin_num_ptn(inode, inode_ptn);
+    ipin = rr_graph.node_pin_num(inode);
 
     return type->is_ignored_pin[ipin];
 }
@@ -303,11 +302,11 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     const auto& rr_graph = device_ctx.rr_graph;
     RRNodeId rr_node = RRNodeId(inode);
     int rr_node_ptn = rr_graph.get_node_ptn(rr_node);
-    rr_type = rr_graph.node_type_ptn(rr_node_ptn);
-    xlow = rr_graph.node_xlow_ptn(rr_node_ptn);
-    xhigh = rr_graph.node_xhigh_ptn(rr_node_ptn);
-    ylow = rr_graph.node_ylow_ptn(rr_node_ptn);
-    yhigh = rr_graph.node_yhigh_ptn(rr_node_ptn);
+    rr_type = rr_graph.node_type(rr_node);
+    xlow = rr_graph.node_xlow(rr_node);
+    xhigh = rr_graph.node_xhigh_ptn(rr_node, rr_node_ptn);
+    ylow = rr_graph.node_ylow(rr_node);
+    yhigh = rr_graph.node_yhigh_ptn(rr_node, rr_node_ptn);
     ptc_num = rr_graph.node_ptc_num(rr_node);
     capacity = rr_graph.node_capacity_ptn(rr_node_ptn);
     cost_index = rr_graph.node_cost_index_ptn(rr_node_ptn);

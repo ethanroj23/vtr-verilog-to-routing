@@ -79,19 +79,16 @@ class RRGraphView {
     inline t_rr_type node_type(RRNodeId node) const {
         return node_storage_.node_type(node);
     }
-
-    /** @brief Get the type of a routing resource node. This function is inlined for runtime optimization. */
     inline t_rr_type node_type_ptn(int node) const {
         return node_storage_.node_type_ptn(node);
     }
+
 
     /** @brief Get the type string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
         return node_storage_.node_type_string(node);
     }
-    inline const char* node_type_string_ptn(int node) const {
-        return node_storage_.node_type_string_ptn(node);
-    }
+
 
 
     /** @brief Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
@@ -111,9 +108,7 @@ class RRGraphView {
     inline Direction node_direction(RRNodeId node) const {
         return node_storage_.node_direction(node);
     }
-    inline Direction node_direction_ptn(int ptn_id) const {
-        return node_storage_.node_direction_ptn(ptn_id);
-    }
+
 
     /** @brief Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
     inline const std::string& node_direction_string(RRNodeId node) const {
@@ -157,32 +152,27 @@ class RRGraphView {
     inline short node_xlow(RRNodeId node) const {
         return node_storage_.node_xlow(node);
     }
-    inline short node_xlow_ptn(int ptn_id) const {
-        return node_storage_.node_xlow_ptn(ptn_id);
-    }
 
     /** @brief Get the maximum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xhigh(RRNodeId node) const {
         return node_storage_.node_xhigh(node);
     }
-    inline short node_xhigh_ptn(int ptn_id) const {
-        return node_storage_.node_xhigh_ptn(ptn_id);
+    inline short node_xhigh_ptn(RRNodeId node, int ptn_id) const {
+        return node_storage_.node_xhigh_ptn(node, ptn_id);
     }
 
     /** @brief Get the minimum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_ylow(RRNodeId node) const {
         return node_storage_.node_ylow(node);
     }
-    inline short node_ylow_ptn(int ptn_id) const {
-        return node_storage_.node_ylow_ptn(ptn_id);
-    }
+
 
     /** @brief Get the maximum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_yhigh(RRNodeId node) const {
         return node_storage_.node_yhigh(node);
     }
-    inline short node_yhigh_ptn(int ptn_id) const {
-        return node_storage_.node_yhigh_ptn(ptn_id);
+    inline short node_yhigh_ptn(RRNodeId node, int ptn_id) const {
+        return node_storage_.node_yhigh_ptn(node, ptn_id);
     }
 
     /** @brief Get the first out coming edge of resource node. This function is inlined for runtime optimization. */
@@ -314,9 +304,7 @@ class RRGraphView {
     inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
         return node_storage_.is_node_on_specific_side(node, side);
     }
-    inline bool is_node_on_specific_side_ptn(int ptn_id, e_side side) const {
-        return node_storage_.is_node_on_specific_side_ptn(ptn_id, side);
-    }
+
 
     /** @brief Get the side string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_side_string(RRNodeId node) const {
@@ -398,9 +386,7 @@ class RRGraphView {
     inline short node_pin_num(RRNodeId node) const {
         return node_storage_.node_pin_num(node);
     }
-    inline short node_pin_num_ptn(RRNodeId node, int ptn) const {
-        return node_storage_.node_pin_num_ptn(node, ptn);
-    }
+
 
 
     /** @brief Get the track num of a routing resource node. This is designed for routing tracks, 

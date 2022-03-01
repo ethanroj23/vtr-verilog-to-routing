@@ -76,6 +76,40 @@ struct alignas(16) t_rr_node_data {
     uint16_t capacity_ = 0;
 };
 
+struct t_rr_node_data_ptn {
+    int16_t cost_index_ = -1;
+    int16_t rc_index_ = -1;
+
+    int16_t dx_ = -1;
+    int16_t dy_ = -1;
+
+    /* The character is a hex number which is a 4-bit truth table for node sides
+     * The 4-bits in serial represent 4 sides on which a node could appear 
+     * It follows a fixed sequence, which is (LEFT, BOTTOM, RIGHT, TOP) whose indices are (3, 2, 1, 0) 
+     *   - When a node appears on a given side, it is set to "1"
+     *   - When a node does not appear on a given side, it is set to "0"
+     * For example,
+     *   - '1' means '0001' in hex number, which means the node appears on TOP 
+     *   - 'A' means '1100' in hex number, which means the node appears on LEFT and BOTTOM sides, 
+     */
+
+    uint16_t capacity_ = 0;
+};
+
+struct alignas(8) t_rr_node_core {
+    int16_t ptn_ = -1;
+    int16_t xlow_ = -1;
+    int16_t ylow_ = -1;
+    t_rr_type type_ = NUM_RR_TYPES;
+
+    union {
+        Direction direction;       //Valid only for CHANX/CHANY
+        unsigned char sides = 0x0; //Valid only for IPINs/OPINs
+    } dir_side_;
+
+
+};
+
 // t_rr_node_data is a key data structure, so fail at compile time if the
 // structure gets bigger than expected (16 bytes right now). Developers
 // should only expand it after careful consideration and measurement.
@@ -160,13 +194,12 @@ class t_rr_graph_storage {
 
     t_rr_type node_type(RRNodeId id) const {
         // return node_ptn_[node_to_ptn_[id]].type_;
-        return node_ptn_[get_node_ptn(id)].type_;
+        return node_to_ptn_[id].type_;
     }
-    t_rr_type node_type_ptn(int ptn_id) const {
-        return node_ptn_[ptn_id].type_;
+    t_rr_type node_type_ptn(int id) const {
+        return node_ptn_type_[id];
     }
     const char* node_type_string(RRNodeId id) const;
-    const char* node_type_string_ptn(int id) const;
 
     int16_t node_rc_index(RRNodeId id) const {
         return node_ptn_[get_node_ptn(id)].rc_index_;
@@ -180,28 +213,24 @@ class t_rr_graph_storage {
     float node_C_ptn(int id) const;
 
     short node_xlow(RRNodeId id) const {
-        return node_ptn_[get_node_ptn(id)].xlow_;
+        return node_to_ptn_[id].xlow_;
     }
-    short node_xlow_ptn(int id) const {
-        return node_ptn_[id].xlow_;
-    }
+
     short node_ylow(RRNodeId id) const {
-        return node_ptn_[get_node_ptn(id)].ylow_;
+        return node_to_ptn_[id].ylow_;
     }
-    short node_ylow_ptn(int id) const {
-        return node_ptn_[id].ylow_;
-    }
+
     short node_xhigh(RRNodeId id) const {
-        return node_ptn_[get_node_ptn(id)].xhigh_;
+        return node_to_ptn_[id].xlow_ + node_ptn_[get_node_ptn(id)].dx_;
     }
-    short node_xhigh_ptn(int id) const {
-        return node_ptn_[id].xhigh_;
+    short node_xhigh_ptn(RRNodeId node, int id) const {
+        return node_to_ptn_[node].xlow_ + node_ptn_[id].dx_;
     }
     short node_yhigh(RRNodeId id) const {
-        return node_ptn_[get_node_ptn(id)].yhigh_;
+        return node_to_ptn_[id].ylow_ + node_ptn_[get_node_ptn(id)].dy_;
     }
-    short node_yhigh_ptn(int id) const {
-        return node_ptn_[id].yhigh_;
+    short node_yhigh_ptn(RRNodeId node, int id) const {
+        return node_to_ptn_[node].ylow_ + node_ptn_[id].dy_;
     }
 
     short node_capacity(RRNodeId id) const {
@@ -235,16 +264,7 @@ class t_rr_graph_storage {
     // }
 
     Direction node_direction(RRNodeId id) const {
-        auto& node_data = node_ptn_[get_node_ptn(id)];
-        if (node_data.type_ != CHANX && node_data.type_ != CHANY) {
-            VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "Attempted to access RR node 'direction' for non-channel type '%s'",
-                            rr_node_typename[node_data.type_]);
-        }
-        return node_data.dir_side_.direction;
-    }
-    Direction node_direction_ptn(int id) const {
-        auto& node_data = node_ptn_[id];
+        auto& node_data = node_to_ptn_[id];
         if (node_data.type_ != CHANX && node_data.type_ != CHANY) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                             "Attempted to access RR node 'direction' for non-channel type '%s'",
@@ -255,18 +275,7 @@ class t_rr_graph_storage {
 
     /* Find if the given node appears on a specific side */
     bool is_node_on_specific_side(RRNodeId id, e_side side) const {
-        auto& node_data = node_ptn_[get_node_ptn(id)];
-        if (node_data.type_ != IPIN && node_data.type_ != OPIN) {
-            VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
-                            rr_node_typename[node_data.type_]);
-        }
-        // Return a vector showing only the sides that the node appears
-        std::bitset<NUM_SIDES> side_tt = node_data.dir_side_.sides;
-        return side_tt[size_t(side)];
-    }
-    bool is_node_on_specific_side_ptn(int id, e_side side) const {
-        auto& node_data = node_ptn_[id];
+        auto& node_data = node_to_ptn_[id];
         if (node_data.type_ != IPIN && node_data.type_ != OPIN) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                             "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'",
@@ -326,11 +335,8 @@ class t_rr_graph_storage {
     /* PTC get methods */
     short node_ptc_num(RRNodeId id) const;
     short node_pin_num(RRNodeId id) const;   //Same as ptc_num() but checks that type() is consistent
-    short node_pin_num_ptn(RRNodeId id, int ptn) const;   //Same as ptc_num() but checks that type() is consistent
     short node_track_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
-    short node_track_num_ptn(RRNodeId id, int ptn) const; //Same as ptc_num() but checks that type() is consistent
     short node_class_num(RRNodeId id) const; //Same as ptc_num() but checks that type() is consistent
-    short node_class_num_ptn(RRNodeId id, int ptn) const; //Same as ptc_num() but checks that type() is consistent
 
     /* Retrieve fan_in for RRNodeId, init_fan_in must have been called first. */
     t_edge_size fan_in(RRNodeId id) const {
@@ -507,6 +513,7 @@ class t_rr_graph_storage {
 
     void make_room_for_node_ptn(int elem_position) {
         make_room_in_vector(&node_ptn_, size_t(elem_position));
+        make_room_in_vector(&node_ptn_type_, size_t(elem_position));
     }
 
     // Reserve storage for RR nodes.
@@ -590,26 +597,28 @@ class t_rr_graph_storage {
     void set_node_class_num(RRNodeId id, short); //Same as set_ptc_num() by checks type() is consistent
 
     void set_node_type(RRNodeId id, t_rr_type new_type);
+    void set_node_type_ptn(int id, t_rr_type new_type);
     void set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2);
     void set_node_cost_index(RRNodeId, RRIndexedDataId new_cost_index);
     void set_node_rc_index(RRNodeId, NodeRCIndex new_rc_index);
     void set_node_capacity(RRNodeId, short new_capacity);
     void set_node_direction(RRNodeId, Direction new_direction);
 
-    void set_node_type_ptn(int id, t_rr_type new_type);
     void set_node_coordinates_ptn(int id, short x1, short y1, short x2, short y2);
     void set_node_cost_index_ptn(int, RRIndexedDataId new_cost_index);
     void set_node_rc_index_ptn(int, NodeRCIndex new_rc_index);
     void set_node_capacity_ptn(int, short new_capacity);
-    void set_node_direction_ptn(int, Direction new_direction);
+    void set_node_dx_dy_ptn(int id, int dx, int dy);
+    void set_node_x_y(RRNodeId id, int x, int y);
+
 
     inline void set_node_ptn(RRNodeId id, int ptn_idx){
-        node_to_ptn_[id] = ptn_idx;
+        node_to_ptn_[id].ptn_ = ptn_idx;
     }
 
     // Get the switch used for the specified edge.
     int get_node_ptn(const RRNodeId& node) const {
-        return node_to_ptn_[node];
+        return node_to_ptn_[node].ptn_;
     }
 
 
@@ -619,7 +628,6 @@ class t_rr_graph_storage {
      * This is the function to use when you just add a new side WITHOUT reseting side attributes
      */
     void add_node_side(RRNodeId, e_side new_side);
-    void add_node_side_ptn(int, e_side new_side);
 
     /****************
      * Edge methods *
@@ -794,8 +802,9 @@ class t_rr_graph_storage {
 
 
     // Every node has an index into this data structure. This is where the data is stored in patterns
-    std::vector<t_rr_node_data> node_ptn_;
-    vtr::vector<RRNodeId, int> node_to_ptn_;
+    std::vector<t_rr_node_data_ptn> node_ptn_;
+    std::vector<t_rr_type> node_ptn_type_;
+    vtr::vector<RRNodeId, t_rr_node_core> node_to_ptn_;
 
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is

@@ -4,9 +4,9 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
 # Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
-# md5sum of input file: 632b2a08c17be3a8e70c16bb9a97b532
+# md5sum of input file: a1d9fe2b5c14910a4f175b8247ba8342
 
-@0xb5a351a1c7c8d674;
+@0x9b282f0a9b00a3f0;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -160,14 +160,6 @@ struct GridLocs {
 	gridLocs @0 :List(GridLoc);
 }
 
-struct NodeLoc {
-	side @0 :LocSide;
-	xhigh @1 :Int32;
-	xlow @2 :Int32;
-	yhigh @3 :Int32;
-	ylow @4 :Int32;
-}
-
 struct NodeTiming {
 	c @0 :Float32;
 	r @1 :Float32;
@@ -188,10 +180,10 @@ struct Metadata {
 
 struct NodePtn {
 	capacity @0 :UInt32;
-	direction @1 :NodeDirection;
-	id @2 :UInt32;
-	type @3 :NodeType;
-	loc @4 :NodeLoc;
+	dx @1 :Int32;
+	dy @2 :Int32;
+	id @3 :UInt32;
+	type @4 :NodeType;
 	timing @5 :NodeTiming;
 	segment @6 :NodeSegment;
 	metadata @7 :Metadata;
@@ -202,9 +194,14 @@ struct RrNodePatterns {
 }
 
 struct Node {
-	id @0 :UInt32;
-	ptc @1 :Int32;
-	ptnIdx @2 :UInt32;
+	direction @0 :NodeDirection;
+	id @1 :UInt32;
+	ptc @2 :Int32;
+	ptnIdx @3 :UInt32;
+	side @4 :LocSide;
+	type @5 :NodeType;
+	xlow @6 :UInt32;
+	ylow @7 :UInt32;
 }
 
 struct RrNodes {

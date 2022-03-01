@@ -257,7 +257,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             }
 
             /*Check node types if match rr graph*/
-            if (tokens[2] != rr_graph.node_type_string_ptn(rr_node_ptn)) {
+            if (tokens[2] != rr_graph.node_type_string(RRNodeId(inode))) {
                 vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                           "Node %d has a type that does not match the RR graph", inode);
             }
@@ -267,7 +267,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
 
             if (tokens[4] == "to") {
                 format_coordinates(x2, y2, tokens[5], inet, filename, lineno);
-                if (rr_graph.node_xlow_ptn(rr_node_ptn) != x || rr_graph.node_xhigh_ptn(rr_node_ptn) != x2 || rr_graph.node_yhigh_ptn(rr_node_ptn) != y2 || rr_graph.node_ylow_ptn(rr_node_ptn) != y) {
+                if (rr_graph.node_xlow(rr_node) != x || rr_graph.node_xhigh_ptn(rr_node, rr_node_ptn) != x2 || rr_graph.node_yhigh_ptn(rr_node, rr_node_ptn) != y2 || rr_graph.node_ylow(rr_node) != y) {
                     vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                               "The coordinates of node %d does not match the rr graph", inode);
                 }
@@ -280,7 +280,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
                 }
                 prev_node = rr_node;
             } else {
-                if (rr_graph.node_xlow_ptn(rr_node_ptn) != x || rr_graph.node_xhigh_ptn(rr_node_ptn) != x || rr_graph.node_yhigh_ptn(rr_node_ptn) != y || rr_graph.node_ylow_ptn(rr_node_ptn) != y) {
+                if (rr_graph.node_xlow(rr_node) != x || rr_graph.node_xhigh_ptn(rr_node, rr_node_ptn) != x || rr_graph.node_yhigh_ptn(rr_node, rr_node_ptn) != y || rr_graph.node_ylow(rr_node) != y) {
                     vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                               "The coordinates of node %d does not match the rr graph", inode);
                 }
@@ -317,7 +317,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             if (tokens[6 + offset] != "Switch:") {
                 /*This is an opin or ipin, process its pin nums*/
                 if (!is_io_type(device_ctx.grid[x][y].type) && (tokens[2] == "IPIN" || tokens[2] == "OPIN")) {
-                    int pin_num = rr_graph.node_pin_num_ptn(RRNodeId(inode), rr_node_ptn);
+                    int pin_num = rr_graph.node_pin_num(RRNodeId(inode));
 
                     auto type = device_ctx.grid[x][y].type;
                     int height_offset = device_ctx.grid[x][y].height_offset;

@@ -435,7 +435,7 @@ static float evaluate_node_cost(const float prev_path_cost, const float bend_cos
 
     if (bend_cost != 0.) {
         t_rr_type from_type = rr_graph.node_type(RRNodeId(from_node));
-        t_rr_type to_type = rr_graph.node_type_ptn(to_node_ptn);
+        t_rr_type to_type = rr_graph.node_type((RRNodeId)to_node);
         if ((from_type == CHANX && to_type == CHANY)
             || (from_type == CHANY && to_type == CHANX))
             tot_cost += bend_cost;

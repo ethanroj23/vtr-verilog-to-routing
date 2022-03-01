@@ -260,10 +260,8 @@
 
 
   <xs:complexType name="node_loc">
-    <xs:attribute name="xlow" type="xs:int" use="required"/>
-    <xs:attribute name="ylow" type="xs:int" use="required"/>
-    <xs:attribute name="xhigh" type="xs:int" use="required"/>
-    <xs:attribute name="yhigh" type="xs:int" use="required"/>
+    <xs:attribute name="dx" type="xs:int" use="required"/>
+    <xs:attribute name="dy" type="xs:int" use="required"/>
     <xs:attribute name="side" type="loc_side"/>
     <!-- <xs:attribute name="ptc" type="xs:int" use="required"/> -->
   </xs:complexType>
@@ -279,20 +277,25 @@
 
   <xs:complexType name="node_ptn">  
     <xs:all>
-      <xs:element name="loc" type="node_loc"/>
       <xs:element name="timing" type="node_timing" minOccurs="0"/>
       <xs:element name="segment" type="node_segment" minOccurs="0"/>
       <xs:element name="metadata" type="metadata" minOccurs="0"/>
     </xs:all>
     <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
-    <xs:attribute name="type" type="node_type" use="required"/>
-    <xs:attribute name="direction" type="node_direction"/>
+    <xs:attribute name="dx" type="xs:int" use="required"/>
+    <xs:attribute name="dy" type="xs:int" use="required"/>
     <xs:attribute name="capacity" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="type" type="node_type" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="node">
     <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
     <xs:attribute name="ptn_idx" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="xlow" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="ylow" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="type" type="node_type" use="required"/>
+    <xs:attribute name="direction" type="node_direction"/>
+    <xs:attribute name="side" type="loc_side"/>
     <xs:attribute name="ptc" type="xs:int" use="required"/>
   </xs:complexType>  
 

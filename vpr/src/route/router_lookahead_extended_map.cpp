@@ -178,17 +178,17 @@ std::pair<float, float> ExtendedMapLookahead::get_expected_delay_and_cong(RRNode
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    int from_x = rr_graph.node_xlow_ptn(from_node_ptn);
-    int from_y = rr_graph.node_ylow_ptn(from_node_ptn);
+    int from_x = rr_graph.node_xlow(from_node);
+    int from_y = rr_graph.node_ylow(from_node);
 
-    int to_x = rr_graph.node_xlow_ptn(to_node_ptn);
-    int to_y = rr_graph.node_ylow_ptn(to_node_ptn);
+    int to_x = rr_graph.node_xlow(to_node);
+    int to_y = rr_graph.node_ylow(to_node);
 
     int dx, dy;
     dx = to_x - from_x;
     dy = to_y - from_y;
 
-    e_rr_type from_type = rr_graph.node_type_ptn(from_node_ptn);
+    e_rr_type from_type = rr_graph.node_type(from_node);
     if (from_type == SOURCE || from_type == OPIN) {
         return this->get_src_opin_cost(from_node, dx, dy, params);
     } else if (from_type == IPIN) {
@@ -576,7 +576,7 @@ float ExtendedMapLookahead::get_expected_cost(
     auto& device_ctx = g_vpr_ctx.device();
     const auto& rr_graph = device_ctx.rr_graph;
 
-    t_rr_type rr_type = rr_graph.node_type_ptn(current_node_ptn);
+    t_rr_type rr_type = rr_graph.node_type(current_node);
 
     if (rr_type == CHANX || rr_type == CHANY || rr_type == SOURCE || rr_type == OPIN) {
         float delay_cost, cong_cost;

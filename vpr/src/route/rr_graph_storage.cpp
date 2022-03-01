@@ -568,9 +568,7 @@ bool t_rr_graph_storage::validate() const {
 const char* t_rr_graph_storage::node_type_string(RRNodeId id) const {
     return rr_node_typename[node_type(id)];
 }
-const char* t_rr_graph_storage::node_type_string_ptn(int id) const {
-    return rr_node_typename[node_type_ptn(id)];
-}
+
 const char* t_rr_graph_view::node_type_string(RRNodeId id) const {
     return rr_node_typename[node_type(id)];
 }
@@ -675,14 +673,7 @@ static short get_node_class_num(
 }
 
 short t_rr_graph_storage::node_pin_num(RRNodeId id) const {
-    auto node_type = node_ptn_[get_node_ptn(id)].type_;
-    if (node_type != IPIN && node_type != OPIN) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[node_type]);
-    }
-    return node_ptc_[id].ptc_.pin_num;
-}
-short t_rr_graph_storage::node_pin_num_ptn(RRNodeId id, int ptn) const {
-    auto node_type = node_ptn_[ptn].type_;
+    auto node_type = node_to_ptn_[id].type_;
     if (node_type != IPIN && node_type != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", rr_node_typename[node_type]);
     }
@@ -690,40 +681,39 @@ short t_rr_graph_storage::node_pin_num_ptn(RRNodeId id, int ptn) const {
 }
 
 short t_rr_graph_storage::node_track_num(RRNodeId id) const {
-    auto node_type = node_ptn_[get_node_ptn(id)].type_;
+    auto node_type = node_to_ptn_[id].type_;
     if (node_type != CHANX && node_type != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[node_type]);
     }
     return node_ptc_[id].ptc_.track_num;
 }
-short t_rr_graph_storage::node_track_num_ptn(RRNodeId id, int ptn) const {
-    auto node_type = node_ptn_[ptn].type_;
-    if (node_type != CHANX && node_type != CHANY) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", rr_node_typename[node_type]);
-    }
-    return node_ptc_[id].ptc_.track_num;
-}
+
 short t_rr_graph_storage::node_class_num(RRNodeId id) const {
-    auto node_type = node_ptn_[get_node_ptn(id)].type_;
+    auto node_type = node_to_ptn_[id].type_;
     if (node_type != SOURCE && node_type != SINK) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[node_type]);
     }
     return node_ptc_[id].ptc_.class_num;
 }
-short t_rr_graph_storage::node_class_num_ptn(RRNodeId id, int ptn) const {
-    auto node_type = node_ptn_[ptn].type_;
-    if (node_type != SOURCE && node_type != SINK) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", rr_node_typename[node_type]);
-    }
-    return node_ptc_[id].ptc_.class_num;
-}
+\
 
 void t_rr_graph_storage::set_node_type(RRNodeId id, t_rr_type new_type) {
     node_storage_[id].type_ = new_type;
+    node_to_ptn_[id].type_ = new_type;
 }
 void t_rr_graph_storage::set_node_type_ptn(int id, t_rr_type new_type) {
-    node_ptn_[id].type_ = new_type;
+    node_ptn_type_[id] = new_type;
 }
+
+void t_rr_graph_storage::set_node_dx_dy_ptn(int id, int dx, int dy) {
+    node_ptn_[id].dx_ = dx;
+    node_ptn_[id].dy_ = dy;
+}
+void t_rr_graph_storage::set_node_x_y(RRNodeId id, int x, int y) {
+    node_to_ptn_[id].xlow_ = x;
+    node_to_ptn_[id].ylow_ = y;
+}
+
 
 void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
     auto& node = node_storage_[id];
@@ -744,22 +734,7 @@ void t_rr_graph_storage::set_node_coordinates(RRNodeId id, short x1, short y1, s
     }
 }
 void t_rr_graph_storage::set_node_coordinates_ptn(int id, short x1, short y1, short x2, short y2) {
-    auto& node = node_ptn_[id];
-    if (x1 < x2) {
-        node.xlow_ = x1;
-        node.xhigh_ = x2;
-    } else {
-        node.xlow_ = x2;
-        node.xhigh_ = x1;
-    }
-
-    if (y1 < y2) {
-        node.ylow_ = y1;
-        node.yhigh_ = y2;
-    } else {
-        node.ylow_ = y2;
-        node.yhigh_ = y1;
-    }
+    return;
 }
 
 void t_rr_graph_storage::set_node_cost_index(RRNodeId id, RRIndexedDataId new_cost_index) {
@@ -801,38 +776,23 @@ void t_rr_graph_storage::set_node_direction(RRNodeId id, Direction new_direction
     if (node_type(id) != CHANX && node_type(id) != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string(id));
     }
-    node_storage_[id].dir_side_.direction = new_direction;
+    node_to_ptn_[id].dir_side_.direction = new_direction;
 }
-void t_rr_graph_storage::set_node_direction_ptn(int ptn_id, Direction new_direction) {
-    if (node_type_ptn(ptn_id) != CHANX && node_type_ptn(ptn_id) != CHANY) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", node_type_string_ptn(ptn_id));
-    }
-    node_ptn_[ptn_id].dir_side_.direction = new_direction;
-}
+
 
 void t_rr_graph_storage::add_node_side(RRNodeId id, e_side new_side) {
     if (node_type(id) != IPIN && node_type(id) != OPIN) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string(id));
     }
-    std::bitset<NUM_SIDES> side_bits = node_storage_[id].dir_side_.sides;
+    std::bitset<NUM_SIDES> side_bits = node_to_ptn_[id].dir_side_.sides;
     side_bits[size_t(new_side)] = true;
     if (side_bits.to_ulong() > CHAR_MAX) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node %u", SIDE_STRING[new_side], size_t(id));
     }
-    node_storage_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
+    node_to_ptn_[id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
 }
 
-void t_rr_graph_storage::add_node_side_ptn(int ptn_id, e_side new_side) {
-    if (node_type_ptn(ptn_id) != IPIN && node_type_ptn(ptn_id) != OPIN) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", node_type_string_ptn(ptn_id));
-    }
-    std::bitset<NUM_SIDES> side_bits = node_ptn_[ptn_id].dir_side_.sides;
-    side_bits[size_t(new_side)] = true;
-    if (side_bits.to_ulong() > CHAR_MAX) {
-        VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Invalid side '%s' to be added to rr node ptn %d", SIDE_STRING[new_side], size_t(ptn_id));
-    }
-    node_ptn_[ptn_id].dir_side_.sides = static_cast<unsigned char>(side_bits.to_ulong());
-}
+
 
 short t_rr_graph_view::node_ptc_num(RRNodeId id) const {
     return node_ptc_[id].ptc_.pin_num;

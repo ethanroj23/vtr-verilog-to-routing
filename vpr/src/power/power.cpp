@@ -866,7 +866,7 @@ static void power_usage_routing(t_power_usage* power_usage,
         const t_edge_size node_fan_in = rr_graph.node_fan_in(rr_id);
         int rr_id_ptn = rr_graph.get_node_ptn(rr_id);
 
-        switch (rr_graph.node_type_ptn(rr_id_ptn)) {
+        switch (rr_graph.node_type(rr_id)) {
             case SOURCE:
             case SINK:
             case OPIN:
@@ -904,10 +904,10 @@ static void power_usage_routing(t_power_usage* power_usage,
                 VTR_ASSERT(node_power->in_prob);
 
                 wire_length = 0;
-                if (rr_graph.node_type_ptn(rr_id_ptn) == CHANX) {
-                    wire_length = rr_graph.node_xhigh_ptn(rr_id_ptn) - rr_graph.node_xlow_ptn(rr_id_ptn) + 1;
-                } else if (rr_graph.node_type_ptn(rr_id_ptn) == CHANY) {
-                    wire_length = rr_graph.node_yhigh_ptn(rr_id_ptn) - rr_graph.node_ylow_ptn(rr_id_ptn) + 1;
+                if (rr_graph.node_type(rr_id) == CHANX) {
+                    wire_length = rr_graph.node_xhigh_ptn(rr_id, rr_id_ptn) - rr_graph.node_xlow(rr_id) + 1;
+                } else if (rr_graph.node_type(rr_id) == CHANY) {
+                    wire_length = rr_graph.node_yhigh_ptn(rr_id, rr_id_ptn) - rr_graph.node_ylow(rr_id) + 1;
                 }
                 int seg_index = device_ctx.rr_indexed_data[rr_graph.node_cost_index_ptn(rr_id_ptn)].seg_index;
                 C_wire = wire_length * rr_graph.rr_segments(RRSegmentId(seg_index)).Cmetal;
