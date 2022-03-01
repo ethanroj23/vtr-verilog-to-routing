@@ -351,8 +351,7 @@ class t_rr_graph_storage {
             else if (last <= edge_id_size) // try again with right half of nodes
                 l = mid + 1;
             else if (first != last) { // edge is a part of this node
-                int edge_idx = edge_id_size - first;
-                return rr_switches_[node_first_edge_[node].s_idx+edge_idx];
+                return rr_switches_[node_first_edge_[node].s_idx + edge_id_size - first];
             }
         }
         return -1; // INVALID
@@ -362,15 +361,13 @@ class t_rr_graph_storage {
     //
     // This method should generally not be used, and instead first_edge and
     // last_edge should be used.
-    short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
+    inline short edge_switch(const RRNodeId& id, t_edge_size iedge) const {
         return rr_switches_[node_first_edge_[id].s_idx+iedge];
         // return edge_switch(edge_id(id, iedge));
     }
 
-    short edge_switch(const RRNodeId& id, RREdgeId iedge) const {
-        auto offset = (size_t)iedge - (size_t)node_first_edge_[id].edge;
-        return rr_switches_[node_first_edge_[id].s_idx+offset];
-        // return edge_switch(edge_id(id, iedge));
+    inline short edge_switch(const RRNodeId& id, RREdgeId iedge) const {
+        return rr_switches_[node_first_edge_[id].s_idx+(size_t)iedge - (size_t)node_first_edge_[id].edge];
     }
 
     /*
