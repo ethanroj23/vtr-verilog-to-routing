@@ -153,6 +153,15 @@ class RRGraphView {
     inline int node_to_edge_ptns(RRNodeId node) const {
         return node_storage_.node_to_edge_ptns(node);
     }
+    inline int edge_ptn_idxs(int idx) const {
+        return node_storage_.edge_ptn_idxs(idx);
+    }
+    inline int single_edge_ptn_dest(int idx) const {
+        return node_storage_.single_edge_ptn_dest(idx);
+    }
+    inline int single_edge_ptn_switch(int idx) const {
+        return node_storage_.single_edge_ptn_switch(idx);
+    }
     
     inline int num_edge_ptns(const RRNodeId& id) const {
         return node_storage_.num_edge_ptns(id);
@@ -161,6 +170,10 @@ class RRGraphView {
     inline void get_edges(RRNodeId id, std::vector<t_dest_switch> &edges)  {
         node_storage_.get_edges(id, edges);
     }
+    inline std::vector<t_dest_switch> return_edges(RRNodeId id) const {
+        return node_storage_.return_edges(id);
+    }
+
     inline void get_non_configurable_edges(RRNodeId id, std::vector<t_dest_switch> &edges)  {
         node_storage_.get_non_configurable_edges(id, edges);
     }

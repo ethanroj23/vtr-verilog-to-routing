@@ -316,11 +316,12 @@ class edge_compare_dest_node {
     }
 };
 
+
 void t_rr_graph_storage::assign_first_edges() {
     VTR_ASSERT(node_first_edge_.empty());
 
     int cur_idx = 0;
-    for (int i=0; i < node_storage_.size(); i++){
+    for (int i=0; i < (int)node_storage_.size(); i++){
         RRNodeId node = RRNodeId(i);
         node_to_edge_ptns_[node] = cur_idx;
         cur_idx += node_num_edge_patterns_[node];
@@ -337,12 +338,18 @@ void t_rr_graph_storage::assign_first_edges() {
         node_first_edge_[node] = RREdgeId(edge_number);
 
         int e_ptn_idx = node_to_edge_ptns_[node]; 
-        t_switch_edge_ptn p = edge_ptns_[e_ptn_idx];
+        t_switch_edge_ptn p;
         int num_ptns = num_edge_ptns(node);
         for (int j=0; j<num_ptns; j++){
-            edge_number += p.edge_count;
+            int cur_p_idx = edge_ptn_idxs_[e_ptn_idx];
+            if (cur_p_idx >= 0){
+                p = edge_ptns_[cur_p_idx];
+                edge_number += p.edge_count;
+            }
+            else{
+                edge_number += 1;
+            }
             e_ptn_idx++;
-            p = edge_ptns_[e_ptn_idx];
         }
     }
 
@@ -432,6 +439,7 @@ bool t_rr_graph_storage::verify_first_edges() const {
 
 void t_rr_graph_storage::init_fan_in() {
     //Reset all fan-ins to zero
+    VTR_LOG("init_fan_in()\n");
     edges_read_ = true;
     node_fan_in_.resize(node_storage_.size(), 0);
     node_fan_in_.shrink_to_fit();
@@ -446,22 +454,29 @@ void t_rr_graph_storage::init_fan_in() {
         int first_dest = node_first_dest(node);
         int e_ptn_idx = node_to_edge_ptns(node); 
 
-        t_switch_edge_ptn p = edge_ptns(e_ptn_idx);
-        int k = 0;
+        t_switch_edge_ptn p;
         int num_ptns = num_edge_ptns(node);
         for (int j=0; j<num_ptns; j++){
-            const int p_edge_count = p.edge_count;
-            for (int i=0; i<p_edge_count; i++){
-                node_fan_in_[RRNodeId(first_dest+edge_ptn_data(p.ptn_idx+k))] += 1;
-                k++;
+            int cur_p_idx = edge_ptn_idxs_[e_ptn_idx];
+            if (cur_p_idx >= 0){
+                p = edge_ptns_[cur_p_idx];
+                const int p_edge_count = p.edge_count;
+                for (int k=0; k<p_edge_count; k++){
+                    node_fan_in_[RRNodeId(first_dest+edge_ptn_data(p.ptn_idx+k))] += 1;
+                }
             }
-            k = 0;
+            else{ // single edge in pattern case
+                node_fan_in_[RRNodeId(first_dest+single_edge_ptn_dest_[-cur_p_idx])] += 1;
+            }
             e_ptn_idx++;
-            p = edge_ptns(e_ptn_idx);
+            // p = edge_ptns(e_ptn_idx);
         }
     }
+    VTR_LOG("finish init_fan_in()\n");
     
 }
+
+    
 
         
 
@@ -590,18 +605,25 @@ void t_rr_graph_storage::partition_edges() {
     VTR_ASSERT_SAFE(validate());
 }
 
+
 t_edge_size t_rr_graph_storage::num_configurable_edges(const RRNodeId& id) const {
     VTR_ASSERT(!node_first_edge_.empty() && remapped_edges_);
     int edge_count = 0;
     short cur_switch;
     const auto& rr_graph = g_vpr_ctx.device().rr_graph;
-    int e_ptn_idx = node_to_edge_ptns(id); 
-    t_switch_edge_ptn p = edge_ptns(e_ptn_idx);
+    int e_ptn_idx = node_to_edge_ptns_[id]; 
+    t_switch_edge_ptn p;
     int num_ptns = num_edge_ptns(id);
     for (int j=0; j<num_ptns; j++){
-        edge_count += rr_graph.rr_switch_inf(RRSwitchId(p.switch_id)).configurable()*p.edge_count;
+        int cur_p_idx = edge_ptn_idxs_[e_ptn_idx];
+        if (cur_p_idx >= 0){
+            p = edge_ptns_[cur_p_idx];
+            edge_count += rr_graph.rr_switch_inf(RRSwitchId(p.switch_id)).configurable()*p.edge_count;
+        }
+        else{
+            edge_count += rr_graph.rr_switch_inf(RRSwitchId(single_edge_ptn_switch_[-cur_p_idx])).configurable()*1;
+        }
         e_ptn_idx++;
-        p = edge_ptns(e_ptn_idx);
     }
 
     return edge_count;

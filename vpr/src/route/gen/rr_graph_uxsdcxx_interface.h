@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcxx.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: f70492b177e0daf17b52aa153b3fae93
+ * md5sum of input file: 3d2186e526265181754d81a5104120fa
  */
 
 #include <functional>
@@ -60,6 +60,7 @@ using ChannelReadContext = void *;
 	using DdiffReadContext = void *;
 	using EdgePtnReadContext = void *;
 	using RrEdgePtnsReadContext = void *;
+	using RrSingleEdgePtnsReadContext = void *;
 	using EPtnReadContext = void *;
 	using NodeEPtnReadContext = void *;
 	using RrNodeEPtnsReadContext = void *;
@@ -91,6 +92,7 @@ using ChannelWriteContext = void *;
 	using DdiffWriteContext = void *;
 	using EdgePtnWriteContext = void *;
 	using RrEdgePtnsWriteContext = void *;
+	using RrSingleEdgePtnsWriteContext = void *;
 	using EPtnWriteContext = void *;
 	using NodeEPtnWriteContext = void *;
 	using RrNodeEPtnsWriteContext = void *;
@@ -144,8 +146,8 @@ public:
 	 * <xs:complexType name="channels">
 	 *   <xs:sequence>
 	 *     <xs:element name="channel" type="channel" />
-	 *     <xs:element maxOccurs="unbounded" name="x_list" type="x_list" />
-	 *     <xs:element maxOccurs="unbounded" name="y_list" type="y_list" />
+	 *     <xs:element name="x_list" type="x_list" maxOccurs="unbounded" />
+	 *     <xs:element name="y_list" type="y_list" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -196,7 +198,7 @@ public:
 	/** Generated for complex type "switch":
 	 * <xs:complexType name="switch">
 	 *   <xs:all>
-	 *     <xs:element minOccurs="0" name="timing" type="timing" />
+	 *     <xs:element name="timing" type="timing" minOccurs="0" />
 	 *     <xs:element name="sizing" type="sizing" />
 	 *   </xs:all>
 	 *   <xs:attribute name="id" type="xs:int" use="required" />
@@ -222,7 +224,7 @@ public:
 	/** Generated for complex type "switches":
 	 * <xs:complexType name="switches">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="switch" type="switch" />
+	 *     <xs:element name="switch" type="switch" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -246,7 +248,7 @@ public:
 	/** Generated for complex type "segment":
 	 * <xs:complexType name="segment">
 	 *   <xs:all>
-	 *     <xs:element minOccurs="0" name="timing" type="segment_timing" />
+	 *     <xs:element name="timing" type="segment_timing" minOccurs="0" />
 	 *   </xs:all>
 	 *   <xs:attribute name="id" type="xs:int" use="required" />
 	 *   <xs:attribute name="name" type="xs:string" use="required" />
@@ -263,7 +265,7 @@ public:
 	/** Generated for complex type "segments":
 	 * <xs:complexType name="segments">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="segment" type="segment" />
+	 *     <xs:element name="segment" type="segment" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -289,7 +291,7 @@ public:
 	/** Generated for complex type "pin_class":
 	 * <xs:complexType name="pin_class">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="pin" type="pin" />
+	 *     <xs:element name="pin" type="pin" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 *   <xs:attribute name="type" type="pin_type" use="required" />
 	 * </xs:complexType>
@@ -304,7 +306,7 @@ public:
 	/** Generated for complex type "block_type":
 	 * <xs:complexType name="block_type">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" minOccurs="0" name="pin_class" type="pin_class" />
+	 *     <xs:element name="pin_class" type="pin_class" minOccurs="0" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 *   <xs:attribute name="id" type="xs:int" use="required" />
 	 *   <xs:attribute name="name" type="xs:string" use="required" />
@@ -326,7 +328,7 @@ public:
 	/** Generated for complex type "block_types":
 	 * <xs:complexType name="block_types">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="block_type" type="block_type" />
+	 *     <xs:element name="block_type" type="block_type" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -354,7 +356,7 @@ public:
 	/** Generated for complex type "grid_locs":
 	 * <xs:complexType name="grid_locs">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="grid_loc" type="grid_loc" />
+	 *     <xs:element name="grid_loc" type="grid_loc" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -415,7 +417,7 @@ public:
 	/** Generated for complex type "metadata":
 	 * <xs:complexType name="metadata">
 	 *   <xs:sequence>
-	 *     <xs:element maxOccurs="unbounded" name="meta" type="meta" />
+	 *     <xs:element name="meta" type="meta" maxOccurs="unbounded" />
 	 *   </xs:sequence>
 	 * </xs:complexType>
 	*/
@@ -429,9 +431,9 @@ public:
 	 * <xs:complexType name="node">
 	 *   <xs:all>
 	 *     <xs:element name="loc" type="node_loc" />
-	 *     <xs:element minOccurs="0" name="timing" type="node_timing" />
-	 *     <xs:element minOccurs="0" name="segment" type="node_segment" />
-	 *     <xs:element minOccurs="0" name="metadata" type="metadata" />
+	 *     <xs:element name="timing" type="node_timing" minOccurs="0" />
+	 *     <xs:element name="segment" type="node_segment" minOccurs="0" />
+	 *     <xs:element name="metadata" type="metadata" minOccurs="0" />
 	 *   </xs:all>
 	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
 	 *   <xs:attribute name="type" type="node_type" use="required" />
@@ -510,12 +512,25 @@ public:
 	virtual inline size_t num_rr_edge_ptns_edge_ptn(typename ContextTypes::RrEdgePtnsReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::EdgePtnReadContext get_rr_edge_ptns_edge_ptn(int n, typename ContextTypes::RrEdgePtnsReadContext &ctx) = 0;
 
-	/** Generated for complex type "e_ptn":
-	 * <xs:complexType name="e_ptn">
-	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+	/** Generated for complex type "rr_single_edge_ptns":
+	 * <xs:complexType name="rr_single_edge_ptns">
+	 *   <xs:choice maxOccurs="unbounded">
+	 *     <xs:element name="edge_ptn" type="edge_ptn" />
+	 *   </xs:choice>
 	 * </xs:complexType>
 	*/
-	virtual inline unsigned int get_e_ptn_id(typename ContextTypes::EPtnReadContext &ctx) = 0;
+	virtual inline void preallocate_rr_single_edge_ptns_edge_ptn(typename ContextTypes::RrSingleEdgePtnsWriteContext &ctx, size_t size) = 0;
+	virtual inline typename ContextTypes::EdgePtnWriteContext add_rr_single_edge_ptns_edge_ptn(typename ContextTypes::RrSingleEdgePtnsWriteContext &ctx, unsigned int id, unsigned int switch_id) = 0;
+	virtual inline void finish_rr_single_edge_ptns_edge_ptn(typename ContextTypes::EdgePtnWriteContext &ctx) = 0;
+	virtual inline size_t num_rr_single_edge_ptns_edge_ptn(typename ContextTypes::RrSingleEdgePtnsReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::EdgePtnReadContext get_rr_single_edge_ptns_edge_ptn(int n, typename ContextTypes::RrSingleEdgePtnsReadContext &ctx) = 0;
+
+	/** Generated for complex type "e_ptn":
+	 * <xs:complexType name="e_ptn">
+	 *   <xs:attribute name="id" type="xs:int" use="required" />
+	 * </xs:complexType>
+	*/
+	virtual inline int get_e_ptn_id(typename ContextTypes::EPtnReadContext &ctx) = 0;
 
 	/** Generated for complex type "node_e_ptn":
 	 * <xs:complexType name="node_e_ptn">
@@ -529,7 +544,7 @@ public:
 	virtual inline unsigned int get_node_e_ptn_dest(typename ContextTypes::NodeEPtnReadContext &ctx) = 0;
 	virtual inline unsigned int get_node_e_ptn_id(typename ContextTypes::NodeEPtnReadContext &ctx) = 0;
 	virtual inline void preallocate_node_e_ptn_e_ptn(typename ContextTypes::NodeEPtnWriteContext &ctx, size_t size) = 0;
-	virtual inline typename ContextTypes::EPtnWriteContext add_node_e_ptn_e_ptn(typename ContextTypes::NodeEPtnWriteContext &ctx, unsigned int id) = 0;
+	virtual inline typename ContextTypes::EPtnWriteContext add_node_e_ptn_e_ptn(typename ContextTypes::NodeEPtnWriteContext &ctx, int id) = 0;
 	virtual inline void finish_node_e_ptn_e_ptn(typename ContextTypes::EPtnWriteContext &ctx) = 0;
 	virtual inline size_t num_node_e_ptn_e_ptn(typename ContextTypes::NodeEPtnReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::EPtnReadContext get_node_e_ptn_e_ptn(int n, typename ContextTypes::NodeEPtnReadContext &ctx) = 0;
@@ -558,6 +573,7 @@ public:
 	 *       <xs:element name="rr_nodes" type="rr_nodes" />
 	 *       
 	 *       <xs:element name="rr_edge_ptns" type="rr_edge_ptns" />
+	 *       <xs:element name="rr_single_edge_ptns" type="rr_single_edge_ptns" />
 	 *       <xs:element name="rr_node_e_ptns" type="rr_node_e_ptns" />
 	 *       
 	 *     </xs:all>
@@ -593,6 +609,9 @@ public:
 	virtual inline typename ContextTypes::RrEdgePtnsWriteContext init_rr_graph_rr_edge_ptns(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
 	virtual inline void finish_rr_graph_rr_edge_ptns(typename ContextTypes::RrEdgePtnsWriteContext &ctx) = 0;
 	virtual inline typename ContextTypes::RrEdgePtnsReadContext get_rr_graph_rr_edge_ptns(typename ContextTypes::RrGraphReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::RrSingleEdgePtnsWriteContext init_rr_graph_rr_single_edge_ptns(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
+	virtual inline void finish_rr_graph_rr_single_edge_ptns(typename ContextTypes::RrSingleEdgePtnsWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::RrSingleEdgePtnsReadContext get_rr_graph_rr_single_edge_ptns(typename ContextTypes::RrGraphReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::RrNodeEPtnsWriteContext init_rr_graph_rr_node_e_ptns(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
 	virtual inline void finish_rr_graph_rr_node_e_ptns(typename ContextTypes::RrNodeEPtnsWriteContext &ctx) = 0;
 	virtual inline typename ContextTypes::RrNodeEPtnsReadContext get_rr_graph_rr_node_e_ptns(typename ContextTypes::RrGraphReadContext &ctx) = 0;

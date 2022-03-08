@@ -4,9 +4,9 @@
 #
 # Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
 # Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
-# md5sum of input file: f70492b177e0daf17b52aa153b3fae93
+# md5sum of input file: 3d2186e526265181754d81a5104120fa
 
-@0xba70c56446959ad0;
+@0xaf58610aabfb4cdd;
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ucap");
 
@@ -216,8 +216,12 @@ struct RrEdgePtns {
 	edgePtns @0 :List(EdgePtn);
 }
 
+struct RrSingleEdgePtns {
+	edgePtns @0 :List(EdgePtn);
+}
+
 struct EPtn {
-	id @0 :UInt32;
+	id @0 :Int32;
 }
 
 struct NodeEPtn {
@@ -241,5 +245,6 @@ struct RrGraph {
 	grid @7 :GridLocs;
 	rrNodes @8 :RrNodes;
 	rrEdgePtns @9 :RrEdgePtns;
-	rrNodeEPtns @10 :RrNodeEPtns;
+	rrSingleEdgePtns @10 :RrSingleEdgePtns;
+	rrNodeEPtns @11 :RrNodeEPtns;
 }

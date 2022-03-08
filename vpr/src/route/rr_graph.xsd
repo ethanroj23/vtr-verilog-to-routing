@@ -318,7 +318,7 @@
   </xs:complexType>
 
   <xs:complexType name="e_ptn">
-    <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+    <xs:attribute name="id" type="xs:int" use="required"/>
   </xs:complexType>
 
   <!-- <xs:complexType name="edge">
@@ -377,6 +377,12 @@
     </xs:choice>
   </xs:complexType>
 
+  <xs:complexType name="rr_single_edge_ptns">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="edge_ptn" type="edge_ptn"/>
+    </xs:choice>
+  </xs:complexType>
+
 
 
   <!-- <xs:complexType name="rr_edges">
@@ -400,6 +406,7 @@
         <xs:element name="rr_nodes" type="rr_nodes"/>
         <!-- <xs:element name="rr_node_e_ptns" type="rr_node_e_ptns"/> -->
         <xs:element name="rr_edge_ptns" type="rr_edge_ptns"/>
+        <xs:element name="rr_single_edge_ptns" type="rr_single_edge_ptns"/>
         <xs:element name="rr_node_e_ptns" type="rr_node_e_ptns"/>
         <!-- <xs:element name="rr_edges" type="rr_edges"/> -->
       </xs:all>

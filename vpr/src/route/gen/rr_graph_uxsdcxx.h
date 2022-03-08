@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcxx.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: f70492b177e0daf17b52aa153b3fae93
+ * md5sum of input file: 3d2186e526265181754d81a5104120fa
  */
 
 #include <functional>
@@ -112,8 +112,10 @@ inline void load_edge_ptn_required_attributes(const pugi::xml_node &root, unsign
 template <class T, typename Context>
 inline void load_rr_edge_ptns(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 template <class T, typename Context>
+inline void load_rr_single_edge_ptns(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
+template <class T, typename Context>
 inline void load_e_ptn(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
-inline void load_e_ptn_required_attributes(const pugi::xml_node &root, unsigned int * id, const std::function<void(const char*)> * report_error);
+inline void load_e_ptn_required_attributes(const pugi::xml_node &root, int * id, const std::function<void(const char*)> * report_error);
 template <class T, typename Context>
 inline void load_node_e_ptn(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 inline void load_node_e_ptn_required_attributes(const pugi::xml_node &root, unsigned int * dest, unsigned int * id, const std::function<void(const char*)> * report_error);
@@ -155,6 +157,8 @@ template <class T>
 inline void write_edge_ptn(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
 inline void write_rr_edge_ptns(T &in, std::ostream &os, const void *data, void *iter);
+template <class T>
+inline void write_rr_single_edge_ptns(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
 inline void write_node_e_ptn(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
@@ -325,6 +329,8 @@ constexpr const char *atok_lookup_t_edge_ptn[] = {"id", "switch_id"};
 
 enum class gtok_t_rr_edge_ptns {EDGE_PTN};
 constexpr const char *gtok_lookup_t_rr_edge_ptns[] = {"edge_ptn"};
+enum class gtok_t_rr_single_edge_ptns {EDGE_PTN};
+constexpr const char *gtok_lookup_t_rr_single_edge_ptns[] = {"edge_ptn"};
 
 enum class atok_t_e_ptn {ID};
 constexpr const char *atok_lookup_t_e_ptn[] = {"id"};
@@ -336,8 +342,8 @@ constexpr const char *atok_lookup_t_node_e_ptn[] = {"dest", "id"};
 
 enum class gtok_t_rr_node_e_ptns {NODE_E_PTN};
 constexpr const char *gtok_lookup_t_rr_node_e_ptns[] = {"node_e_ptn"};
-enum class gtok_t_rr_graph {CHANNELS, SWITCHES, SEGMENTS, BLOCK_TYPES, GRID, RR_NODES, RR_EDGE_PTNS, RR_NODE_E_PTNS};
-constexpr const char *gtok_lookup_t_rr_graph[] = {"channels", "switches", "segments", "block_types", "grid", "rr_nodes", "rr_edge_ptns", "rr_node_e_ptns"};
+enum class gtok_t_rr_graph {CHANNELS, SWITCHES, SEGMENTS, BLOCK_TYPES, GRID, RR_NODES, RR_EDGE_PTNS, RR_SINGLE_EDGE_PTNS, RR_NODE_E_PTNS};
+constexpr const char *gtok_lookup_t_rr_graph[] = {"channels", "switches", "segments", "block_types", "grid", "rr_nodes", "rr_edge_ptns", "rr_single_edge_ptns", "rr_node_e_ptns"};
 enum class atok_t_rr_graph {TOOL_COMMENT, TOOL_NAME, TOOL_VERSION};
 constexpr const char *atok_lookup_t_rr_graph[] = {"tool_comment", "tool_name", "tool_version"};
 
@@ -1479,6 +1485,22 @@ inline gtok_t_rr_edge_ptns lex_node_t_rr_edge_ptns(const char *in, const std::fu
 	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <rr_edge_ptns>.").c_str());
 }
 
+inline gtok_t_rr_single_edge_ptns lex_node_t_rr_single_edge_ptns(const char *in, const std::function<void(const char *)> *report_error){
+	unsigned int len = strlen(in);
+	switch(len){
+	case 8:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('e', 0, 64) | onechar('d', 8, 64) | onechar('g', 16, 64) | onechar('e', 24, 64) | onechar('_', 32, 64) | onechar('p', 40, 64) | onechar('t', 48, 64) | onechar('n', 56, 64):
+			return gtok_t_rr_single_edge_ptns::EDGE_PTN;
+		break;
+		default: break;
+		}
+		break;
+	default: break;
+	}
+	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <rr_single_edge_ptns>.").c_str());
+}
+
 inline atok_t_e_ptn lex_attr_t_e_ptn(const char *in, const std::function<void(const char *)> * report_error){
 	unsigned int len = strlen(in);
 	switch(len){
@@ -1649,6 +1671,34 @@ inline gtok_t_rr_graph lex_node_t_rr_graph(const char *in, const std::function<v
 					switch(in[13]){
 					case onechar('s', 0, 8):
 						return gtok_t_rr_graph::RR_NODE_E_PTNS;
+					break;
+					default: break;
+					}
+				break;
+				default: break;
+				}
+			break;
+			default: break;
+			}
+		break;
+		default: break;
+		}
+		break;
+	case 19:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('r', 0, 64) | onechar('r', 8, 64) | onechar('_', 16, 64) | onechar('s', 24, 64) | onechar('i', 32, 64) | onechar('n', 40, 64) | onechar('g', 48, 64) | onechar('l', 56, 64):
+			switch(*((triehash_uu64*)&in[8])){
+			case onechar('e', 0, 64) | onechar('_', 8, 64) | onechar('e', 16, 64) | onechar('d', 24, 64) | onechar('g', 32, 64) | onechar('e', 40, 64) | onechar('_', 48, 64) | onechar('p', 56, 64):
+				switch(in[16]){
+				case onechar('t', 0, 8):
+					switch(in[17]){
+					case onechar('n', 0, 8):
+						switch(in[18]){
+						case onechar('s', 0, 8):
+							return gtok_t_rr_graph::RR_SINGLE_EDGE_PTNS;
+						break;
+						default: break;
+						}
 					break;
 					default: break;
 					}
@@ -2628,7 +2678,7 @@ inline void load_edge_ptn_required_attributes(const pugi::xml_node &root, unsign
 	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_edge_ptn, report_error);
 }
 
-inline void load_e_ptn_required_attributes(const pugi::xml_node &root, unsigned int * id, const std::function<void(const char *)> * report_error){
+inline void load_e_ptn_required_attributes(const pugi::xml_node &root, int * id, const std::function<void(const char *)> * report_error){
 	std::bitset<1> astate = 0;
 	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
 		atok_t_e_ptn in = lex_attr_t_e_ptn(attr.name(), report_error);
@@ -2636,7 +2686,7 @@ inline void load_e_ptn_required_attributes(const pugi::xml_node &root, unsigned 
 		else noreturn_report(report_error, ("Duplicate attribute " + std::string(attr.name()) + " in <e_ptn>.").c_str());
 		switch(in){
 		case atok_t_e_ptn::ID:
-			*id = load_unsigned_int(attr.value(), report_error);
+			*id = load_int(attr.value(), report_error);
 			break;
 		default: break; /* Not possible. */
 		}
@@ -3902,6 +3952,73 @@ inline void load_rr_edge_ptns(const pugi::xml_node &root, T &out, Context &conte
 
 }
 
+constexpr int NUM_T_RR_SINGLE_EDGE_PTNS_STATES = 2;
+constexpr const int NUM_T_RR_SINGLE_EDGE_PTNS_INPUTS = 1;
+constexpr int gstate_t_rr_single_edge_ptns[NUM_T_RR_SINGLE_EDGE_PTNS_STATES][NUM_T_RR_SINGLE_EDGE_PTNS_INPUTS] = {
+	{0},
+	{0},
+};
+template<class T, typename Context>
+inline void load_rr_single_edge_ptns(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	// Update current file offset in case an error is encountered.
+	*offset_debug = root.offset_debug();
+
+	if(root.first_attribute())
+		noreturn_report(report_error, "Unexpected attribute in <rr_single_edge_ptns>.");
+
+	// Preallocate arrays by counting child nodes (if any)
+	size_t edge_ptn_count = 0;
+	{
+		int next, state=1;
+		for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()) {
+			*offset_debug = node.offset_debug();
+			gtok_t_rr_single_edge_ptns in = lex_node_t_rr_single_edge_ptns(node.name(), report_error);
+			next = gstate_t_rr_single_edge_ptns[state][(int)in];
+			if(next == -1)
+				dfa_error(gtok_lookup_t_rr_single_edge_ptns[(int)in], gstate_t_rr_single_edge_ptns[state], gtok_lookup_t_rr_single_edge_ptns, 1, report_error);
+			state = next;
+			switch(in) {
+			case gtok_t_rr_single_edge_ptns::EDGE_PTN:
+				edge_ptn_count += 1;
+				break;
+			default: break; /* Not possible. */
+			}
+		}
+		
+		out.preallocate_rr_single_edge_ptns_edge_ptn(context, edge_ptn_count);
+	}
+	int next, state=1;
+	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()){
+		*offset_debug = node.offset_debug();
+		gtok_t_rr_single_edge_ptns in = lex_node_t_rr_single_edge_ptns(node.name(), report_error);
+		next = gstate_t_rr_single_edge_ptns[state][(int)in];
+		if(next == -1)
+			dfa_error(gtok_lookup_t_rr_single_edge_ptns[(int)in], gstate_t_rr_single_edge_ptns[state], gtok_lookup_t_rr_single_edge_ptns, 1, report_error);
+		state = next;
+		switch(in){
+		case gtok_t_rr_single_edge_ptns::EDGE_PTN:
+			{
+				unsigned int edge_ptn_id;
+				memset(&edge_ptn_id, 0, sizeof(edge_ptn_id));
+				unsigned int edge_ptn_switch_id;
+				memset(&edge_ptn_switch_id, 0, sizeof(edge_ptn_switch_id));
+				load_edge_ptn_required_attributes(node, &edge_ptn_id, &edge_ptn_switch_id, report_error);
+				auto child_context = out.add_rr_single_edge_ptns_edge_ptn(context, edge_ptn_id, edge_ptn_switch_id);
+				load_edge_ptn(node, out, child_context, report_error, offset_debug);
+				out.finish_rr_single_edge_ptns_edge_ptn(child_context);
+			}
+			break;
+		default: break; /* Not possible. */
+		}
+	}
+	if(state != 0) dfa_error("end of input", gstate_t_rr_single_edge_ptns[state], gtok_lookup_t_rr_single_edge_ptns, 1, report_error);
+
+}
+
 template<class T, typename Context>
 inline void load_e_ptn(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
 	(void)root;
@@ -3965,7 +4082,7 @@ inline void load_node_e_ptn(const pugi::xml_node &root, T &out, Context &context
 		switch(in){
 		case gtok_t_node_e_ptn::E_PTN:
 			{
-				unsigned int e_ptn_id;
+				int e_ptn_id;
 				memset(&e_ptn_id, 0, sizeof(e_ptn_id));
 				load_e_ptn_required_attributes(node, &e_ptn_id, report_error);
 				auto child_context = out.add_node_e_ptn_e_ptn(context, e_ptn_id);
@@ -4072,7 +4189,7 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 		}
 	}
 
-	std::bitset<8> gstate = 0;
+	std::bitset<9> gstate = 0;
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()){
 		*offset_debug = node.offset_debug();
 		gtok_t_rr_graph in = lex_node_t_rr_graph(node.name(), report_error);
@@ -4128,6 +4245,13 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 				out.finish_rr_graph_rr_edge_ptns(child_context);
 			}
 			break;
+		case gtok_t_rr_graph::RR_SINGLE_EDGE_PTNS:
+			{
+				auto child_context = out.init_rr_graph_rr_single_edge_ptns(context);
+				load_rr_single_edge_ptns(node, out, child_context, report_error, offset_debug);
+				out.finish_rr_graph_rr_single_edge_ptns(child_context);
+			}
+			break;
 		case gtok_t_rr_graph::RR_NODE_E_PTNS:
 			{
 				auto child_context = out.init_rr_graph_rr_node_e_ptns(context);
@@ -4138,7 +4262,7 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 		default: break; /* Not possible. */
 		}
 	}
-	std::bitset<8> test_gstate = gstate | std::bitset<8>(0b00000000);
+	std::bitset<9> test_gstate = gstate | std::bitset<9>(0b000000000);
 	if(!test_gstate.all()) all_error(test_gstate, gtok_lookup_t_rr_graph, report_error);
 
 }
@@ -4472,6 +4596,24 @@ inline void write_rr_edge_ptns(T &in, std::ostream &os, Context &context){
 }
 
 template<class T, typename Context>
+inline void write_rr_single_edge_ptns(T &in, std::ostream &os, Context &context){
+	(void)in;
+	(void)os;
+	(void)context;
+	{
+		for(size_t i=0, n=in.num_rr_single_edge_ptns_edge_ptn(context); i<n; i++){
+			auto child_context = in.get_rr_single_edge_ptns_edge_ptn(i, context);
+			os << "<edge_ptn";
+			os << " id=\"" << in.get_edge_ptn_id(child_context) << "\"";
+			os << " switch_id=\"" << in.get_edge_ptn_switch_id(child_context) << "\"";
+			os << ">";
+			write_edge_ptn(in, os, child_context);
+			os << "</edge_ptn>\n";
+		}
+	}
+}
+
+template<class T, typename Context>
 inline void write_node_e_ptn(T &in, std::ostream &os, Context &context){
 	(void)in;
 	(void)os;
@@ -4550,6 +4692,12 @@ inline void write_rr_graph(T &in, std::ostream &os, Context &context){
 		os << "<rr_edge_ptns>\n";
 		write_rr_edge_ptns(in, os, child_context);
 		os << "</rr_edge_ptns>\n";
+	}
+	{
+		auto child_context = in.get_rr_graph_rr_single_edge_ptns(context);
+		os << "<rr_single_edge_ptns>\n";
+		write_rr_single_edge_ptns(in, os, child_context);
+		os << "</rr_single_edge_ptns>\n";
 	}
 	{
 		auto child_context = in.get_rr_graph_rr_node_e_ptns(context);

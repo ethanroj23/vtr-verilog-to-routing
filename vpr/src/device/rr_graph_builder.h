@@ -138,9 +138,18 @@ class RRGraphBuilder {
     inline void add_edge_ptn(int switch_id){
         node_storage_.add_edge_ptn(switch_id);
     }
+    inline void add_single_edge_ptn(int switch_id){
+        node_storage_.add_single_edge_ptn(switch_id);
+    }
+    
     inline void add_node_to_edge_ptn(int edge_ptn_idx){
         node_storage_.add_node_to_edge_ptn(edge_ptn_idx);
     }
+
+    inline void set_current_ptn_vector(){
+        node_storage_.set_current_ptn_vector();
+    }
+
 
 
 

@@ -421,34 +421,21 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //     VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
     // }
 
+    std::vector<t_dest_switch> edges = rr_graph_->return_edges(from_node);
     size_t first_edge = (size_t)rr_graph_->node_first_edge(from_node);
-    int first_dest = rr_graph_->node_first_dest(from_node);
-    int e_ptn_idx = rr_graph_->node_to_edge_ptns(from_node); 
-    int edges_num = rr_graph_->num_edges(from_node);
     int edges_count = 0;
+    for (auto edge : edges){
+        timing_driven_expand_neighbour(current,
+                            from_node_int,
+                            RREdgeId(first_edge+edges_count),
+                            size_t(edge.dest),
+                            cost_params,
+                            bounding_box,
+                            target_node,
+                            target_bb,
+                            edge.switch_id);
+        edges_count++;
 
-    t_switch_edge_ptn p = rr_graph_->edge_ptns(e_ptn_idx);
-    int k = 0;
-    int num_ptns = rr_graph_->num_edge_ptns(from_node);
-    for (int j=0; j<num_ptns; j++){
-        const int p_edge_count = p.edge_count;
-        for (int i=0; i<p_edge_count; i++){
-            RRNodeId to_node = RRNodeId(first_dest+rr_graph_->edge_ptn_data(p.ptn_idx+k));
-            timing_driven_expand_neighbour(current,
-                                from_node_int,
-                                RREdgeId(first_edge+edges_count),
-                                size_t(to_node),
-                                cost_params,
-                                bounding_box,
-                                target_node,
-                                target_bb,
-                                p.switch_id);
-            edges_count += 1;
-            k++;
-        }
-        k = 0;
-        e_ptn_idx++;
-        p = rr_graph_->edge_ptns(e_ptn_idx);
     }
 
     // --- Previous Method for accessing edges ---

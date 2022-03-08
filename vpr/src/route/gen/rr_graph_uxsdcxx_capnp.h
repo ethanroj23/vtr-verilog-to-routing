@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: f70492b177e0daf17b52aa153b3fae93
+ * md5sum of input file: 3d2186e526265181754d81a5104120fa
  */
 
 #include <functional>
@@ -78,6 +78,8 @@ void load_edge_ptn_capnp_type(const ucap::EdgePtn::Reader &root, T &out, Context
 template <class T, typename Context>
 void load_rr_edge_ptns_capnp_type(const ucap::RrEdgePtns::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
 template <class T, typename Context>
+void load_rr_single_edge_ptns_capnp_type(const ucap::RrSingleEdgePtns::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
+template <class T, typename Context>
 void load_e_ptn_capnp_type(const ucap::EPtn::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
 template <class T, typename Context>
 void load_node_e_ptn_capnp_type(const ucap::NodeEPtn::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
@@ -119,6 +121,8 @@ template <class T, typename Context>
 inline void write_edge_ptn_capnp_type(T &in, ucap::EdgePtn::Builder &root, Context &context);
 template <class T, typename Context>
 inline void write_rr_edge_ptns_capnp_type(T &in, ucap::RrEdgePtns::Builder &root, Context &context);
+template <class T, typename Context>
+inline void write_rr_single_edge_ptns_capnp_type(T &in, ucap::RrSingleEdgePtns::Builder &root, Context &context);
 template <class T, typename Context>
 inline void write_node_e_ptn_capnp_type(T &in, ucap::NodeEPtn::Builder &root, Context &context);
 template <class T, typename Context>
@@ -895,6 +899,28 @@ inline void load_rr_edge_ptns_capnp_type(const ucap::RrEdgePtns::Reader &root, T
 }
 
 template<class T, typename Context>
+inline void load_rr_single_edge_ptns_capnp_type(const ucap::RrSingleEdgePtns::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	(void)stack;
+
+	stack->push_back(std::make_pair("getEdgePtn", 0));
+	{
+		auto data = root.getEdgePtns();
+		out.preallocate_rr_single_edge_ptns_edge_ptn(context, data.size());
+		for(const auto & el : data) {
+			auto child_context = out.add_rr_single_edge_ptns_edge_ptn(context, el.getId(), el.getSwitchId());
+			load_edge_ptn_capnp_type(el, out, child_context, report_error, stack);
+			out.finish_rr_single_edge_ptns_edge_ptn(child_context);
+			stack->back().second += 1;
+		}
+	}
+	stack->pop_back();
+}
+
+template<class T, typename Context>
 inline void load_e_ptn_capnp_type(const ucap::EPtn::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack){
 	(void)root;
 	(void)out;
@@ -1013,6 +1039,14 @@ inline void load_rr_graph_capnp_type(const ucap::RrGraph::Reader &root, T &out, 
 		auto child_context = out.init_rr_graph_rr_edge_ptns(context);
 		load_rr_edge_ptns_capnp_type(child_el, out, child_context, report_error, stack);
 		out.finish_rr_graph_rr_edge_ptns(child_context);
+	}
+	stack->pop_back();
+	stack->push_back(std::make_pair("getRrSingleEdgePtns", 0));
+	if (root.hasRrSingleEdgePtns()) {
+		auto child_el = root.getRrSingleEdgePtns();
+		auto child_context = out.init_rr_graph_rr_single_edge_ptns(context);
+		load_rr_single_edge_ptns_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_rr_graph_rr_single_edge_ptns(child_context);
 	}
 	stack->pop_back();
 	stack->push_back(std::make_pair("getRrNodeEPtns", 0));
@@ -1320,6 +1354,22 @@ inline void write_rr_edge_ptns_capnp_type(T &in, ucap::RrEdgePtns::Builder &root
 }
 
 template<class T, typename Context>
+inline void write_rr_single_edge_ptns_capnp_type(T &in, ucap::RrSingleEdgePtns::Builder &root, Context &context) {
+	(void)in;
+	(void)root;
+
+	size_t num_rr_single_edge_ptns_edge_ptns = in.num_rr_single_edge_ptns_edge_ptn(context);
+	auto rr_single_edge_ptns_edge_ptns = root.initEdgePtns(num_rr_single_edge_ptns_edge_ptns);
+	for(size_t i = 0; i < num_rr_single_edge_ptns_edge_ptns; i++) {
+		auto rr_single_edge_ptns_edge_ptn = rr_single_edge_ptns_edge_ptns[i];
+		auto child_context = in.get_rr_single_edge_ptns_edge_ptn(i, context);
+		rr_single_edge_ptns_edge_ptn.setId(in.get_edge_ptn_id(child_context));
+		rr_single_edge_ptns_edge_ptn.setSwitchId(in.get_edge_ptn_switch_id(child_context));
+		write_edge_ptn_capnp_type(in, rr_single_edge_ptns_edge_ptn, child_context);
+	}
+}
+
+template<class T, typename Context>
 inline void write_node_e_ptn_capnp_type(T &in, ucap::NodeEPtn::Builder &root, Context &context) {
 	(void)in;
 	(void)root;
@@ -1394,6 +1444,12 @@ inline void write_rr_graph_capnp_type(T &in, ucap::RrGraph::Builder &root, Conte
 		auto child_context = in.get_rr_graph_rr_edge_ptns(context);
 		auto rr_graph_rr_edge_ptns = root.initRrEdgePtns();
 		write_rr_edge_ptns_capnp_type(in, rr_graph_rr_edge_ptns, child_context);
+	}
+
+	{
+		auto child_context = in.get_rr_graph_rr_single_edge_ptns(context);
+		auto rr_graph_rr_single_edge_ptns = root.initRrSingleEdgePtns();
+		write_rr_single_edge_ptns_capnp_type(in, rr_graph_rr_single_edge_ptns, child_context);
 	}
 
 	{

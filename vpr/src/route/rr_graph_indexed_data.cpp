@@ -57,7 +57,7 @@ void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_in
                                     int wire_to_ipin_switch,
                                     enum e_base_cost_type base_cost_type) {
     int iseg, length, i, index;
-
+    VTR_LOG("alloc_and_load_rr_indexed_data()\n");
     auto& device_ctx = g_vpr_ctx.mutable_device();
     const auto& rr_graph = device_ctx.rr_graph;
     int num_segment = segment_inf.size();
@@ -128,6 +128,7 @@ void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_in
         print_rr_index_info(getEchoFileName(E_ECHO_RR_GRAPH_INDEXED_DATA),
                             segment_inf);
     }
+    VTR_LOG("finish alloc_and_load_rr_indexed_data()\n");
 }
 
 void load_rr_index_segments(const int num_segment) {

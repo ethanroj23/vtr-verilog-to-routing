@@ -259,6 +259,8 @@ struct RrGraphContextTypes : public uxsd::DefaultRrGraphContextTypes {
     using RrEdgePtnsWriteContext = int;
     using DdiffReadContext = int;
     using DdiffWriteContext = int;
+    using RrSingleEdgePtnsWriteContext = int;
+    using RrSingleEdgePtnsReadContext = int;
 };
 
 class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
@@ -768,7 +770,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
 	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
 	 * </xs:complexType>
 	*/
-	inline unsigned int get_e_ptn_id(int &ctx){
+	inline int get_e_ptn_id(int &ctx){
         return ctx;
     }
 
@@ -792,7 +794,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         (void) size;
         return;
     }
-	inline int add_node_e_ptn_e_ptn(int &ctx, unsigned int id){
+	inline int add_node_e_ptn_e_ptn(int &ctx, int id){
         (void) id;
         rr_graph_builder_->add_node_to_edge_ptn(id);
         return ctx;
@@ -929,9 +931,11 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         return;
     }
 	inline void finish_rr_graph_rr_node_e_ptns(int &ctx){
+        VTR_LOG("finish_rr_graph_rr_node_e_ptns()\n");
         /*initialize a vector that keeps track of the number of wire to ipin switches
          * There should be only one wire to ipin switch. In case there are more, make sure to
          * store the most frequent switch */
+        (void) ctx;
         const auto& rr_graph = (*rr_graph_);
         std::vector<int> count_for_wire_to_ipin_switches;
         count_for_wire_to_ipin_switches.resize(rr_switch_inf_->size(), 0);
@@ -983,6 +987,37 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
     
 	inline int get_rr_graph_rr_edge_ptns(void*& /*ctx*/){
+        return 0;
+    }
+
+    /* rr_single_edge_ptns */
+
+    inline int init_rr_graph_rr_single_edge_ptns(void*& /*ctx*/){
+        rr_graph_builder_->set_current_ptn_vector();
+        return 0;
+    }
+	inline void finish_rr_graph_rr_single_edge_ptns(int& /*ctx*/){
+
+    }
+	inline int get_rr_graph_rr_single_edge_ptns(void*& /*ctx*/){
+        return 0;
+    }
+
+    inline void preallocate_rr_single_edge_ptns_edge_ptn(int &, size_t ){
+
+    }
+	inline int add_rr_single_edge_ptns_edge_ptn(int &, unsigned int id, unsigned int switch_id){
+        (void) id;
+        rr_graph_builder_->add_single_edge_ptn(switch_id);
+        return 0;
+    }
+	inline void finish_rr_single_edge_ptns_edge_ptn(int &){
+
+    }
+	inline size_t num_rr_single_edge_ptns_edge_ptn(int &){
+        return 0;
+    }
+	inline int get_rr_single_edge_ptns_edge_ptn(int , int &){
         return 0;
     }
 
@@ -1083,6 +1118,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
 
     inline void* init_rr_graph_rr_nodes(void*& /*ctx*/) final {
+        VTR_LOG("init_rr_graph_rr_nodes()\n");
         rr_nodes_->clear();
         seg_index_.resize(CHANX_COST_INDEX_START + 2 * segment_inf_.size(), -1);
         return nullptr;
@@ -1786,6 +1822,7 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
     }
 
     void finish_load() final {
+        VTR_LOG("finish_load()\n");
         process_rr_node_indices();
         rr_graph_builder_->init_fan_in();
         // rr_graph_builder_->remap_rr_node_switch_indices(const t_arch_switch_fanin& switch_fanin)
@@ -1816,7 +1853,9 @@ class RrGraphSerializer final : public uxsd::RrGraphBase<RrGraphContextTypes> {
         read_rr_graph_filename_->assign(read_rr_graph_name_);
 
         if (do_check_rr_graph_) {
+            VTR_LOG("check_rr_graph()\n");
             check_rr_graph(graph_type_, grid_, physical_tile_types_);
+            VTR_LOG("finish check_rr_graph()\n");
         }
     }
 
