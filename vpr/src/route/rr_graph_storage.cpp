@@ -320,7 +320,7 @@ void t_rr_graph_storage::assign_first_edges() {
     VTR_ASSERT(node_first_edge_.empty());
 
     // Last element is a dummy element
-    node_first_edge_.resize(node_storage_.size() + 1);
+    node_first_edge_.resize(node_to_ptn_.size() + 1);
 
     VTR_ASSERT(std::is_sorted(
         edge_src_node_.begin(),
@@ -332,7 +332,7 @@ void t_rr_graph_storage::assign_first_edges() {
     size_t num_edges = edge_src_node_.size();
 
     vtr::vector<RRNodeId, int> node_edge_count;
-    node_edge_count.resize(node_storage_.size());
+    node_edge_count.resize(node_to_ptn_.size());
     for (int i=0; i<edge_src_node_.size(); i++){
         auto src = edge_src_node_[RREdgeId(i)];
         node_edge_count[src]++;
@@ -340,12 +340,12 @@ void t_rr_graph_storage::assign_first_edges() {
 
     int first_edge = 0;
     int i;
-    for ( i=0; i < node_storage_.size(); i++){
+    for ( i=0; i < node_to_ptn_.size(); i++){
         RRNodeId node = RRNodeId(i);
         node_first_edge_[node] = RREdgeId(first_edge);
         first_edge += node_edge_count[node];
     }
-    node_first_edge_[RRNodeId(node_storage_.size())] = RREdgeId(first_edge);
+    node_first_edge_[RRNodeId(node_to_ptn_.size())] = RREdgeId(first_edge);
 
 
 
@@ -386,7 +386,7 @@ void t_rr_graph_storage::assign_first_edges() {
 
 bool t_rr_graph_storage::verify_first_edges() const {
     size_t num_edges = edge_src_node_.size();
-    VTR_ASSERT(node_first_edge_[RRNodeId(node_storage_.size())] == RREdgeId(num_edges));
+    VTR_ASSERT(node_first_edge_[RRNodeId(node_to_ptn_.size())] == RREdgeId(num_edges));
 
     // Each edge should belong with the edge range defined by
     // [node_first_edge_[src_node], node_first_edge_[src_node+1]).
@@ -404,7 +404,7 @@ bool t_rr_graph_storage::verify_first_edges() const {
 void t_rr_graph_storage::init_fan_in() {
     //Reset all fan-ins to zero
     edges_read_ = true;
-    node_fan_in_.resize(node_storage_.size(), 0);
+    node_fan_in_.resize(node_to_ptn_.size(), 0);
     node_fan_in_.shrink_to_fit();
 
     //Walk the graph and increment fanin on all downstream nodes

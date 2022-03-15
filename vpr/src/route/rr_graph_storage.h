@@ -499,10 +499,10 @@ class t_rr_graph_storage {
     // if push_back(x) / emplace_back() were used if underlying storage
     // was not preallocated.
     void make_room_for_node(RRNodeId elem_position) {
-        make_room_in_vector(&node_storage_, size_t(elem_position));
+        // make_room_in_vector(&node_storage_, size_t(elem_position));
         make_room_in_vector(&node_to_ptn_, size_t(elem_position));
         node_ptc_.reserve(node_storage_.capacity());
-        node_ptc_.resize(node_storage_.size());
+        node_ptc_.resize(node_to_ptn_.size());
     }
 
     void make_room_for_node_ptn(int elem_position) {
@@ -513,7 +513,7 @@ class t_rr_graph_storage {
     void reserve(size_t size) {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
-        node_storage_.reserve(size);
+        // node_storage_.reserve(size);
         node_ptn_.reserve(size);
         node_ptc_.reserve(size);
     }
@@ -522,19 +522,19 @@ class t_rr_graph_storage {
     void resize(size_t size) {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
-        node_storage_.resize(size);
+        // node_storage_.resize(size);
         node_ptn_.resize(size);
         node_ptc_.resize(size);
     }
 
     // Number of RR nodes that can be accessed.
     size_t size() const {
-        return node_storage_.size();
+        return node_to_ptn_.size();
     }
 
     // Is the RR graph currently empty?
     bool empty() const {
-        return node_storage_.empty();
+        return node_to_ptn_.empty();
     }
 
     // Remove all nodes and edges from the RR graph.
@@ -571,7 +571,7 @@ class t_rr_graph_storage {
     void emplace_back() {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
-        node_storage_.emplace_back();
+        // node_storage_.emplace_back();
         node_ptc_.emplace_back();
     }
 
@@ -868,7 +868,7 @@ class t_rr_graph_view {
      ****************/
 
     size_t size() const {
-        return node_storage_.size();
+        return node_ptc_.size();
     }
 
     t_rr_type node_type(RRNodeId id) const {

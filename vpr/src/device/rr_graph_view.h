@@ -328,12 +328,28 @@ class RRGraphView {
     inline short edge_switch(RRNodeId id, t_edge_size iedge) const {
         return node_storage_.edge_switch(id, iedge);
     }
+    inline short edge_switch(RREdgeId id) const {
+        return node_storage_.edge_switch(id);
+    }
+    
     /** @brief Get the destination node for the iedge'th edge from specified RRNodeId.
      *  This method should generally not be used, and instead first_edge and
      *  last_edge should be used.*/
     inline RRNodeId edge_sink_node(RRNodeId id, t_edge_size iedge) const {
         return node_storage_.edge_sink_node(id, iedge);
     }
+    inline RRNodeId edge_sink_node(RREdgeId id) const {
+        return node_storage_.edge_sink_node(id);
+    }
+
+    inline vtr::StrongIdRange<RREdgeId> edge_range(const RRNodeId id) const {
+        return node_storage_.edge_range(id);
+    }
+
+    void prefetch_node(const RRNodeId id) const {
+        return node_storage_.prefetch_node(id);
+    }
+
 
     /** @brief Get the number of configurable edges. This function is inlined for runtime optimization. */
     inline t_edge_size num_configurable_edges(RRNodeId node) const {

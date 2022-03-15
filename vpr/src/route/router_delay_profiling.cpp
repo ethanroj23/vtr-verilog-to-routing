@@ -16,7 +16,6 @@ RouterDelayProfiler::RouterDelayProfiler(
     : router_(
           g_vpr_ctx.device().grid,
           *lookahead,
-          g_vpr_ctx.device().rr_nodes,
           &g_vpr_ctx.device().rr_graph,
           g_vpr_ctx.device().rr_rc_data,
           g_vpr_ctx.device().rr_switch_inf,
@@ -121,7 +120,6 @@ std::vector<float> calculate_all_path_delays_from_rr_node(int src_rr_node, const
     ConnectionRouter<BinaryHeap> router(
         device_ctx.grid,
         *router_lookahead,
-        device_ctx.rr_nodes,
         &g_vpr_ctx.device().rr_graph,
         device_ctx.rr_rc_data,
         device_ctx.rr_switch_inf,

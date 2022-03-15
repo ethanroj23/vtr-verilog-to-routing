@@ -339,7 +339,6 @@ bool try_timing_driven_route_tmpl(const t_router_opts& router_opts,
     ConnectionRouter router(
         device_ctx.grid,
         *router_lookahead,
-        device_ctx.rr_nodes,
         &device_ctx.rr_graph,
         device_ctx.rr_rc_data,
         device_ctx.rr_switch_inf,

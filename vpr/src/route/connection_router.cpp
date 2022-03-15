@@ -283,7 +283,7 @@ template<typename Heap>
 std::vector<t_heap> ConnectionRouter<Heap>::timing_driven_find_all_shortest_paths_from_heap(
     const t_conn_cost_params cost_params,
     t_bb bounding_box) {
-    std::vector<t_heap> cheapest_paths(rr_nodes_.size());
+    std::vector<t_heap> cheapest_paths(rr_graph_->size());
 
     VTR_ASSERT_SAFE(heap_.is_valid());
 
@@ -393,7 +393,7 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //For each node associated with the current heap element, expand all of it's neighbors
     int from_node_int = current->index;
     RRNodeId from_node(from_node_int);
-    auto edges = rr_nodes_.edge_range(from_node);
+    auto edges = rr_graph_->edge_range(from_node);
 
     // This is a simple prefetch that prefetches:
     //  - RR node data reachable from this node
@@ -413,15 +413,15 @@ void ConnectionRouter<Heap>::timing_driven_expand_neighbours(t_heap* current,
     //  - gsm_switch_stratixiv_arch_timing.blif
     //
     for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_nodes_.edge_sink_node(from_edge);
-        rr_nodes_.prefetch_node(to_node);
+        RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
+        rr_graph_->prefetch_node(to_node);
 
-        int switch_idx = rr_nodes_.edge_switch(from_edge);
+        int switch_idx = rr_graph_->edge_switch(from_edge);
         VTR_PREFETCH(&rr_switch_inf_[switch_idx], 0, 0);
     }
 
     for (RREdgeId from_edge : edges) {
-        RRNodeId to_node = rr_nodes_.edge_sink_node(from_edge);
+        RRNodeId to_node = rr_graph_->edge_sink_node(from_edge);
         timing_driven_expand_neighbour(current,
                                        from_node_int,
                                        from_edge,
@@ -689,7 +689,7 @@ void ConnectionRouter<Heap>::evaluate_timing_driven_node_costs(t_heap* to,
      */
 
     //Info for the switch connecting from_node to_node
-    int iswitch = rr_nodes_.edge_switch(from_edge);
+    int iswitch = rr_graph_->edge_switch(from_edge);
     bool switch_buffered = rr_switch_inf_[iswitch].buffered();
     bool reached_configurably = rr_switch_inf_[iswitch].configurable();
     float switch_R = rr_switch_inf_[iswitch].R;
@@ -979,7 +979,6 @@ std::unique_ptr<ConnectionRouterInterface> make_connection_router(
     e_heap_type heap_type,
     const DeviceGrid& grid,
     const RouterLookahead& router_lookahead,
-    const t_rr_graph_storage& rr_nodes,
     const RRGraphView* rr_graph,
     const std::vector<t_rr_rc_data>& rr_rc_data,
     const vtr::vector<RRSwitchId, t_rr_switch_inf>& rr_switch_inf,
@@ -989,7 +988,6 @@ std::unique_ptr<ConnectionRouterInterface> make_connection_router(
             return std::make_unique<ConnectionRouter<BinaryHeap>>(
                 grid,
                 router_lookahead,
-                rr_nodes,
                 rr_graph,
                 rr_rc_data,
                 rr_switch_inf,
@@ -998,7 +996,6 @@ std::unique_ptr<ConnectionRouterInterface> make_connection_router(
             return std::make_unique<ConnectionRouter<Bucket>>(
                 grid,
                 router_lookahead,
-                rr_nodes,
                 rr_graph,
                 rr_rc_data,
                 rr_switch_inf,
