@@ -278,7 +278,7 @@ class t_rr_graph_storage {
     }
 
     void add_last_node_ptn(){
-        ptn_to_first_node_.push_back(RRNodeId(node_storage_.size()));
+        ptn_to_first_node_.push_back(RRNodeId(node_count));
     }
     void print() {
         return;
@@ -500,10 +500,13 @@ class t_rr_graph_storage {
     // if push_back(x) / emplace_back() were used if underlying storage
     // was not preallocated.
     void make_room_for_node(RRNodeId elem_position) {
-        make_room_in_vector(&node_storage_, size_t(elem_position));
-        make_room_in_vector(&node_to_ptn_, size_t(elem_position));
+        // make_room_in_vector(&node_storage_, size_t(elem_position));
+        // make_room_in_vector(&node_to_ptn_, size_t(elem_position));
+        if ((size_t)elem_position+1 > node_count){
+            node_count = (size_t)elem_position+1;
+        }
         node_ptc_.reserve(node_storage_.capacity());
-        node_ptc_.resize(node_storage_.size());
+        node_ptc_.resize(node_count);
     }
 
     void make_room_for_node_ptn(int elem_position) {
@@ -514,8 +517,8 @@ class t_rr_graph_storage {
     void reserve(size_t size) {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
-        node_storage_.reserve(size);
-        node_ptn_.reserve(size);
+        // node_storage_.reserve(size);
+        // node_ptn_.reserve(size);
         node_ptc_.reserve(size);
     }
 
@@ -523,19 +526,19 @@ class t_rr_graph_storage {
     void resize(size_t size) {
         // No edges can be assigned if mutating the rr node array.
         VTR_ASSERT(!edges_read_);
-        node_storage_.resize(size);
-        node_ptn_.resize(size);
+        // node_storage_.resize(size);
+        // node_ptn_.resize(size);
         node_ptc_.resize(size);
     }
 
     // Number of RR nodes that can be accessed.
     size_t size() const {
-        return node_storage_.size();
+        return node_count;
     }
 
     // Is the RR graph currently empty?
     bool empty() const {
-        return node_storage_.empty();
+        return node_count == 0;
     }
 
     // Remove all nodes and edges from the RR graph.
@@ -817,7 +820,8 @@ class t_rr_graph_storage {
     std::vector<RRNodeId> ptn_to_first_node_;
     // Every node has an index into this data structure. This is where the data is stored in patterns
     std::vector<t_rr_node_data> node_ptn_;
-    vtr::vector<RRNodeId, int> node_to_ptn_;
+    // vtr::vector<RRNodeId, int> node_to_ptn_;
+    int node_count = 0;
 
     // This array stores the first edge of each RRNodeId.  Not that the length
     // of this vector is always storage_.size() + 1, where the last value is

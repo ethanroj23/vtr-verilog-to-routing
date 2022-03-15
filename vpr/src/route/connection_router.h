@@ -42,7 +42,7 @@ class ConnectionRouter : public ConnectionRouterInterface {
         , router_stats_(nullptr)
         , router_debug_(false) {
         heap_.init_heap(grid);
-        heap_.set_prune_limit(rr_nodes_.size(), kHeapPruneFactor * rr_nodes_.size());
+        heap_.set_prune_limit(rr_graph_->size(), kHeapPruneFactor * rr_graph_->size());
     }
 
     // Clear's the modified list.  Should be called after reset_path_costs
