@@ -80,14 +80,26 @@ class RRGraphView {
         return node_storage_.node_type(node);
     }
 
+    /** @brief Get the type of a routing resource node. This function is inlined for runtime optimization. */
+    inline t_rr_type node_type_ptn(int node) const {
+        return node_storage_.node_type_ptn(node);
+    }
+
     /** @brief Get the type string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_type_string(RRNodeId node) const {
         return node_storage_.node_type_string(node);
     }
+    inline const char* node_type_string_ptn(int node) const {
+        return node_storage_.node_type_string_ptn(node);
+    }
+
 
     /** @brief Get the capacity of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_capacity(RRNodeId node) const {
         return node_storage_.node_capacity(node);
+    }
+    inline short node_capacity_ptn(int ptn_id) const {
+        return node_storage_.node_capacity_ptn(ptn_id);
     }
 
     /** @brief Get the direction of a routing resource node. This function is inlined for runtime optimization.
@@ -99,6 +111,9 @@ class RRGraphView {
     inline Direction node_direction(RRNodeId node) const {
         return node_storage_.node_direction(node);
     }
+    inline Direction node_direction_ptn(int ptn_id) const {
+        return node_storage_.node_direction_ptn(ptn_id);
+    }
 
     /** @brief Get the direction string of a routing resource node. This function is inlined for runtime optimization. */
     inline const std::string& node_direction_string(RRNodeId node) const {
@@ -109,15 +124,24 @@ class RRGraphView {
     inline float node_C(RRNodeId node) const {
         return node_storage_.node_C(node);
     }
+    inline float node_C_ptn(int ptn_id) const {
+        return node_storage_.node_C_ptn(ptn_id);
+    }
 
     /** @brief Get the resistance of a routing resource node. This function is inlined for runtime optimization. */
     inline float node_R(RRNodeId node) const {
         return node_storage_.node_R(node);
     }
+    inline float node_R_ptn(int ptn_id) const {
+        return node_storage_.node_R_ptn(ptn_id);
+    }
 
     /** @brief Get the rc_index of a routing resource node. This function is inlined for runtime optimization. */
     inline int16_t node_rc_index(RRNodeId node) const {
         return node_storage_.node_rc_index(node);
+    }
+    inline int16_t node_rc_index_ptn(int ptn_id) const {
+        return node_storage_.node_rc_index_ptn(ptn_id);
     }
 
     /** @brief Get the fan in of a routing resource node. This function is inlined for runtime optimization. */
@@ -125,24 +149,40 @@ class RRGraphView {
         return node_storage_.fan_in(node);
     }
 
+    int get_node_ptn(const RRNodeId& node) const {
+        return node_storage_.get_node_ptn(node);
+    }
+
     /** @brief Get the minimum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xlow(RRNodeId node) const {
         return node_storage_.node_xlow(node);
+    }
+    inline short node_xlow_ptn(int ptn_id) const {
+        return node_storage_.node_xlow_ptn(ptn_id);
     }
 
     /** @brief Get the maximum x-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_xhigh(RRNodeId node) const {
         return node_storage_.node_xhigh(node);
     }
+    inline short node_xhigh_ptn(int ptn_id) const {
+        return node_storage_.node_xhigh_ptn(ptn_id);
+    }
 
     /** @brief Get the minimum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_ylow(RRNodeId node) const {
         return node_storage_.node_ylow(node);
     }
+    inline short node_ylow_ptn(int ptn_id) const {
+        return node_storage_.node_ylow_ptn(ptn_id);
+    }
 
     /** @brief Get the maximum y-coordinate of a routing resource node. This function is inlined for runtime optimization. */
     inline short node_yhigh(RRNodeId node) const {
         return node_storage_.node_yhigh(node);
+    }
+    inline short node_yhigh_ptn(int ptn_id) const {
+        return node_storage_.node_yhigh_ptn(ptn_id);
     }
 
 
@@ -329,6 +369,9 @@ class RRGraphView {
     inline bool is_node_on_specific_side(RRNodeId node, e_side side) const {
         return node_storage_.is_node_on_specific_side(node, side);
     }
+    inline bool is_node_on_specific_side_ptn(int ptn_id, e_side side) const {
+        return node_storage_.is_node_on_specific_side_ptn(ptn_id, side);
+    }
 
     /** @brief Get the side string of a routing resource node. This function is inlined for runtime optimization. */
     inline const char* node_side_string(RRNodeId node) const {
@@ -415,11 +458,15 @@ class RRGraphView {
     inline short node_ptc_num(RRNodeId node) const {
         return node_storage_.node_ptc_num(node);
     }
+    
 
     /** @brief Get the pin num of a routing resource node. This is designed for logic blocks, 
      * which are IPIN and OPIN nodes. This function is inlined for runtime optimization. */
     inline short node_pin_num(RRNodeId node) const {
         return node_storage_.node_pin_num(node);
+    }
+    inline short node_pin_num_ptn(RRNodeId node, int ptn) const {
+        return node_storage_.node_pin_num_ptn(node, ptn);
     }
 
     /** @brief Get the track num of a routing resource node. This is designed for routing tracks, 
@@ -437,6 +484,9 @@ class RRGraphView {
     /** @brief Get the cost index of a routing resource node. This function is inlined for runtime optimization. */
     RRIndexedDataId node_cost_index(RRNodeId node) const {
         return node_storage_.node_cost_index(node);
+    }
+    RRIndexedDataId node_cost_index_ptn(int node) const {
+        return node_storage_.node_cost_index_ptn(node);
     }
     /** @brief Return detailed routing segment information with a given id* @note The routing segments here may not be exactly same as those defined in architecture file. They have been
      * adapted to fit the context of routing resource graphs.

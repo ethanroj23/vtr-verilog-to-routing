@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcap.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: 3d2186e526265181754d81a5104120fa
+ * md5sum of input file: c44c871024a6c60f7c3509e3424a6947
  */
 
 #include <functional>
@@ -68,6 +68,10 @@ void load_meta_capnp_type(const ucap::Meta::Reader &root, T &out, Context &conte
 template <class T, typename Context>
 void load_metadata_capnp_type(const ucap::Metadata::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
 template <class T, typename Context>
+void load_node_ptn_capnp_type(const ucap::NodePtn::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
+template <class T, typename Context>
+void load_rr_node_patterns_capnp_type(const ucap::RrNodePatterns::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
+template <class T, typename Context>
 void load_node_capnp_type(const ucap::Node::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
 template <class T, typename Context>
 void load_rr_nodes_capnp_type(const ucap::RrNodes::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack);
@@ -114,7 +118,9 @@ inline void write_meta_capnp_type(T &in, ucap::Meta::Builder &root, Context &con
 template <class T, typename Context>
 inline void write_metadata_capnp_type(T &in, ucap::Metadata::Builder &root, Context &context);
 template <class T, typename Context>
-inline void write_node_capnp_type(T &in, ucap::Node::Builder &root, Context &context);
+inline void write_node_ptn_capnp_type(T &in, ucap::NodePtn::Builder &root, Context &context);
+template <class T, typename Context>
+inline void write_rr_node_patterns_capnp_type(T &in, ucap::RrNodePatterns::Builder &root, Context &context);
 template <class T, typename Context>
 inline void write_rr_nodes_capnp_type(T &in, ucap::RrNodes::Builder &root, Context &context);
 template <class T, typename Context>
@@ -780,6 +786,71 @@ inline void load_metadata_capnp_type(const ucap::Metadata::Reader &root, T &out,
 }
 
 template<class T, typename Context>
+inline void load_node_ptn_capnp_type(const ucap::NodePtn::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	(void)stack;
+
+	out.set_node_ptn_direction(conv_enum_node_direction(root.getDirection(), report_error), context);
+	stack->push_back(std::make_pair("getLoc", 0));
+	if (root.hasLoc()) {
+		auto child_el = root.getLoc();
+		auto child_context = out.init_node_ptn_loc(context, child_el.getXhigh(), child_el.getXlow(), child_el.getYhigh(), child_el.getYlow());
+		load_node_loc_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_node_ptn_loc(child_context);
+	}
+	stack->pop_back();
+	stack->push_back(std::make_pair("getTiming", 0));
+	if (root.hasTiming()) {
+		auto child_el = root.getTiming();
+		auto child_context = out.init_node_ptn_timing(context, child_el.getC(), child_el.getR());
+		load_node_timing_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_node_ptn_timing(child_context);
+	}
+	stack->pop_back();
+	stack->push_back(std::make_pair("getSegment", 0));
+	if (root.hasSegment()) {
+		auto child_el = root.getSegment();
+		auto child_context = out.init_node_ptn_segment(context, child_el.getSegmentId());
+		load_node_segment_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_node_ptn_segment(child_context);
+	}
+	stack->pop_back();
+	stack->push_back(std::make_pair("getMetadata", 0));
+	if (root.hasMetadata()) {
+		auto child_el = root.getMetadata();
+		auto child_context = out.init_node_ptn_metadata(context);
+		load_metadata_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_node_ptn_metadata(child_context);
+	}
+	stack->pop_back();
+}
+
+template<class T, typename Context>
+inline void load_rr_node_patterns_capnp_type(const ucap::RrNodePatterns::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	(void)stack;
+
+	stack->push_back(std::make_pair("getNodePtn", 0));
+	{
+		auto data = root.getNodePtns();
+		out.preallocate_rr_node_patterns_node_ptn(context, data.size());
+		for(const auto & el : data) {
+			auto child_context = out.add_rr_node_patterns_node_ptn(context, el.getCapacity(), el.getId(), conv_enum_node_type(el.getType(), report_error));
+			load_node_ptn_capnp_type(el, out, child_context, report_error, stack);
+			out.finish_rr_node_patterns_node_ptn(child_context);
+			stack->back().second += 1;
+		}
+	}
+	stack->pop_back();
+}
+
+template<class T, typename Context>
 inline void load_node_capnp_type(const ucap::Node::Reader &root, T &out, Context &context, const std::function<void(const char*)> * report_error, std::vector<std::pair<const char *, size_t>> * stack){
 	(void)root;
 	(void)out;
@@ -787,39 +858,6 @@ inline void load_node_capnp_type(const ucap::Node::Reader &root, T &out, Context
 	(void)report_error;
 	(void)stack;
 
-	out.set_node_direction(conv_enum_node_direction(root.getDirection(), report_error), context);
-	stack->push_back(std::make_pair("getLoc", 0));
-	if (root.hasLoc()) {
-		auto child_el = root.getLoc();
-		auto child_context = out.init_node_loc(context, child_el.getPtc(), child_el.getXhigh(), child_el.getXlow(), child_el.getYhigh(), child_el.getYlow());
-		load_node_loc_capnp_type(child_el, out, child_context, report_error, stack);
-		out.finish_node_loc(child_context);
-	}
-	stack->pop_back();
-	stack->push_back(std::make_pair("getTiming", 0));
-	if (root.hasTiming()) {
-		auto child_el = root.getTiming();
-		auto child_context = out.init_node_timing(context, child_el.getC(), child_el.getR());
-		load_node_timing_capnp_type(child_el, out, child_context, report_error, stack);
-		out.finish_node_timing(child_context);
-	}
-	stack->pop_back();
-	stack->push_back(std::make_pair("getSegment", 0));
-	if (root.hasSegment()) {
-		auto child_el = root.getSegment();
-		auto child_context = out.init_node_segment(context, child_el.getSegmentId());
-		load_node_segment_capnp_type(child_el, out, child_context, report_error, stack);
-		out.finish_node_segment(child_context);
-	}
-	stack->pop_back();
-	stack->push_back(std::make_pair("getMetadata", 0));
-	if (root.hasMetadata()) {
-		auto child_el = root.getMetadata();
-		auto child_context = out.init_node_metadata(context);
-		load_metadata_capnp_type(child_el, out, child_context, report_error, stack);
-		out.finish_node_metadata(child_context);
-	}
-	stack->pop_back();
 }
 
 template<class T, typename Context>
@@ -835,7 +873,7 @@ inline void load_rr_nodes_capnp_type(const ucap::RrNodes::Reader &root, T &out, 
 		auto data = root.getNodes();
 		out.preallocate_rr_nodes_node(context, data.size());
 		for(const auto & el : data) {
-			auto child_context = out.add_rr_nodes_node(context, el.getCapacity(), el.getId(), conv_enum_node_type(el.getType(), report_error));
+			auto child_context = out.add_rr_nodes_node(context, el.getId(), el.getPtc(), el.getPtnIdx());
 			load_node_capnp_type(el, out, child_context, report_error, stack);
 			out.finish_rr_nodes_node(child_context);
 			stack->back().second += 1;
@@ -1023,6 +1061,14 @@ inline void load_rr_graph_capnp_type(const ucap::RrGraph::Reader &root, T &out, 
 		auto child_context = out.init_rr_graph_grid(context);
 		load_grid_locs_capnp_type(child_el, out, child_context, report_error, stack);
 		out.finish_rr_graph_grid(child_context);
+	}
+	stack->pop_back();
+	stack->push_back(std::make_pair("getRrNodePatterns", 0));
+	if (root.hasRrNodePatterns()) {
+		auto child_el = root.getRrNodePatterns();
+		auto child_context = out.init_rr_graph_rr_node_patterns(context);
+		load_rr_node_patterns_capnp_type(child_el, out, child_context, report_error, stack);
+		out.finish_rr_graph_rr_node_patterns(child_context);
 	}
 	stack->pop_back();
 	stack->push_back(std::make_pair("getRrNodes", 0));
@@ -1268,39 +1314,57 @@ inline void write_metadata_capnp_type(T &in, ucap::Metadata::Builder &root, Cont
 }
 
 template<class T, typename Context>
-inline void write_node_capnp_type(T &in, ucap::Node::Builder &root, Context &context) {
+inline void write_node_ptn_capnp_type(T &in, ucap::NodePtn::Builder &root, Context &context) {
 	(void)in;
 	(void)root;
 
 	{
-		auto child_context = in.get_node_loc(context);
-		auto node_loc = root.initLoc();
-		node_loc.setPtc(in.get_node_loc_ptc(child_context));
+		auto child_context = in.get_node_ptn_loc(context);
+		auto node_ptn_loc = root.initLoc();
 		if((bool)in.get_node_loc_side(child_context))
-			node_loc.setSide(conv_to_enum_loc_side(in.get_node_loc_side(child_context)));
-		node_loc.setXhigh(in.get_node_loc_xhigh(child_context));
-		node_loc.setXlow(in.get_node_loc_xlow(child_context));
-		node_loc.setYhigh(in.get_node_loc_yhigh(child_context));
-		node_loc.setYlow(in.get_node_loc_ylow(child_context));
+			node_ptn_loc.setSide(conv_to_enum_loc_side(in.get_node_loc_side(child_context)));
+		node_ptn_loc.setXhigh(in.get_node_loc_xhigh(child_context));
+		node_ptn_loc.setXlow(in.get_node_loc_xlow(child_context));
+		node_ptn_loc.setYhigh(in.get_node_loc_yhigh(child_context));
+		node_ptn_loc.setYlow(in.get_node_loc_ylow(child_context));
 	}
 
-	if(in.has_node_timing(context)){
-		auto node_timing = root.initTiming();
-		auto child_context = in.get_node_timing(context);
-		node_timing.setC(in.get_node_timing_C(child_context));
-		node_timing.setR(in.get_node_timing_R(child_context));
+	if(in.has_node_ptn_timing(context)){
+		auto node_ptn_timing = root.initTiming();
+		auto child_context = in.get_node_ptn_timing(context);
+		node_ptn_timing.setC(in.get_node_timing_C(child_context));
+		node_ptn_timing.setR(in.get_node_timing_R(child_context));
 	}
 
-	if(in.has_node_segment(context)){
-		auto node_segment = root.initSegment();
-		auto child_context = in.get_node_segment(context);
-		node_segment.setSegmentId(in.get_node_segment_segment_id(child_context));
+	if(in.has_node_ptn_segment(context)){
+		auto node_ptn_segment = root.initSegment();
+		auto child_context = in.get_node_ptn_segment(context);
+		node_ptn_segment.setSegmentId(in.get_node_segment_segment_id(child_context));
 	}
 
-	if(in.has_node_metadata(context)){
-		auto node_metadata = root.initMetadata();
-		auto child_context = in.get_node_metadata(context);
-		write_metadata_capnp_type(in, node_metadata, child_context);
+	if(in.has_node_ptn_metadata(context)){
+		auto node_ptn_metadata = root.initMetadata();
+		auto child_context = in.get_node_ptn_metadata(context);
+		write_metadata_capnp_type(in, node_ptn_metadata, child_context);
+	}
+}
+
+template<class T, typename Context>
+inline void write_rr_node_patterns_capnp_type(T &in, ucap::RrNodePatterns::Builder &root, Context &context) {
+	(void)in;
+	(void)root;
+
+	size_t num_rr_node_patterns_node_ptns = in.num_rr_node_patterns_node_ptn(context);
+	auto rr_node_patterns_node_ptns = root.initNodePtns(num_rr_node_patterns_node_ptns);
+	for(size_t i = 0; i < num_rr_node_patterns_node_ptns; i++) {
+		auto rr_node_patterns_node_ptn = rr_node_patterns_node_ptns[i];
+		auto child_context = in.get_rr_node_patterns_node_ptn(i, context);
+		rr_node_patterns_node_ptn.setCapacity(in.get_node_ptn_capacity(child_context));
+		if((bool)in.get_node_ptn_direction(child_context))
+			rr_node_patterns_node_ptn.setDirection(conv_to_enum_node_direction(in.get_node_ptn_direction(child_context)));
+		rr_node_patterns_node_ptn.setId(in.get_node_ptn_id(child_context));
+		rr_node_patterns_node_ptn.setType(conv_to_enum_node_type(in.get_node_ptn_type(child_context)));
+		write_node_ptn_capnp_type(in, rr_node_patterns_node_ptn, child_context);
 	}
 }
 
@@ -1314,12 +1378,9 @@ inline void write_rr_nodes_capnp_type(T &in, ucap::RrNodes::Builder &root, Conte
 	for(size_t i = 0; i < num_rr_nodes_nodes; i++) {
 		auto rr_nodes_node = rr_nodes_nodes[i];
 		auto child_context = in.get_rr_nodes_node(i, context);
-		rr_nodes_node.setCapacity(in.get_node_capacity(child_context));
-		if((bool)in.get_node_direction(child_context))
-			rr_nodes_node.setDirection(conv_to_enum_node_direction(in.get_node_direction(child_context)));
 		rr_nodes_node.setId(in.get_node_id(child_context));
-		rr_nodes_node.setType(conv_to_enum_node_type(in.get_node_type(child_context)));
-		write_node_capnp_type(in, rr_nodes_node, child_context);
+		rr_nodes_node.setPtc(in.get_node_ptc(child_context));
+		rr_nodes_node.setPtnIdx(in.get_node_ptn_idx(child_context));
 	}
 }
 
@@ -1432,6 +1493,12 @@ inline void write_rr_graph_capnp_type(T &in, ucap::RrGraph::Builder &root, Conte
 		auto child_context = in.get_rr_graph_grid(context);
 		auto rr_graph_grid = root.initGrid();
 		write_grid_locs_capnp_type(in, rr_graph_grid, child_context);
+	}
+
+	{
+		auto child_context = in.get_rr_graph_rr_node_patterns(context);
+		auto rr_graph_rr_node_patterns = root.initRrNodePatterns();
+		write_rr_node_patterns_capnp_type(in, rr_graph_rr_node_patterns, child_context);
 	}
 
 	{

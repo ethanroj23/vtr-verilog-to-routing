@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcxx.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: 3d2186e526265181754d81a5104120fa
+ * md5sum of input file: c44c871024a6c60f7c3509e3424a6947
  */
 
 #include <functional>
@@ -87,7 +87,7 @@ template <class T, typename Context>
 inline void load_grid_locs(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 template <class T, typename Context>
 inline void load_node_loc(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
-inline void load_node_loc_required_attributes(const pugi::xml_node &root, int * ptc, int * xhigh, int * xlow, int * yhigh, int * ylow, const std::function<void(const char*)> * report_error);
+inline void load_node_loc_required_attributes(const pugi::xml_node &root, int * xhigh, int * xlow, int * yhigh, int * ylow, const std::function<void(const char*)> * report_error);
 template <class T, typename Context>
 inline void load_node_timing(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 inline void load_node_timing_required_attributes(const pugi::xml_node &root, float * C, float * R, const std::function<void(const char*)> * report_error);
@@ -99,8 +99,13 @@ inline void load_meta(const pugi::xml_node &root, T &out, Context &context, cons
 template <class T, typename Context>
 inline void load_metadata(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 template <class T, typename Context>
+inline void load_node_ptn(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
+inline void load_node_ptn_required_attributes(const pugi::xml_node &root, unsigned int * capacity, unsigned int * id, enum_node_type * type, const std::function<void(const char*)> * report_error);
+template <class T, typename Context>
+inline void load_rr_node_patterns(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
+template <class T, typename Context>
 inline void load_node(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
-inline void load_node_required_attributes(const pugi::xml_node &root, unsigned int * capacity, unsigned int * id, enum_node_type * type, const std::function<void(const char*)> * report_error);
+inline void load_node_required_attributes(const pugi::xml_node &root, unsigned int * id, int * ptc, unsigned int * ptn_idx, const std::function<void(const char*)> * report_error);
 template <class T, typename Context>
 inline void load_rr_nodes(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug);
 template <class T, typename Context>
@@ -150,7 +155,9 @@ inline void write_meta(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
 inline void write_metadata(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
-inline void write_node(T &in, std::ostream &os, const void *data, void *iter);
+inline void write_node_ptn(T &in, std::ostream &os, const void *data, void *iter);
+template <class T>
+inline void write_rr_node_patterns(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
 inline void write_rr_nodes(T &in, std::ostream &os, const void *data, void *iter);
 template <class T>
@@ -294,8 +301,8 @@ constexpr const char *atok_lookup_t_grid_loc[] = {"block_type_id", "height_offse
 enum class gtok_t_grid_locs {GRID_LOC};
 constexpr const char *gtok_lookup_t_grid_locs[] = {"grid_loc"};
 
-enum class atok_t_node_loc {PTC, SIDE, XHIGH, XLOW, YHIGH, YLOW};
-constexpr const char *atok_lookup_t_node_loc[] = {"ptc", "side", "xhigh", "xlow", "yhigh", "ylow"};
+enum class atok_t_node_loc {SIDE, XHIGH, XLOW, YHIGH, YLOW};
+constexpr const char *atok_lookup_t_node_loc[] = {"side", "xhigh", "xlow", "yhigh", "ylow"};
 
 
 enum class atok_t_node_timing {C, R};
@@ -311,10 +318,16 @@ constexpr const char *atok_lookup_t_meta[] = {"name"};
 
 enum class gtok_t_metadata {META};
 constexpr const char *gtok_lookup_t_metadata[] = {"meta"};
-enum class gtok_t_node {LOC, TIMING, SEGMENT, METADATA};
-constexpr const char *gtok_lookup_t_node[] = {"loc", "timing", "segment", "metadata"};
-enum class atok_t_node {CAPACITY, DIRECTION, ID, TYPE};
-constexpr const char *atok_lookup_t_node[] = {"capacity", "direction", "id", "type"};
+enum class gtok_t_node_ptn {LOC, TIMING, SEGMENT, METADATA};
+constexpr const char *gtok_lookup_t_node_ptn[] = {"loc", "timing", "segment", "metadata"};
+enum class atok_t_node_ptn {CAPACITY, DIRECTION, ID, TYPE};
+constexpr const char *atok_lookup_t_node_ptn[] = {"capacity", "direction", "id", "type"};
+
+enum class gtok_t_rr_node_patterns {NODE_PTN};
+constexpr const char *gtok_lookup_t_rr_node_patterns[] = {"node_ptn"};
+
+enum class atok_t_node {ID, PTC, PTN_IDX};
+constexpr const char *atok_lookup_t_node[] = {"id", "ptc", "ptn_idx"};
 
 enum class gtok_t_rr_nodes {NODE};
 constexpr const char *gtok_lookup_t_rr_nodes[] = {"node"};
@@ -342,8 +355,8 @@ constexpr const char *atok_lookup_t_node_e_ptn[] = {"dest", "id"};
 
 enum class gtok_t_rr_node_e_ptns {NODE_E_PTN};
 constexpr const char *gtok_lookup_t_rr_node_e_ptns[] = {"node_e_ptn"};
-enum class gtok_t_rr_graph {CHANNELS, SWITCHES, SEGMENTS, BLOCK_TYPES, GRID, RR_NODES, RR_EDGE_PTNS, RR_SINGLE_EDGE_PTNS, RR_NODE_E_PTNS};
-constexpr const char *gtok_lookup_t_rr_graph[] = {"channels", "switches", "segments", "block_types", "grid", "rr_nodes", "rr_edge_ptns", "rr_single_edge_ptns", "rr_node_e_ptns"};
+enum class gtok_t_rr_graph {CHANNELS, SWITCHES, SEGMENTS, BLOCK_TYPES, GRID, RR_NODE_PATTERNS, RR_NODES, RR_EDGE_PTNS, RR_SINGLE_EDGE_PTNS, RR_NODE_E_PTNS};
+constexpr const char *gtok_lookup_t_rr_graph[] = {"channels", "switches", "segments", "block_types", "grid", "rr_node_patterns", "rr_nodes", "rr_edge_ptns", "rr_single_edge_ptns", "rr_node_e_ptns"};
 enum class atok_t_rr_graph {TOOL_COMMENT, TOOL_NAME, TOOL_VERSION};
 constexpr const char *atok_lookup_t_rr_graph[] = {"tool_comment", "tool_name", "tool_version"};
 
@@ -1119,24 +1132,6 @@ inline gtok_t_grid_locs lex_node_t_grid_locs(const char *in, const std::function
 inline atok_t_node_loc lex_attr_t_node_loc(const char *in, const std::function<void(const char *)> * report_error){
 	unsigned int len = strlen(in);
 	switch(len){
-	case 3:
-		switch(in[0]){
-		case onechar('p', 0, 8):
-			switch(in[1]){
-			case onechar('t', 0, 8):
-				switch(in[2]){
-				case onechar('c', 0, 8):
-					return atok_t_node_loc::PTC;
-				break;
-				default: break;
-				}
-			break;
-			default: break;
-			}
-		break;
-		default: break;
-		}
-		break;
 	case 4:
 		switch(*((triehash_uu32*)&in[0])){
 		case onechar('s', 0, 32) | onechar('i', 8, 32) | onechar('d', 16, 32) | onechar('e', 24, 32):
@@ -1254,7 +1249,7 @@ inline gtok_t_metadata lex_node_t_metadata(const char *in, const std::function<v
 	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <metadata>.").c_str());
 }
 
-inline gtok_t_node lex_node_t_node(const char *in, const std::function<void(const char *)> *report_error){
+inline gtok_t_node_ptn lex_node_t_node_ptn(const char *in, const std::function<void(const char *)> *report_error){
 	unsigned int len = strlen(in);
 	switch(len){
 	case 3:
@@ -1264,7 +1259,7 @@ inline gtok_t_node lex_node_t_node(const char *in, const std::function<void(cons
 			case onechar('o', 0, 8):
 				switch(in[2]){
 				case onechar('c', 0, 8):
-					return gtok_t_node::LOC;
+					return gtok_t_node_ptn::LOC;
 				break;
 				default: break;
 				}
@@ -1282,7 +1277,7 @@ inline gtok_t_node lex_node_t_node(const char *in, const std::function<void(cons
 			case onechar('n', 0, 8):
 				switch(in[5]){
 				case onechar('g', 0, 8):
-					return gtok_t_node::TIMING;
+					return gtok_t_node_ptn::TIMING;
 				break;
 				default: break;
 				}
@@ -1302,7 +1297,7 @@ inline gtok_t_node lex_node_t_node(const char *in, const std::function<void(cons
 				case onechar('n', 0, 8):
 					switch(in[6]){
 					case onechar('t', 0, 8):
-						return gtok_t_node::SEGMENT;
+						return gtok_t_node_ptn::SEGMENT;
 					break;
 					default: break;
 					}
@@ -1319,15 +1314,81 @@ inline gtok_t_node lex_node_t_node(const char *in, const std::function<void(cons
 	case 8:
 		switch(*((triehash_uu64*)&in[0])){
 		case onechar('m', 0, 64) | onechar('e', 8, 64) | onechar('t', 16, 64) | onechar('a', 24, 64) | onechar('d', 32, 64) | onechar('a', 40, 64) | onechar('t', 48, 64) | onechar('a', 56, 64):
-			return gtok_t_node::METADATA;
+			return gtok_t_node_ptn::METADATA;
 		break;
 		default: break;
 		}
 		break;
 	default: break;
 	}
-	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <node>.").c_str());
+	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <node_ptn>.").c_str());
 }
+inline atok_t_node_ptn lex_attr_t_node_ptn(const char *in, const std::function<void(const char *)> * report_error){
+	unsigned int len = strlen(in);
+	switch(len){
+	case 2:
+		switch(in[0]){
+		case onechar('i', 0, 8):
+			switch(in[1]){
+			case onechar('d', 0, 8):
+				return atok_t_node_ptn::ID;
+			break;
+			default: break;
+			}
+		break;
+		default: break;
+		}
+		break;
+	case 4:
+		switch(*((triehash_uu32*)&in[0])){
+		case onechar('t', 0, 32) | onechar('y', 8, 32) | onechar('p', 16, 32) | onechar('e', 24, 32):
+			return atok_t_node_ptn::TYPE;
+		break;
+		default: break;
+		}
+		break;
+	case 8:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('c', 0, 64) | onechar('a', 8, 64) | onechar('p', 16, 64) | onechar('a', 24, 64) | onechar('c', 32, 64) | onechar('i', 40, 64) | onechar('t', 48, 64) | onechar('y', 56, 64):
+			return atok_t_node_ptn::CAPACITY;
+		break;
+		default: break;
+		}
+		break;
+	case 9:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('d', 0, 64) | onechar('i', 8, 64) | onechar('r', 16, 64) | onechar('e', 24, 64) | onechar('c', 32, 64) | onechar('t', 40, 64) | onechar('i', 48, 64) | onechar('o', 56, 64):
+			switch(in[8]){
+			case onechar('n', 0, 8):
+				return atok_t_node_ptn::DIRECTION;
+			break;
+			default: break;
+			}
+		break;
+		default: break;
+		}
+		break;
+	default: break;
+	}
+	noreturn_report(report_error, ("Found unrecognized attribute " + std::string(in) + " of <node_ptn>.").c_str());
+}
+
+inline gtok_t_rr_node_patterns lex_node_t_rr_node_patterns(const char *in, const std::function<void(const char *)> *report_error){
+	unsigned int len = strlen(in);
+	switch(len){
+	case 8:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('n', 0, 64) | onechar('o', 8, 64) | onechar('d', 16, 64) | onechar('e', 24, 64) | onechar('_', 32, 64) | onechar('p', 40, 64) | onechar('t', 48, 64) | onechar('n', 56, 64):
+			return gtok_t_rr_node_patterns::NODE_PTN;
+		break;
+		default: break;
+		}
+		break;
+	default: break;
+	}
+	noreturn_report(report_error, ("Found unrecognized child " + std::string(in) + " of <rr_node_patterns>.").c_str());
+}
+
 inline atok_t_node lex_attr_t_node(const char *in, const std::function<void(const char *)> * report_error){
 	unsigned int len = strlen(in);
 	switch(len){
@@ -1344,28 +1405,40 @@ inline atok_t_node lex_attr_t_node(const char *in, const std::function<void(cons
 		default: break;
 		}
 		break;
-	case 4:
+	case 3:
+		switch(in[0]){
+		case onechar('p', 0, 8):
+			switch(in[1]){
+			case onechar('t', 0, 8):
+				switch(in[2]){
+				case onechar('c', 0, 8):
+					return atok_t_node::PTC;
+				break;
+				default: break;
+				}
+			break;
+			default: break;
+			}
+		break;
+		default: break;
+		}
+		break;
+	case 7:
 		switch(*((triehash_uu32*)&in[0])){
-		case onechar('t', 0, 32) | onechar('y', 8, 32) | onechar('p', 16, 32) | onechar('e', 24, 32):
-			return atok_t_node::TYPE;
-		break;
-		default: break;
-		}
-		break;
-	case 8:
-		switch(*((triehash_uu64*)&in[0])){
-		case onechar('c', 0, 64) | onechar('a', 8, 64) | onechar('p', 16, 64) | onechar('a', 24, 64) | onechar('c', 32, 64) | onechar('i', 40, 64) | onechar('t', 48, 64) | onechar('y', 56, 64):
-			return atok_t_node::CAPACITY;
-		break;
-		default: break;
-		}
-		break;
-	case 9:
-		switch(*((triehash_uu64*)&in[0])){
-		case onechar('d', 0, 64) | onechar('i', 8, 64) | onechar('r', 16, 64) | onechar('e', 24, 64) | onechar('c', 32, 64) | onechar('t', 40, 64) | onechar('i', 48, 64) | onechar('o', 56, 64):
-			switch(in[8]){
-			case onechar('n', 0, 8):
-				return atok_t_node::DIRECTION;
+		case onechar('p', 0, 32) | onechar('t', 8, 32) | onechar('n', 16, 32) | onechar('_', 24, 32):
+			switch(in[4]){
+			case onechar('i', 0, 8):
+				switch(in[5]){
+				case onechar('d', 0, 8):
+					switch(in[6]){
+					case onechar('x', 0, 8):
+						return atok_t_node::PTN_IDX;
+					break;
+					default: break;
+					}
+				break;
+				default: break;
+				}
 			break;
 			default: break;
 			}
@@ -1677,6 +1750,19 @@ inline gtok_t_rr_graph lex_node_t_rr_graph(const char *in, const std::function<v
 				break;
 				default: break;
 				}
+			break;
+			default: break;
+			}
+		break;
+		default: break;
+		}
+		break;
+	case 16:
+		switch(*((triehash_uu64*)&in[0])){
+		case onechar('r', 0, 64) | onechar('r', 8, 64) | onechar('_', 16, 64) | onechar('n', 24, 64) | onechar('o', 32, 64) | onechar('d', 40, 64) | onechar('e', 48, 64) | onechar('_', 56, 64):
+			switch(*((triehash_uu64*)&in[8])){
+			case onechar('p', 0, 64) | onechar('a', 8, 64) | onechar('t', 16, 64) | onechar('t', 24, 64) | onechar('e', 32, 64) | onechar('r', 40, 64) | onechar('n', 48, 64) | onechar('s', 56, 64):
+				return gtok_t_rr_graph::RR_NODE_PATTERNS;
 			break;
 			default: break;
 			}
@@ -2546,16 +2632,13 @@ inline void load_grid_loc_required_attributes(const pugi::xml_node &root, int * 
 	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_grid_loc, report_error);
 }
 
-inline void load_node_loc_required_attributes(const pugi::xml_node &root, int * ptc, int * xhigh, int * xlow, int * yhigh, int * ylow, const std::function<void(const char *)> * report_error){
-	std::bitset<6> astate = 0;
+inline void load_node_loc_required_attributes(const pugi::xml_node &root, int * xhigh, int * xlow, int * yhigh, int * ylow, const std::function<void(const char *)> * report_error){
+	std::bitset<5> astate = 0;
 	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
 		atok_t_node_loc in = lex_attr_t_node_loc(attr.name(), report_error);
 		if(astate[(int)in] == 0) astate[(int)in] = 1;
 		else noreturn_report(report_error, ("Duplicate attribute " + std::string(attr.name()) + " in <node_loc>.").c_str());
 		switch(in){
-		case atok_t_node_loc::PTC:
-			*ptc = load_int(attr.value(), report_error);
-			break;
 		case atok_t_node_loc::SIDE:
 			/* Attribute side set after element init */
 			break;
@@ -2574,7 +2657,7 @@ inline void load_node_loc_required_attributes(const pugi::xml_node &root, int * 
 		default: break; /* Not possible. */
 		}
 	}
-	std::bitset<6> test_astate = astate | std::bitset<6>(0b000010);
+	std::bitset<5> test_astate = astate | std::bitset<5>(0b00001);
 	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_node_loc, report_error);
 }
 
@@ -2615,29 +2698,52 @@ inline void load_node_segment_required_attributes(const pugi::xml_node &root, in
 	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_node_segment, report_error);
 }
 
-inline void load_node_required_attributes(const pugi::xml_node &root, unsigned int * capacity, unsigned int * id, enum_node_type * type, const std::function<void(const char *)> * report_error){
+inline void load_node_ptn_required_attributes(const pugi::xml_node &root, unsigned int * capacity, unsigned int * id, enum_node_type * type, const std::function<void(const char *)> * report_error){
 	std::bitset<4> astate = 0;
 	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
-		atok_t_node in = lex_attr_t_node(attr.name(), report_error);
+		atok_t_node_ptn in = lex_attr_t_node_ptn(attr.name(), report_error);
 		if(astate[(int)in] == 0) astate[(int)in] = 1;
-		else noreturn_report(report_error, ("Duplicate attribute " + std::string(attr.name()) + " in <node>.").c_str());
+		else noreturn_report(report_error, ("Duplicate attribute " + std::string(attr.name()) + " in <node_ptn>.").c_str());
 		switch(in){
-		case atok_t_node::CAPACITY:
+		case atok_t_node_ptn::CAPACITY:
 			*capacity = load_unsigned_int(attr.value(), report_error);
 			break;
-		case atok_t_node::DIRECTION:
+		case atok_t_node_ptn::DIRECTION:
 			/* Attribute direction set after element init */
 			break;
-		case atok_t_node::ID:
+		case atok_t_node_ptn::ID:
 			*id = load_unsigned_int(attr.value(), report_error);
 			break;
-		case atok_t_node::TYPE:
+		case atok_t_node_ptn::TYPE:
 			*type = lex_enum_node_type(attr.value(), true, report_error);
 			break;
 		default: break; /* Not possible. */
 		}
 	}
 	std::bitset<4> test_astate = astate | std::bitset<4>(0b0010);
+	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_node_ptn, report_error);
+}
+
+inline void load_node_required_attributes(const pugi::xml_node &root, unsigned int * id, int * ptc, unsigned int * ptn_idx, const std::function<void(const char *)> * report_error){
+	std::bitset<3> astate = 0;
+	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
+		atok_t_node in = lex_attr_t_node(attr.name(), report_error);
+		if(astate[(int)in] == 0) astate[(int)in] = 1;
+		else noreturn_report(report_error, ("Duplicate attribute " + std::string(attr.name()) + " in <node>.").c_str());
+		switch(in){
+		case atok_t_node::ID:
+			*id = load_unsigned_int(attr.value(), report_error);
+			break;
+		case atok_t_node::PTC:
+			*ptc = load_int(attr.value(), report_error);
+			break;
+		case atok_t_node::PTN_IDX:
+			*ptn_idx = load_unsigned_int(attr.value(), report_error);
+			break;
+		default: break; /* Not possible. */
+		}
+	}
+	std::bitset<3> test_astate = astate | std::bitset<3>(0b000);
 	if(!test_astate.all()) attr_error(test_astate, atok_lookup_t_node, report_error);
 }
 
@@ -3504,9 +3610,6 @@ inline void load_node_loc(const pugi::xml_node &root, T &out, Context &context, 
 	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
 		atok_t_node_loc in = lex_attr_t_node_loc(attr.name(), report_error);
 		switch(in){
-		case atok_t_node_loc::PTC:
-			/* Attribute ptc is already set */
-			break;
 		case atok_t_node_loc::SIDE:
 			out.set_node_loc_side(lex_enum_loc_side(attr.value(), true, report_error), context);
 			break;
@@ -3649,7 +3752,7 @@ inline void load_metadata(const pugi::xml_node &root, T &out, Context &context, 
 }
 
 template<class T, typename Context>
-inline void load_node(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
+inline void load_node_ptn(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
 	(void)root;
 	(void)out;
 	(void)context;
@@ -3658,18 +3761,18 @@ inline void load_node(const pugi::xml_node &root, T &out, Context &context, cons
 	*offset_debug = root.offset_debug();
 
 	for(pugi::xml_attribute attr = root.first_attribute(); attr; attr = attr.next_attribute()){
-		atok_t_node in = lex_attr_t_node(attr.name(), report_error);
+		atok_t_node_ptn in = lex_attr_t_node_ptn(attr.name(), report_error);
 		switch(in){
-		case atok_t_node::CAPACITY:
+		case atok_t_node_ptn::CAPACITY:
 			/* Attribute capacity is already set */
 			break;
-		case atok_t_node::DIRECTION:
-			out.set_node_direction(lex_enum_node_direction(attr.value(), true, report_error), context);
+		case atok_t_node_ptn::DIRECTION:
+			out.set_node_ptn_direction(lex_enum_node_direction(attr.value(), true, report_error), context);
 			break;
-		case atok_t_node::ID:
+		case atok_t_node_ptn::ID:
 			/* Attribute id is already set */
 			break;
-		case atok_t_node::TYPE:
+		case atok_t_node_ptn::TYPE:
 			/* Attribute type is already set */
 			break;
 		default: break; /* Not possible. */
@@ -3679,14 +3782,12 @@ inline void load_node(const pugi::xml_node &root, T &out, Context &context, cons
 	std::bitset<4> gstate = 0;
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()){
 		*offset_debug = node.offset_debug();
-		gtok_t_node in = lex_node_t_node(node.name(), report_error);
+		gtok_t_node_ptn in = lex_node_t_node_ptn(node.name(), report_error);
 		if(gstate[(int)in] == 0) gstate[(int)in] = 1;
-		else noreturn_report(report_error, ("Duplicate element " + std::string(node.name()) + " in <node>.").c_str());
+		else noreturn_report(report_error, ("Duplicate element " + std::string(node.name()) + " in <node_ptn>.").c_str());
 		switch(in){
-		case gtok_t_node::LOC:
+		case gtok_t_node_ptn::LOC:
 			{
-				int node_loc_ptc;
-				memset(&node_loc_ptc, 0, sizeof(node_loc_ptc));
 				int node_loc_xhigh;
 				memset(&node_loc_xhigh, 0, sizeof(node_loc_xhigh));
 				int node_loc_xlow;
@@ -3695,46 +3796,130 @@ inline void load_node(const pugi::xml_node &root, T &out, Context &context, cons
 				memset(&node_loc_yhigh, 0, sizeof(node_loc_yhigh));
 				int node_loc_ylow;
 				memset(&node_loc_ylow, 0, sizeof(node_loc_ylow));
-				load_node_loc_required_attributes(node, &node_loc_ptc, &node_loc_xhigh, &node_loc_xlow, &node_loc_yhigh, &node_loc_ylow, report_error);
-				auto child_context = out.init_node_loc(context, node_loc_ptc, node_loc_xhigh, node_loc_xlow, node_loc_yhigh, node_loc_ylow);
+				load_node_loc_required_attributes(node, &node_loc_xhigh, &node_loc_xlow, &node_loc_yhigh, &node_loc_ylow, report_error);
+				auto child_context = out.init_node_ptn_loc(context, node_loc_xhigh, node_loc_xlow, node_loc_yhigh, node_loc_ylow);
 				load_node_loc(node, out, child_context, report_error, offset_debug);
-				out.finish_node_loc(child_context);
+				out.finish_node_ptn_loc(child_context);
 			}
 			break;
-		case gtok_t_node::TIMING:
+		case gtok_t_node_ptn::TIMING:
 			{
 				float node_timing_C;
 				memset(&node_timing_C, 0, sizeof(node_timing_C));
 				float node_timing_R;
 				memset(&node_timing_R, 0, sizeof(node_timing_R));
 				load_node_timing_required_attributes(node, &node_timing_C, &node_timing_R, report_error);
-				auto child_context = out.init_node_timing(context, node_timing_C, node_timing_R);
+				auto child_context = out.init_node_ptn_timing(context, node_timing_C, node_timing_R);
 				load_node_timing(node, out, child_context, report_error, offset_debug);
-				out.finish_node_timing(child_context);
+				out.finish_node_ptn_timing(child_context);
 			}
 			break;
-		case gtok_t_node::SEGMENT:
+		case gtok_t_node_ptn::SEGMENT:
 			{
 				int node_segment_segment_id;
 				memset(&node_segment_segment_id, 0, sizeof(node_segment_segment_id));
 				load_node_segment_required_attributes(node, &node_segment_segment_id, report_error);
-				auto child_context = out.init_node_segment(context, node_segment_segment_id);
+				auto child_context = out.init_node_ptn_segment(context, node_segment_segment_id);
 				load_node_segment(node, out, child_context, report_error, offset_debug);
-				out.finish_node_segment(child_context);
+				out.finish_node_ptn_segment(child_context);
 			}
 			break;
-		case gtok_t_node::METADATA:
+		case gtok_t_node_ptn::METADATA:
 			{
-				auto child_context = out.init_node_metadata(context);
+				auto child_context = out.init_node_ptn_metadata(context);
 				load_metadata(node, out, child_context, report_error, offset_debug);
-				out.finish_node_metadata(child_context);
+				out.finish_node_ptn_metadata(child_context);
 			}
 			break;
 		default: break; /* Not possible. */
 		}
 	}
 	std::bitset<4> test_gstate = gstate | std::bitset<4>(0b1110);
-	if(!test_gstate.all()) all_error(test_gstate, gtok_lookup_t_node, report_error);
+	if(!test_gstate.all()) all_error(test_gstate, gtok_lookup_t_node_ptn, report_error);
+
+}
+
+constexpr int NUM_T_RR_NODE_PATTERNS_STATES = 2;
+constexpr const int NUM_T_RR_NODE_PATTERNS_INPUTS = 1;
+constexpr int gstate_t_rr_node_patterns[NUM_T_RR_NODE_PATTERNS_STATES][NUM_T_RR_NODE_PATTERNS_INPUTS] = {
+	{0},
+	{0},
+};
+template<class T, typename Context>
+inline void load_rr_node_patterns(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	// Update current file offset in case an error is encountered.
+	*offset_debug = root.offset_debug();
+
+	if(root.first_attribute())
+		noreturn_report(report_error, "Unexpected attribute in <rr_node_patterns>.");
+
+	// Preallocate arrays by counting child nodes (if any)
+	size_t node_ptn_count = 0;
+	{
+		int next, state=1;
+		for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()) {
+			*offset_debug = node.offset_debug();
+			gtok_t_rr_node_patterns in = lex_node_t_rr_node_patterns(node.name(), report_error);
+			next = gstate_t_rr_node_patterns[state][(int)in];
+			if(next == -1)
+				dfa_error(gtok_lookup_t_rr_node_patterns[(int)in], gstate_t_rr_node_patterns[state], gtok_lookup_t_rr_node_patterns, 1, report_error);
+			state = next;
+			switch(in) {
+			case gtok_t_rr_node_patterns::NODE_PTN:
+				node_ptn_count += 1;
+				break;
+			default: break; /* Not possible. */
+			}
+		}
+		
+		out.preallocate_rr_node_patterns_node_ptn(context, node_ptn_count);
+	}
+	int next, state=1;
+	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()){
+		*offset_debug = node.offset_debug();
+		gtok_t_rr_node_patterns in = lex_node_t_rr_node_patterns(node.name(), report_error);
+		next = gstate_t_rr_node_patterns[state][(int)in];
+		if(next == -1)
+			dfa_error(gtok_lookup_t_rr_node_patterns[(int)in], gstate_t_rr_node_patterns[state], gtok_lookup_t_rr_node_patterns, 1, report_error);
+		state = next;
+		switch(in){
+		case gtok_t_rr_node_patterns::NODE_PTN:
+			{
+				unsigned int node_ptn_capacity;
+				memset(&node_ptn_capacity, 0, sizeof(node_ptn_capacity));
+				unsigned int node_ptn_id;
+				memset(&node_ptn_id, 0, sizeof(node_ptn_id));
+				enum_node_type node_ptn_type;
+				memset(&node_ptn_type, 0, sizeof(node_ptn_type));
+				load_node_ptn_required_attributes(node, &node_ptn_capacity, &node_ptn_id, &node_ptn_type, report_error);
+				auto child_context = out.add_rr_node_patterns_node_ptn(context, node_ptn_capacity, node_ptn_id, node_ptn_type);
+				load_node_ptn(node, out, child_context, report_error, offset_debug);
+				out.finish_rr_node_patterns_node_ptn(child_context);
+			}
+			break;
+		default: break; /* Not possible. */
+		}
+	}
+	if(state != 0) dfa_error("end of input", gstate_t_rr_node_patterns[state], gtok_lookup_t_rr_node_patterns, 1, report_error);
+
+}
+
+template<class T, typename Context>
+inline void load_node(const pugi::xml_node &root, T &out, Context &context, const std::function<void(const char*)> *report_error, ptrdiff_t *offset_debug){
+	(void)root;
+	(void)out;
+	(void)context;
+	(void)report_error;
+	// Update current file offset in case an error is encountered.
+	*offset_debug = root.offset_debug();
+
+
+	if(root.first_child().type() == pugi::node_element)
+		noreturn_report(report_error, "Unexpected child element in <node>.");
 
 }
 
@@ -3788,14 +3973,14 @@ inline void load_rr_nodes(const pugi::xml_node &root, T &out, Context &context, 
 		switch(in){
 		case gtok_t_rr_nodes::NODE:
 			{
-				unsigned int node_capacity;
-				memset(&node_capacity, 0, sizeof(node_capacity));
 				unsigned int node_id;
 				memset(&node_id, 0, sizeof(node_id));
-				enum_node_type node_type;
-				memset(&node_type, 0, sizeof(node_type));
-				load_node_required_attributes(node, &node_capacity, &node_id, &node_type, report_error);
-				auto child_context = out.add_rr_nodes_node(context, node_capacity, node_id, node_type);
+				int node_ptc;
+				memset(&node_ptc, 0, sizeof(node_ptc));
+				unsigned int node_ptn_idx;
+				memset(&node_ptn_idx, 0, sizeof(node_ptn_idx));
+				load_node_required_attributes(node, &node_id, &node_ptc, &node_ptn_idx, report_error);
+				auto child_context = out.add_rr_nodes_node(context, node_id, node_ptc, node_ptn_idx);
 				load_node(node, out, child_context, report_error, offset_debug);
 				out.finish_rr_nodes_node(child_context);
 			}
@@ -4189,7 +4374,7 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 		}
 	}
 
-	std::bitset<9> gstate = 0;
+	std::bitset<10> gstate = 0;
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling()){
 		*offset_debug = node.offset_debug();
 		gtok_t_rr_graph in = lex_node_t_rr_graph(node.name(), report_error);
@@ -4231,6 +4416,13 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 				out.finish_rr_graph_grid(child_context);
 			}
 			break;
+		case gtok_t_rr_graph::RR_NODE_PATTERNS:
+			{
+				auto child_context = out.init_rr_graph_rr_node_patterns(context);
+				load_rr_node_patterns(node, out, child_context, report_error, offset_debug);
+				out.finish_rr_graph_rr_node_patterns(child_context);
+			}
+			break;
 		case gtok_t_rr_graph::RR_NODES:
 			{
 				auto child_context = out.init_rr_graph_rr_nodes(context);
@@ -4262,7 +4454,7 @@ inline void load_rr_graph(const pugi::xml_node &root, T &out, Context &context, 
 		default: break; /* Not possible. */
 		}
 	}
-	std::bitset<9> test_gstate = gstate | std::bitset<9>(0b000000000);
+	std::bitset<10> test_gstate = gstate | std::bitset<10>(0b0000000000);
 	if(!test_gstate.all()) all_error(test_gstate, gtok_lookup_t_rr_graph, report_error);
 
 }
@@ -4498,14 +4690,13 @@ inline void write_metadata(T &in, std::ostream &os, Context &context){
 }
 
 template<class T, typename Context>
-inline void write_node(T &in, std::ostream &os, Context &context){
+inline void write_node_ptn(T &in, std::ostream &os, Context &context){
 	(void)in;
 	(void)os;
 	(void)context;
 	{
-		auto child_context = in.get_node_loc(context);
+		auto child_context = in.get_node_ptn_loc(context);
 		os << "<loc";
-		os << " ptc=\"" << in.get_node_loc_ptc(child_context) << "\"";
 		if((bool)in.get_node_loc_side(child_context))
 			os << " side=\"" << lookup_loc_side[(int)in.get_node_loc_side(child_context)] << "\"";
 		os << " xhigh=\"" << in.get_node_loc_xhigh(child_context) << "\"";
@@ -4515,8 +4706,8 @@ inline void write_node(T &in, std::ostream &os, Context &context){
 		os << "/>\n";
 	}
 	{
-		if(in.has_node_timing(context)){
-			auto child_context = in.get_node_timing(context);
+		if(in.has_node_ptn_timing(context)){
+			auto child_context = in.get_node_ptn_timing(context);
 			os << "<timing";
 			os << " C=\"" << in.get_node_timing_C(child_context) << "\"";
 			os << " R=\"" << in.get_node_timing_R(child_context) << "\"";
@@ -4524,19 +4715,40 @@ inline void write_node(T &in, std::ostream &os, Context &context){
 		}
 	}
 	{
-		if(in.has_node_segment(context)){
-			auto child_context = in.get_node_segment(context);
+		if(in.has_node_ptn_segment(context)){
+			auto child_context = in.get_node_ptn_segment(context);
 			os << "<segment";
 			os << " segment_id=\"" << in.get_node_segment_segment_id(child_context) << "\"";
 			os << "/>\n";
 		}
 	}
 	{
-		if(in.has_node_metadata(context)){
-			auto child_context = in.get_node_metadata(context);
+		if(in.has_node_ptn_metadata(context)){
+			auto child_context = in.get_node_ptn_metadata(context);
 			os << "<metadata>\n";
 			write_metadata(in, os, child_context);
 			os << "</metadata>\n";
+		}
+	}
+}
+
+template<class T, typename Context>
+inline void write_rr_node_patterns(T &in, std::ostream &os, Context &context){
+	(void)in;
+	(void)os;
+	(void)context;
+	{
+		for(size_t i=0, n=in.num_rr_node_patterns_node_ptn(context); i<n; i++){
+			auto child_context = in.get_rr_node_patterns_node_ptn(i, context);
+			os << "<node_ptn";
+			os << " capacity=\"" << in.get_node_ptn_capacity(child_context) << "\"";
+			if((bool)in.get_node_ptn_direction(child_context))
+				os << " direction=\"" << lookup_node_direction[(int)in.get_node_ptn_direction(child_context)] << "\"";
+			os << " id=\"" << in.get_node_ptn_id(child_context) << "\"";
+			os << " type=\"" << lookup_node_type[(int)in.get_node_ptn_type(child_context)] << "\"";
+			os << ">";
+			write_node_ptn(in, os, child_context);
+			os << "</node_ptn>\n";
 		}
 	}
 }
@@ -4550,14 +4762,10 @@ inline void write_rr_nodes(T &in, std::ostream &os, Context &context){
 		for(size_t i=0, n=in.num_rr_nodes_node(context); i<n; i++){
 			auto child_context = in.get_rr_nodes_node(i, context);
 			os << "<node";
-			os << " capacity=\"" << in.get_node_capacity(child_context) << "\"";
-			if((bool)in.get_node_direction(child_context))
-				os << " direction=\"" << lookup_node_direction[(int)in.get_node_direction(child_context)] << "\"";
 			os << " id=\"" << in.get_node_id(child_context) << "\"";
-			os << " type=\"" << lookup_node_type[(int)in.get_node_type(child_context)] << "\"";
-			os << ">";
-			write_node(in, os, child_context);
-			os << "</node>\n";
+			os << " ptc=\"" << in.get_node_ptc(child_context) << "\"";
+			os << " ptn_idx=\"" << in.get_node_ptn_idx(child_context) << "\"";
+			os << "/>\n";
 		}
 	}
 }
@@ -4680,6 +4888,12 @@ inline void write_rr_graph(T &in, std::ostream &os, Context &context){
 		os << "<grid>\n";
 		write_grid_locs(in, os, child_context);
 		os << "</grid>\n";
+	}
+	{
+		auto child_context = in.get_rr_graph_rr_node_patterns(context);
+		os << "<rr_node_patterns>\n";
+		write_rr_node_patterns(in, os, child_context);
+		os << "</rr_node_patterns>\n";
 	}
 	{
 		auto child_context = in.get_rr_graph_rr_nodes(context);

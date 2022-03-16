@@ -44,6 +44,15 @@ class RRGraphBuilder {
     inline void set_node_type(RRNodeId id, t_rr_type type) {
         node_storage_.set_node_type(id, type);
     }
+
+    inline void set_node_type_ptn(int id, t_rr_type type) {
+        node_storage_.set_node_type_ptn(id, type);
+    }
+
+    /** @brief Set the node ptn index of a node with a given valid id */
+    inline void set_node_ptn(RRNodeId id, int ptn_idx) {
+        node_storage_.set_node_ptn(id, ptn_idx);
+    }
     /**
      * @brief Add an existing rr_node in the node storage to the node look-up
      *
@@ -89,11 +98,18 @@ class RRGraphBuilder {
     inline void set_node_capacity(RRNodeId id, short new_capacity) {
         node_storage_.set_node_capacity(id, new_capacity);
     }
+    inline void set_node_capacity_ptn(int id, short new_capacity) {
+        node_storage_.set_node_capacity_ptn(id, new_capacity);
+    }
 
     /** @brief Set the node coordinate */
     inline void set_node_coordinates(RRNodeId id, short x1, short y1, short x2, short y2) {
         node_storage_.set_node_coordinates(id, x1, y1, x2, y2);
     }
+    inline void set_node_coordinates_ptn(int id, short x1, short y1, short x2, short y2) {
+        node_storage_.set_node_coordinates_ptn(id, x1, y1, x2, y2);
+    }
+
 
     /** @brief The ptc_num carries different meanings for different node types
      * (true in VPR RRG that is currently supported, may not be true in customized RRG)
@@ -127,6 +143,9 @@ class RRGraphBuilder {
     /** @brief Set the node direction; The node direction is only available of routing channel nodes, such as x-direction routing tracks (CHANX) and y-direction routing tracks (CHANY). For other nodes types, this value is not meaningful and should be set to NONE. */
     inline void set_node_direction(RRNodeId id, Direction new_direction) {
         node_storage_.set_node_direction(id, new_direction);
+    }
+    inline void set_node_direction_ptn(int id, Direction new_direction) {
+        node_storage_.set_node_direction_ptn(id, new_direction);
     }
     
     inline void add_node_first_dest(RRNodeId id, int dest){
@@ -180,16 +199,25 @@ class RRGraphBuilder {
     inline void set_node_cost_index(RRNodeId id, RRIndexedDataId new_cost_index) {
         node_storage_.set_node_cost_index(id, new_cost_index);
     }
+    inline void set_node_cost_index_ptn(int id, RRIndexedDataId new_cost_index) {
+        node_storage_.set_node_cost_index_ptn(id, new_cost_index);
+    }
 
     /** @brief Set the rc_index of routing resource node. */
     inline void set_node_rc_index(RRNodeId id, NodeRCIndex new_rc_index) {
         node_storage_.set_node_rc_index(id, new_rc_index);
+    }
+    inline void set_node_rc_index_ptn(int id, NodeRCIndex new_rc_index) {
+        node_storage_.set_node_rc_index_ptn(id, new_rc_index);
     }
 
     /** @brief Add the side where the node physically locates on a logic block.
      * Mainly applicable to IPIN and OPIN nodes.*/
     inline void add_node_side(RRNodeId id, e_side new_side) {
         node_storage_.add_node_side(id, new_side);
+    }
+    inline void add_node_side_ptn(int ptn_id, e_side new_side) {
+        node_storage_.add_node_side_ptn(ptn_id, new_side);
     }
 
     /** @brief It maps arch_switch_inf indicies to rr_switch_inf indicies. */

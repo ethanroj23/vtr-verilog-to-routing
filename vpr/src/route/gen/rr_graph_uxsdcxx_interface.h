@@ -6,7 +6,7 @@
  *
  * Cmdline: uxsdcxx/uxsdcxx.py /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
  * Input file: /home/ethan/workspaces/ethanroj23/vtr/vpr/src/route/rr_graph.xsd
- * md5sum of input file: 3d2186e526265181754d81a5104120fa
+ * md5sum of input file: c44c871024a6c60f7c3509e3424a6947
  */
 
 #include <functional>
@@ -55,6 +55,8 @@ using ChannelReadContext = void *;
 	using NodeSegmentReadContext = void *;
 	using MetaReadContext = void *;
 	using MetadataReadContext = void *;
+	using NodePtnReadContext = void *;
+	using RrNodePatternsReadContext = void *;
 	using NodeReadContext = void *;
 	using RrNodesReadContext = void *;
 	using DdiffReadContext = void *;
@@ -87,6 +89,8 @@ using ChannelWriteContext = void *;
 	using NodeSegmentWriteContext = void *;
 	using MetaWriteContext = void *;
 	using MetadataWriteContext = void *;
+	using NodePtnWriteContext = void *;
+	using RrNodePatternsWriteContext = void *;
 	using NodeWriteContext = void *;
 	using RrNodesWriteContext = void *;
 	using DdiffWriteContext = void *;
@@ -373,10 +377,9 @@ public:
 	 *   <xs:attribute name="xhigh" type="xs:int" use="required" />
 	 *   <xs:attribute name="yhigh" type="xs:int" use="required" />
 	 *   <xs:attribute name="side" type="loc_side" />
-	 *   <xs:attribute name="ptc" type="xs:int" use="required" />
+	 *   
 	 * </xs:complexType>
 	*/
-	virtual inline int get_node_loc_ptc(typename ContextTypes::NodeLocReadContext &ctx) = 0;
 	virtual inline enum_loc_side get_node_loc_side(typename ContextTypes::NodeLocReadContext &ctx) = 0;
 	virtual inline void set_node_loc_side(enum_loc_side side, typename ContextTypes::NodeLocWriteContext &ctx) = 0;
 	virtual inline int get_node_loc_xhigh(typename ContextTypes::NodeLocReadContext &ctx) = 0;
@@ -427,8 +430,8 @@ public:
 	virtual inline size_t num_metadata_meta(typename ContextTypes::MetadataReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::MetaReadContext get_metadata_meta(int n, typename ContextTypes::MetadataReadContext &ctx) = 0;
 
-	/** Generated for complex type "node":
-	 * <xs:complexType name="node">
+	/** Generated for complex type "node_ptn":
+	 * <xs:complexType name="node_ptn">
 	 *   <xs:all>
 	 *     <xs:element name="loc" type="node_loc" />
 	 *     <xs:element name="timing" type="node_timing" minOccurs="0" />
@@ -441,26 +444,50 @@ public:
 	 *   <xs:attribute name="capacity" type="xs:unsignedInt" use="required" />
 	 * </xs:complexType>
 	*/
-	virtual inline unsigned int get_node_capacity(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline enum_node_direction get_node_direction(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline void set_node_direction(enum_node_direction direction, typename ContextTypes::NodeWriteContext &ctx) = 0;
+	virtual inline unsigned int get_node_ptn_capacity(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline enum_node_direction get_node_ptn_direction(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline void set_node_ptn_direction(enum_node_direction direction, typename ContextTypes::NodePtnWriteContext &ctx) = 0;
+	virtual inline unsigned int get_node_ptn_id(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline enum_node_type get_node_ptn_type(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeLocWriteContext init_node_ptn_loc(typename ContextTypes::NodePtnWriteContext &ctx, int xhigh, int xlow, int yhigh, int ylow) = 0;
+	virtual inline void finish_node_ptn_loc(typename ContextTypes::NodeLocWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeLocReadContext get_node_ptn_loc(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeTimingWriteContext init_node_ptn_timing(typename ContextTypes::NodePtnWriteContext &ctx, float C, float R) = 0;
+	virtual inline void finish_node_ptn_timing(typename ContextTypes::NodeTimingWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeTimingReadContext get_node_ptn_timing(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline bool has_node_ptn_timing(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeSegmentWriteContext init_node_ptn_segment(typename ContextTypes::NodePtnWriteContext &ctx, int segment_id) = 0;
+	virtual inline void finish_node_ptn_segment(typename ContextTypes::NodeSegmentWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodeSegmentReadContext get_node_ptn_segment(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline bool has_node_ptn_segment(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::MetadataWriteContext init_node_ptn_metadata(typename ContextTypes::NodePtnWriteContext &ctx) = 0;
+	virtual inline void finish_node_ptn_metadata(typename ContextTypes::MetadataWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::MetadataReadContext get_node_ptn_metadata(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+	virtual inline bool has_node_ptn_metadata(typename ContextTypes::NodePtnReadContext &ctx) = 0;
+
+	/** Generated for complex type "rr_node_patterns":
+	 * <xs:complexType name="rr_node_patterns">
+	 *   <xs:choice maxOccurs="unbounded">
+	 *     <xs:element name="node_ptn" type="node_ptn" />
+	 *   </xs:choice>
+	 * </xs:complexType>
+	*/
+	virtual inline void preallocate_rr_node_patterns_node_ptn(typename ContextTypes::RrNodePatternsWriteContext &ctx, size_t size) = 0;
+	virtual inline typename ContextTypes::NodePtnWriteContext add_rr_node_patterns_node_ptn(typename ContextTypes::RrNodePatternsWriteContext &ctx, unsigned int capacity, unsigned int id, enum_node_type type) = 0;
+	virtual inline void finish_rr_node_patterns_node_ptn(typename ContextTypes::NodePtnWriteContext &ctx) = 0;
+	virtual inline size_t num_rr_node_patterns_node_ptn(typename ContextTypes::RrNodePatternsReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::NodePtnReadContext get_rr_node_patterns_node_ptn(int n, typename ContextTypes::RrNodePatternsReadContext &ctx) = 0;
+
+	/** Generated for complex type "node":
+	 * <xs:complexType name="node">
+	 *   <xs:attribute name="id" type="xs:unsignedInt" use="required" />
+	 *   <xs:attribute name="ptn_idx" type="xs:unsignedInt" use="required" />
+	 *   <xs:attribute name="ptc" type="xs:int" use="required" />
+	 * </xs:complexType>
+	*/
 	virtual inline unsigned int get_node_id(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline enum_node_type get_node_type(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeLocWriteContext init_node_loc(typename ContextTypes::NodeWriteContext &ctx, int ptc, int xhigh, int xlow, int yhigh, int ylow) = 0;
-	virtual inline void finish_node_loc(typename ContextTypes::NodeLocWriteContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeLocReadContext get_node_loc(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeTimingWriteContext init_node_timing(typename ContextTypes::NodeWriteContext &ctx, float C, float R) = 0;
-	virtual inline void finish_node_timing(typename ContextTypes::NodeTimingWriteContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeTimingReadContext get_node_timing(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline bool has_node_timing(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeSegmentWriteContext init_node_segment(typename ContextTypes::NodeWriteContext &ctx, int segment_id) = 0;
-	virtual inline void finish_node_segment(typename ContextTypes::NodeSegmentWriteContext &ctx) = 0;
-	virtual inline typename ContextTypes::NodeSegmentReadContext get_node_segment(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline bool has_node_segment(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline typename ContextTypes::MetadataWriteContext init_node_metadata(typename ContextTypes::NodeWriteContext &ctx) = 0;
-	virtual inline void finish_node_metadata(typename ContextTypes::MetadataWriteContext &ctx) = 0;
-	virtual inline typename ContextTypes::MetadataReadContext get_node_metadata(typename ContextTypes::NodeReadContext &ctx) = 0;
-	virtual inline bool has_node_metadata(typename ContextTypes::NodeReadContext &ctx) = 0;
+	virtual inline int get_node_ptc(typename ContextTypes::NodeReadContext &ctx) = 0;
+	virtual inline unsigned int get_node_ptn_idx(typename ContextTypes::NodeReadContext &ctx) = 0;
 
 	/** Generated for complex type "rr_nodes":
 	 * <xs:complexType name="rr_nodes">
@@ -470,7 +497,7 @@ public:
 	 * </xs:complexType>
 	*/
 	virtual inline void preallocate_rr_nodes_node(typename ContextTypes::RrNodesWriteContext &ctx, size_t size) = 0;
-	virtual inline typename ContextTypes::NodeWriteContext add_rr_nodes_node(typename ContextTypes::RrNodesWriteContext &ctx, unsigned int capacity, unsigned int id, enum_node_type type) = 0;
+	virtual inline typename ContextTypes::NodeWriteContext add_rr_nodes_node(typename ContextTypes::RrNodesWriteContext &ctx, unsigned int id, int ptc, unsigned int ptn_idx) = 0;
 	virtual inline void finish_rr_nodes_node(typename ContextTypes::NodeWriteContext &ctx) = 0;
 	virtual inline size_t num_rr_nodes_node(typename ContextTypes::RrNodesReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::NodeReadContext get_rr_nodes_node(int n, typename ContextTypes::RrNodesReadContext &ctx) = 0;
@@ -570,6 +597,7 @@ public:
 	 *       <xs:element name="segments" type="segments" />
 	 *       <xs:element name="block_types" type="block_types" />
 	 *       <xs:element name="grid" type="grid_locs" />
+	 *       <xs:element name="rr_node_patterns" type="rr_node_patterns" />
 	 *       <xs:element name="rr_nodes" type="rr_nodes" />
 	 *       
 	 *       <xs:element name="rr_edge_ptns" type="rr_edge_ptns" />
@@ -603,6 +631,9 @@ public:
 	virtual inline typename ContextTypes::GridLocsWriteContext init_rr_graph_grid(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
 	virtual inline void finish_rr_graph_grid(typename ContextTypes::GridLocsWriteContext &ctx) = 0;
 	virtual inline typename ContextTypes::GridLocsReadContext get_rr_graph_grid(typename ContextTypes::RrGraphReadContext &ctx) = 0;
+	virtual inline typename ContextTypes::RrNodePatternsWriteContext init_rr_graph_rr_node_patterns(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
+	virtual inline void finish_rr_graph_rr_node_patterns(typename ContextTypes::RrNodePatternsWriteContext &ctx) = 0;
+	virtual inline typename ContextTypes::RrNodePatternsReadContext get_rr_graph_rr_node_patterns(typename ContextTypes::RrGraphReadContext &ctx) = 0;
 	virtual inline typename ContextTypes::RrNodesWriteContext init_rr_graph_rr_nodes(typename ContextTypes::RrGraphWriteContext &ctx) = 0;
 	virtual inline void finish_rr_graph_rr_nodes(typename ContextTypes::RrNodesWriteContext &ctx) = 0;
 	virtual inline typename ContextTypes::RrNodesReadContext get_rr_graph_rr_nodes(typename ContextTypes::RrGraphReadContext &ctx) = 0;
